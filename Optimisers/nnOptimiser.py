@@ -52,7 +52,9 @@ def optimiseNN(datasetNameInput):
     global datasetName, basicSettings, trainingSet, validationSet, categoryColumns
     parameterGroup = showMenu("Select parameter group by entering a number:", parameterGroups)
     datasetName = datasetNameInput
-    trainingSet, validationSet, categoryColumns = loadOptimiserDataset(datasetName, seed)
+    sets, categoryColumns = loadOptimiserDataset(datasetName, seed)
+    trainingSet = sets[0]
+    validationSet = sets[1]
     settingsFilePath = input("Enter the path of the settings file:")
     while parameterGroup != parameterGroups[len(parameterGroups)-1]:
         if parameterGroup == parameterGroups[0]:
