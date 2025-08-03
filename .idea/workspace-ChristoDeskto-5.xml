@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="aa988e97-92a4-406d-8726-7e432a9950a7" name="Changes" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 8
+}</component>
+  <component name="ProjectId" id="2pZLswhr0ZAbfn4xVM4iUwcqifE" />
+  <component name="ProjectViewState">
+    <option name="autoscrollFromSource" value="true" />
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.main laptop.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;database.data.extractors.current.export.id&quot;: &quot;Comma-separated (CSV)_id&quot;,
+    &quot;database.data.extractors.current.id&quot;: &quot;Comma-separated (CSV)_id&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/User/OneDrive/tuks/master/code/Thesis/Data/Datasets/Output/Raw&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;python.debugger.dataview.coloredbydefault&quot;: &quot;false&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\User\OneDrive\tuks\master\code\Thesis\Data\Datasets\Output\Raw" />
+      <recent name="C:\Users\User\OneDrive\tuks\master\code\Thesis\Data\Datasets\Output" />
+      <recent name="C:\Users\User\OneDrive\tuks\master\code\Thesis\Optimisers" />
+      <recent name="C:\Users\User\OneDrive\tuks\master\code\Thesis\ModelTrainer" />
+      <recent name="C:\Users\User\OneDrive\tuks\master\code\Thesis\Data\Datasets\Input\LiverCirrhosis" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\User\OneDrive\tuks\master\code\Thesis\Data\CheckPoints\Decision_Tree" />
+      <recent name="C:\Users\User\OneDrive\tuks\master\code\Thesis\ModelTrainer" />
+      <recent name="C:\Users\User\OneDrive\tuks\master\code\Thesis\Data\Datasets\Output\Raw" />
+      <recent name="C:\Users\User\OneDrive\tuks\master\code\Thesis\Data\Datasets\Output\graphs" />
+      <recent name="C:\Users\User\OneDrive\tuks\master\code\Thesis\Data\Settings\NNSettings" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Python.main">
+    <configuration name="main laptop" type="PythonConfigurationType" factoryName="Python">
+      <module name="Thesis" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="SDK_NAME" value="Python 3.10" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="main" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <module name="Thesis" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="SDK_NAME" value="Python 3.10" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Python.main laptop" />
+      <item itemvalue="Python.main" />
+    </list>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-6a121458b545-JavaScript-PY-251.25410.159" />
+        <option value="bundled-python-sdk-e0ed3721d81e-36ea0e71a18c-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-251.25410.159" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="aa988e97-92a4-406d-8726-7e432a9950a7" name="Changes" comment="" />
+      <created>1732968860496</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1732968860496</updated>
+      <workItem from="1732968864943" duration="78275000" />
+      <workItem from="1733738562304" duration="1616000" />
+      <workItem from="1733838975843" duration="1389000" />
+      <workItem from="1733842105336" duration="1510000" />
+      <workItem from="1733905888909" duration="3421000" />
+      <workItem from="1733927521653" duration="3259000" />
+      <workItem from="1734368015037" duration="3615000" />
+      <workItem from="1734423139244" duration="4506000" />
+      <workItem from="1734441994253" duration="3397000" />
+      <workItem from="1734593517885" duration="668000" />
+      <workItem from="1734600254442" duration="4488000" />
+      <workItem from="1734720893949" duration="18000" />
+      <workItem from="1734722437919" duration="9400000" />
+      <workItem from="1734808071619" duration="112000" />
+      <workItem from="1734859746783" duration="87000" />
+      <workItem from="1734860062809" duration="3807000" />
+      <workItem from="1735490214091" duration="2024000" />
+      <workItem from="1735555990215" duration="2656000" />
+      <workItem from="1735648823557" duration="6651000" />
+      <workItem from="1735921187011" duration="545000" />
+      <workItem from="1735922400233" duration="10901000" />
+      <workItem from="1736069994362" duration="60539000" />
+      <workItem from="1736434890803" duration="35032000" />
+      <workItem from="1736622190181" duration="18422000" />
+      <workItem from="1736753484304" duration="39174000" />
+      <workItem from="1736917422783" duration="1469000" />
+      <workItem from="1736922615783" duration="226933000" />
+      <workItem from="1738050444744" duration="85000" />
+      <workItem from="1738058507167" duration="11367000" />
+      <workItem from="1738129004410" duration="1187000" />
+      <workItem from="1738130479627" duration="293000" />
+      <workItem from="1738136294634" duration="1055000" />
+      <workItem from="1738156769387" duration="1602000" />
+      <workItem from="1738161857284" duration="1548000" />
+      <workItem from="1738687581888" duration="112626000" />
+      <workItem from="1739888229019" duration="42000" />
+      <workItem from="1739888374550" duration="3127000" />
+      <workItem from="1740373442099" duration="1566000" />
+      <workItem from="1740380089774" duration="6587000" />
+      <workItem from="1741516304003" duration="4842000" />
+      <workItem from="1741600168253" duration="12000" />
+      <workItem from="1741615444830" duration="13001000" />
+      <workItem from="1742027032549" duration="3532000" />
+      <workItem from="1742219352464" duration="846000" />
+      <workItem from="1742277094870" duration="667000" />
+      <workItem from="1742306237537" duration="2787000" />
+      <workItem from="1742398377948" duration="1230000" />
+      <workItem from="1742399632064" duration="3658000" />
+      <workItem from="1742451189891" duration="1478000" />
+      <workItem from="1743060809137" duration="1198000" />
+      <workItem from="1743230549491" duration="114208000" />
+      <workItem from="1744263009904" duration="130358000" />
+      <workItem from="1745298671357" duration="11024000" />
+      <workItem from="1745559109304" duration="8251000" />
+      <workItem from="1745737879443" duration="9881000" />
+      <workItem from="1745761141296" duration="106000" />
+      <workItem from="1745761552386" duration="23000" />
+      <workItem from="1745770239807" duration="14000" />
+      <workItem from="1745770464497" duration="43384000" />
+      <workItem from="1746431434578" duration="32000" />
+      <workItem from="1746431498860" duration="15091000" />
+      <workItem from="1746633995733" duration="11975000" />
+      <workItem from="1746791011684" duration="1385000" />
+      <workItem from="1746859177181" duration="10316000" />
+      <workItem from="1747052607326" duration="1489000" />
+      <workItem from="1747470254826" duration="201419000" />
+      <workItem from="1748680569254" duration="108771000" />
+      <workItem from="1749193083554" duration="5001000" />
+      <workItem from="1749209756178" duration="22160000" />
+      <workItem from="1749480690666" duration="2644000" />
+      <workItem from="1749653722104" duration="3064000" />
+      <workItem from="1749887394470" duration="1668000" />
+      <workItem from="1750060179897" duration="2259000" />
+      <workItem from="1750142370276" duration="1292000" />
+      <workItem from="1750589008856" duration="12042000" />
+      <workItem from="1751015733839" duration="595000" />
+      <workItem from="1751172682213" duration="15863000" />
+      <workItem from="1751208554014" duration="1655000" />
+      <workItem from="1751214590930" duration="48007000" />
+      <workItem from="1751460298909" duration="20704000" />
+      <workItem from="1751625664598" duration="85457000" />
+      <workItem from="1752086566335" duration="71485000" />
+      <workItem from="1752472009478" duration="1718000" />
+      <workItem from="1752478743361" duration="1676000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/Utils/datasetHandler.py</url>
+          <line>138</line>
+          <option name="timeStamp" value="8" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/Utils/datasetHandler.py</url>
+          <line>142</line>
+          <option name="timeStamp" value="9" />
+        </line-breakpoint>
+      </breakpoints>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/Thesis$main_laptop.coverage" NAME="main laptop Coverage Results" MODIFIED="1743062797609" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/Thesis$main.coverage" NAME="main Coverage Results" MODIFIED="1752478743960" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+  </component>
+</project>

@@ -45,7 +45,9 @@ Follow the menu prompts to:
 See `requirements.txt` for a full list. Key packages:
 - PyTorch
 - scikit-learn
-- numpy, pandas
-- matplotlib, seaborn
+- numpy,
+- pandas
+- matplotlib, 
+- seaborn
 - imbalanced-learn
 - networkx
