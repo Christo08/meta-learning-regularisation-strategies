@@ -1,0 +1,138 @@
+[
+  {
+    "name": "Agaricus Lepiota",
+    "type": "pmlb",
+    "pmlbName": "agaricus_lepiota",
+    "categoryColumns": ["cap-surface", "stalk-surface-above-ring", "ring-number", "stalk-surface-below-ring", "veil-color", "gill-attachment", "bruises?", "stalk-shape", "gill-size"],
+    "targetColumn": "target",
+    "dropColumns": ["veil-type"]
+  },
+  {
+    "name": "Churn",
+    "type": "pmlb",
+    "pmlbName": "churn",
+    "categoryColumns": ["voice mail plan", "international plan", "area code"],
+    "targetColumn": "target",
+    "dropColumns": []
+  },
+  {
+    "name": "Liver Cirrhosis",
+    "type": "csv",
+    "filePath": "Data/Datasets/Input/LiverCirrhosis/cirrhosis.csv",
+    "categoryColumns": ["Status", "Drug", "Sex", "Ascites", "Hepatomegaly", "Spiders", "Edema"],
+    "targetColumn": "Stage",
+    "dropColumns": ["ID"]
+  },
+  {
+    "name": "Magic",
+    "type": "pmlb",
+    "pmlbName": "magic",
+    "categoryColumns": [],
+    "targetColumn": "target",
+    "dropColumns": []
+  },
+  {
+    "name": "Mobile Price Classification",
+    "type": "csv",
+    "filePath": "Data/Datasets/Input/MobilePriceClassification/mobile_price_classification.csv",
+    "categoryColumns": ["blue", "dual_sim", "four_g", "three_g", "touch_screen", "wifi"],
+    "targetColumn": "n_cores",
+    "dropColumns": ["id","price_range"]
+  },
+  {
+    "name": "Mushroom",
+    "type": "csv",
+    "filePath": "Data/Datasets/Input/Mushrooms/mushrooms.csv",
+    "categoryColumns": ["cap-shape", "cap-surface", "cap-color", "bruises", "gill-attachment", "gill-spacing", "gill-size", "gill-color", "stalk-shape", "stalk-root", "stalk-surface-above-ring", "stalk-surface-below-ring", "stalk-color-above-ring", "stalk-color-below-ring", "veil-type", "veil-color", "ring-number", "ring-type", "spore-print-color", "population", "habitat", "class"],
+    "targetColumn": "odor",
+    "dropColumns": []
+  },
+  {
+    "name": "Nursery",
+    "type": "pmlb",
+    "pmlbName": "nursery",
+    "categoryColumns": ["parents", "form", "children", "housing", "finance", "social", "health"],
+    "targetColumn": "target",
+    "dropColumns": []
+  },
+  {
+    "name": "Page Blocks",
+    "type": "pmlb",
+    "pmlbName": "page_blocks",
+    "categoryColumns": [],
+    "targetColumn": "target",
+    "dropColumns": []
+  },
+  {
+    "name": "Pendigits",
+    "type": "pmlb",
+    "pmlbName": "pendigits",
+    "categoryColumns": [],
+    "targetColumn": "target",
+    "dropColumns": []
+  },
+  {
+    "name": "Pima Indians Diabetes",
+    "type": "csv",
+    "filePath": "Data/Datasets/Input/PimaIndiansDiabetes/diabetes.csv",
+    "categoryColumns": [],
+    "targetColumn": "Outcome",
+    "dropColumns": []
+  },
+  {
+    "name": "Ring",
+    "type": "pmlb",
+    "pmlbName": "ring",
+    "categoryColumns": [],
+    "targetColumn": "target",
+    "dropColumns": []
+  },
+  {
+    "name": "Salaries 2023",
+    "type": "csv",
+    "filePath": "Data/Datasets/Input/Salaries2023/ds_salaries.csv",
+    "categoryColumns": ["employment_type", "job_title", "salary_currency", "salary_in_usd", "employee_residence", "company_location", "company_size"],
+    "targetColumn": "experience_level",
+    "dropColumns": []
+  },
+  {
+    "name": "Segmentation",
+    "type": "pmlb",
+    "pmlbName": "segmentation",
+    "categoryColumns": ["short-line-density-2", "short-line-density-5"],
+    "targetColumn": "target",
+    "dropColumns": ["region-pixel-count"]
+  },
+  {
+    "name": "Students Performance",
+    "type": "csv",
+    "filePath": "Data/Datasets/Input/StudentPerformance/students_performance.csv",
+    "categoryColumns": ["Ethnicity", "ParentalEducation", "Tutoring", "ParentalSupport", "Extracurricular", "Sports", "Music", "Volunteering"],
+    "targetColumn": "GradeClass",
+    "dropColumns": ["StudentID"]
+  },
+  {
+    "name": "Vehicle",
+    "type": "pmlb",
+    "pmlbName": "vehicle",
+    "categoryColumns": [],
+    "targetColumn": "target",
+    "dropColumns": []
+  },
+  {
+    "name": "White Wine Quality",
+    "type": "pmlb",
+    "pmlbName": "wine_quality_white",
+    "categoryColumns": [],
+    "targetColumn": "target",
+    "dropColumns": []
+  },
+  {
+    "name": "Wine Quality Red",
+    "type": "pmlb",
+    "pmlbName": "wine_quality_red",
+    "categoryColumns": [],
+    "targetColumn": "target",
+    "dropColumns": []
+  }
+]

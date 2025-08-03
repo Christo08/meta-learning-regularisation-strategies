@@ -1,0 +1,8 @@
+{
+    "criterion": "friedman_mse",
+    "splitter": "best",
+    "min_samples_split": 64,
+    "min_samples_leaf": 15,
+    "has_max_depth": false,
+    "max_depth": 1000
+}

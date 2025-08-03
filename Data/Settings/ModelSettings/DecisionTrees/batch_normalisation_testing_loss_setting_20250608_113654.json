@@ -1,0 +1,8 @@
+{
+    "criterion": "poisson",
+    "splitter": "best",
+    "min_samples_split": 65,
+    "min_samples_leaf": 127,
+    "has_max_depth": true,
+    "max_depth": 288
+}

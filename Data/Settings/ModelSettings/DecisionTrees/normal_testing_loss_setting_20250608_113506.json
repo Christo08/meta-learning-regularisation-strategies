@@ -1,0 +1,8 @@
+{
+    "criterion": "squared_error",
+    "splitter": "random",
+    "min_samples_split": 35,
+    "min_samples_leaf": 10,
+    "has_max_depth": true,
+    "max_depth": 916
+}
