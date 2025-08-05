@@ -62,6 +62,7 @@ def saveSettings(settings, datasetName, path):
         newSettings = {**oldSettings, **settings}
         with open(path, "w") as file:
             json.dump(newSettings, file, indent=4, cls=ObjectEncoder)
+        return path
 
 def loadSettings(path):
     try:

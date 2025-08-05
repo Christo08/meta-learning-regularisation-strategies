@@ -60,7 +60,7 @@ def optimiseNN(datasetNameInput):
         if parameterGroup == parameterGroups[0]:
             bestParams = setupOptimiserAndRunIt(datasetName, "Basic", basicParameters, 300)
             path = saveSettings(bestParams, datasetName, "")
-            basicSettings = loadSettings(settingsFilePath)
+            basicSettings = loadSettings(path)
 
             bestParams = setupOptimiserAndRunIt(datasetName, "Dropout", dropoutParameters, 50)
             saveSettings(bestParams, datasetName, path)
