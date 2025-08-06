@@ -118,6 +118,9 @@ def loadOptimiserDataset(databaseName, seed):
     dataset = cleanDataset(dataset)
     dataset = applyOneHotEncode(dataset)
 
+    target_columns = [col for col in dataset.columns if 'target' in col]
+    dataset = normalise(dataset, datasetSettings['categoryColumns'], target_columns)
+
     return splitSet(dataset, seed), datasetSettings['categoryColumns']
 
 def applySMOTE(x, y, seed, numberOfNeighbors, categoryColumns):
