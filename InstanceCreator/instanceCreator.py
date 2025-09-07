@@ -5,12 +5,12 @@ import numpy as np
 import pandas as pd
 
 from ModelTrainer.nnTrainer import trainNN
-from Utils.datasetHandler import createSubsets
+from Utils.datasetHandler import createSubsets, loadRawDataset, loadDataset
 from Utils.fileHandler import loadMetaFeaturesDataset, saveMetaFeaturesDataset, loadSettings
 from Utils.timeFormatter import formatDuration
 
 configurations = [
-    {"name": "normal", "param": "normal", "fileName": "normal"},
+    {"name": "baseline", "param": "baseline", "fileName": "baseline"},
     {"name": "batchNormalisation", "param": "batchNormalisation", "fileName": "batch_normalisation"},
     {"name": "dropout", "param": "dropout", "fileName": "dropout"},
     {"name": "layerNormalisation", "param": "layerNormalisation", "fileName": "layer_normalisation"},
@@ -26,7 +26,11 @@ def createDataset(databaseName, outputPath, numberOfInstances, settingsFilePath,
     settings = loadSettings(settingsFilePath)
     totalDuration = 0
 
-    trainingSets, testingSets, metaFeatures, seeds, subsetCategoryColumns = createSubsets(databaseName, numberOfInstances)
+    if numberOfInstances > 1:
+        trainingSets, testingSets, metaFeatures, seeds, subsetCategoryColumns = createSubsets(databaseName, numberOfInstances)
+    else:
+        trainingSets, testingSets, metaFeatures, seeds, subsetCategoryColumns = loadDataset(databaseName)
+
     counter = 0
 
     for trainingSet, testingSet, metaFeature, seed, categoryColumns in zip(trainingSets, testingSets, metaFeatures, seeds, subsetCategoryColumns):

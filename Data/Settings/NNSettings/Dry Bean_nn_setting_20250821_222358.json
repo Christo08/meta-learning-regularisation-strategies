@@ -1,0 +1,20 @@
+{
+    "batch_size": 512,
+    "learning_rate": 0.05,
+    "momentum": 0.5,
+    "number_of_epochs": 740,
+    "number_of_hidden_layers": 6,
+    "number_of_neurons_in_layers": [
+        795,
+        870,
+        625,
+        275,
+        455,
+        35,
+        295,
+        435,
+        610,
+        600
+    ]
+
+}

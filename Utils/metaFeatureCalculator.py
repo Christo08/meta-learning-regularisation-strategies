@@ -4,33 +4,35 @@ from sklearn.preprocessing import LabelEncoder
 import numpy as np
 import pandas as pd
 
+from Utils.datasetHandler import loadRawDataset
+
+
 def calculateMetaFeatures(dataset, categoryColumns):
     metaFeatures = {}
     categoryColumns = list(set( dataset.columns.tolist()) & set(categoryColumns))
 
     #Calculate basic meta features
-    metaFeatures["number_of_attributes"] = dataset.shape[1] - 1
+    metaFeatures["number_of_features"] = dataset.shape[1] - 1
     #what if here are no category fields change to %
-    metaFeatures["percentage_of_numeric_features"] =  (metaFeatures["number_of_attributes"] - len(categoryColumns))/metaFeatures["number_of_attributes"]
+    metaFeatures["proportion_of_numeric_features"] =  (metaFeatures["number_of_features"] - len(categoryColumns))/metaFeatures["number_of_features"]
     metaFeatures["number_of_instances"] = dataset.shape[0]
-    metaFeatures["number_of_class"] = len(dataset['target'].unique().tolist())
-    metaFeatures["proportion_of_attributes_per_instances"] = metaFeatures["number_of_attributes"]/metaFeatures["number_of_instances"]
-    metaFeatures["number_of_classes_per_attributes"] = metaFeatures["number_of_class"]/metaFeatures["number_of_attributes"]
-    metaFeatures["number_of_instances_per_class"] = metaFeatures["number_of_instances"]/metaFeatures["number_of_class"]
+    metaFeatures["number_of_classes"] = len(dataset['target'].unique().tolist())
+    metaFeatures["ratio_of_instances_to_features"] = metaFeatures["number_of_instances"]/metaFeatures["number_of_features"]
+    metaFeatures["ratio_of_classes_to_features"] = metaFeatures["number_of_classes"]/metaFeatures["number_of_features"]
+    metaFeatures["ratio_of_instances_to_classes"] = metaFeatures["number_of_instances"]/metaFeatures["number_of_classes"]
     instancePerClass = dataset['target'].value_counts()
-    metaFeatures["proportion_of_min_to_max_instance_per_class"] = instancePerClass.min()/instancePerClass.max()
-    metaFeatures["proportion_of_attributes_with_outliers"] = countNumberOfAttributesWithOutliers(dataset, categoryColumns)/metaFeatures["number_of_attributes"]
+    metaFeatures["ratio_of_min_to_max_instances_per_class"] = instancePerClass.min()/instancePerClass.max()
+    metaFeatures["proportion_of_features_with_outliers"] = countNumberOfFeaturesWithOutliers(dataset, categoryColumns)/metaFeatures["number_of_features"]
 
     #Calculate information meta features
     miScores = calculateMutualInformation(dataset, categoryColumns)
-    metaFeatures["minimum_continuous_mutual_information"],metaFeatures["maximum_continuous_mutual_information"] = calculateMinAndMaxMiScores(miScores[0])
-    metaFeatures["minimum_discrete_mutual_information"],metaFeatures["maximum_discrete_mutual_information"] = calculateMinAndMaxMiScores(miScores[1])
-    metaFeatures["equivalent_number_of_continuous_attributes"] = calculateEna(miScores[0])
-    metaFeatures["equivalent_number_of_discrete_attributes"] = calculateEna(miScores[1])
-    metaFeatures["noise_signal_ratio_of_continuous_attributes"] = calculateNsr(miScores[0], dataset)
-    metaFeatures["noise_signal_ratio_of_discrete_attributes"] = calculateNsr(miScores[1], dataset)
+    metaFeatures["average_mutual_information"] = calculateAverageMiScore(miScores)
+    metaFeatures["equivalent_number_of_features"] = calculateEna(miScores[0], miScores[1])
+    metaFeatures["noise_to_signal_ratio_of_features"] = calculateNsr(miScores[0], miScores[1], dataset)
 
     return metaFeatures
+
+
 
 def calculateMutualInformation(dataset, categoryColumns):
     X = dataset.drop(columns=["target"])
@@ -51,20 +53,21 @@ def calculateMutualInformation(dataset, categoryColumns):
     else:
         miDiscrete = np.array([0])
 
-    return [miContinuous, miDiscrete]
+    return [normaliseMiScores(miContinuous), normaliseMiScores(miDiscrete)]
 
-def calculateMinAndMaxMiScores(miScores):
-    return miScores.min(), miScores.max()
+def calculateAverageMiScore(miScores):
+    return miScores.average()
 
-def calculateEna(miScores):
-    # Calculate Equivalent Number of Attributes
+def calculateEna(miContinuous, miDiscrete):
+    # Calculate Equivalent Number of Features
+    miScores = np.concatenate((miContinuous, miDiscrete))
     return np.exp(np.mean(miScores))
 
-def calculateNsr(miScores, dataset):
+def calculateNsr(miContinuous, miDiscrete, dataset):
     Y = dataset["target"]
 
     # Total Mutual Information (I)
-    totalMi = np.sum(miScores)
+    totalMi = np.sum(miContinuous) + np.sum(miDiscrete)
 
     # Calculate Entropy (H) of the target
     pY = Y.value_counts(normalize=True)  # Probability distribution of target values
@@ -76,8 +79,8 @@ def calculateNsr(miScores, dataset):
     # Calculate Noise-Signal Ratio (NSR)
     return (entropy - totalMi) / totalMi
 
-def countNumberOfAttributesWithOutliers(dataset, categoryColumns):
-    numberOfAttributesWithoutOutliers = 0
+def countNumberOfFeaturesWithOutliers(dataset, categoryColumns):
+    numberOfFeaturesWithoutOutliers = 0
     for column in dataset.columns:
         if not column in categoryColumns and column != "target":
             Q1 = dataset[column].quantile(0.25)  # First quartile
@@ -87,7 +90,7 @@ def countNumberOfAttributesWithOutliers(dataset, categoryColumns):
             upper_bound = Q3 + 1.5 * IQR
 
             if ((dataset[column] < lower_bound) | (dataset[column] > upper_bound)).any():
-                numberOfAttributesWithoutOutliers += 1
+                numberOfFeaturesWithoutOutliers += 1
             else:
                 mean = dataset[column].mean()
                 std_dev = dataset[column].std()
@@ -96,5 +99,10 @@ def countNumberOfAttributesWithOutliers(dataset, categoryColumns):
                 lower_threshold = mean - 3 * std_dev
                 upper_threshold = mean + 3 * std_dev
                 if ((dataset[column] < lower_threshold) | (dataset[column] > upper_threshold)).any():
-                    numberOfAttributesWithoutOutliers += 1
-    return numberOfAttributesWithoutOutliers
+                    numberOfFeaturesWithoutOutliers += 1
+    return numberOfFeaturesWithoutOutliers
+
+def normaliseMiScores(miScores):
+    if len(miScores) == 0 or np.all(miScores == 0):
+        return miScores
+    return (miScores - miScores.min()) / (miScores.max() - miScores.min())

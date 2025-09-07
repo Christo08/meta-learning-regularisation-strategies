@@ -143,6 +143,17 @@ def trainingLoop(xTraining, yTraining, testingSet, settings, numberOfInputs, num
                 yBatch = yBatch.to(device)
 
             trainingOutputs = network(xBatch)
+            for index in range(xBatch.shape[0]):
+                batch = xBatch[index]
+                output = trainingOutputs[index]
+                if torch.isnan(batch).any() or torch.isnan(output).any():
+                    print(f"NaN detected in sample index {index} of the batch, skipping this sample.")
+
+            if torch.isnan(xBatch).any():
+                print("NaN detected in training batch, skipping this batch.")
+            if torch.isnan(trainingOutputs).any():
+                print("NaN detected in training outputs, skipping this batch.")
+
             if technique == "weightDecay":
                 trainingLoss = lossFunction(trainingOutputs, yBatch, network)
             else:

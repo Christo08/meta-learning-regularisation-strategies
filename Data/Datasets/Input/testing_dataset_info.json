@@ -1,0 +1,86 @@
+[
+  {
+    "name": "Dry Bean",
+    "type": "csv",
+    "filePath": "Data/Datasets/Input/DryBeanDataset/Dry_Bean_Dataset.csv",
+    "categoryColumns": ["Class"],
+    "targetColumn": "Class",
+    "dropColumns": []
+  },
+  {
+    "name": "Led7",
+    "type": "pmlb",
+    "pmlbName": "led7",
+    "categoryColumns": [],
+    "targetColumn": "target",
+    "dropColumns": []
+  },
+  {
+    "name": "Mofn_3_7_10",
+    "type": "pmlb",
+    "pmlbName": "mofn_3_7_10",
+    "categoryColumns": [],
+    "targetColumn": "target",
+    "dropColumns": []
+  },
+  {
+    "name": "Obesity Levels",
+    "type": "csv",
+    "filePath": "Data/Datasets/Input/ObesityDataset/ObesityDataSet_raw_and_data_sinthetic.csv",
+    "categoryColumns": ["Gender", "family_history_with_overweight","FAVC","CAEC","SMOKE","SCC","CALC","MTRANS","NObeyesdad"],
+    "targetColumn": "NObeyesdad",
+    "dropColumns": []
+  },
+  {
+    "name": "Online shopper",
+    "type": "csv",
+    "filePath": "Data/Datasets/Input/OnlineDataset/online_shoppers_intention.csv",
+    "categoryColumns": ["Month","VisitorType", "Weekend", "Revenue"],
+    "targetColumn": "Revenue",
+    "dropColumns": []
+  },
+  {
+    "name": "Schizo",
+    "type": "pmlb",
+    "pmlbName": "schizo",
+    "categoryColumns": [],
+    "targetColumn": "target",
+    "dropColumns": ["ID","target.1"]
+  },
+  {
+    "name": "Twonorm",
+    "type": "pmlb",
+    "pmlbName": "twonorm",
+    "categoryColumns": [],
+    "targetColumn": "target",
+    "dropColumns": []
+  },
+  {
+    "name": "Vowel",
+    "type": "pmlb",
+    "pmlbName": "vowel",
+    "categoryColumns": [],
+    "targetColumn": "target",
+    "dropColumns": ["Train or Test"]
+  },
+  {
+    "name": "Waveform_21",
+    "type": "pmlb",
+    "pmlbName": "waveform_21",
+    "categoryColumns": [],
+    "targetColumn": "target",
+    "dropColumns": []
+  },
+  {
+    "name": "Yeast",
+    "type": "csv",
+    "filePath": "Data/Datasets/Input/Yeast/yeast.csv",
+    "categoryColumns": [
+      "localization_site"
+    ],
+    "targetColumn": "localization_site",
+    "dropColumns": [
+      "SequenceName"
+    ]
+  }
+]

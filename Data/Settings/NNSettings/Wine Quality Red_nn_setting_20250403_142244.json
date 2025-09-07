@@ -30,5 +30,7 @@
     ],
     "prune_amount": 0.38,
     "prune_epoch_interval": 15,
-    "weight_decay": 0.01
+    "weight_decay": 0.01,
+    "weight_perturbation_amount": 0.41,
+    "weight_perturbation_interval": 95
 }

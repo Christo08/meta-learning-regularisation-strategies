@@ -31,8 +31,8 @@ def loadMetaFeaturesDataset(seed, isSVM):
     columns_to_drop = [
         "batch_size", "dropout_layers", "learning_rate", "momentum", "number_of_epochs", "number_of_hidden_layers",
         "number_of_neurons_in_layers", "prune_amount", "prune_epoch_interval", "weight_decay",
-        "weight_perturbation_amount", "weight_perturbation_interval", "dataset_name", "seed", "normal_training_loss",
-        "normal_validation_loss", "batch_normalisation_training_loss", "batch_normalisation_validation_loss",
+        "weight_perturbation_amount", "weight_perturbation_interval", "dataset_name", "seed", "baseline_training_loss",
+        "baseline_validation_loss", "batch_normalisation_training_loss", "batch_normalisation_validation_loss",
         "dropout_training_loss", "dropout_validation_loss", "layer_normalisation_training_loss",
         "layer_normalisation_validation_loss", "SMOTE_training_loss", "SMOTE_validation_loss", "prune_training_loss",
         "prune_validation_loss", "weight_decay_training_loss", "weight_decay_validation_loss",
@@ -40,7 +40,7 @@ def loadMetaFeaturesDataset(seed, isSVM):
         "weight_perturbation_training_loss", "weight_perturbation_validation_loss", "best_training_technique",
         "best_validation_technique", "best_testing_technique"
     ]
-    targetColumns = ["normal_testing_loss", "batch_normalisation_testing_loss", "dropout_testing_loss",
+    targetColumns = ["baseline_testing_loss", "batch_normalisation_testing_loss", "dropout_testing_loss",
                       "layer_normalisation_testing_loss", "SMOTE_testing_loss", "prune_testing_loss",
                       "weight_decay_testing_loss", "weight_normalisation_testing_loss", "weight_perturbation_testing_loss"]
 
@@ -72,7 +72,7 @@ def loadMetaFeaturesDataset(seed, isSVM):
     return (subsetX, subsetY), (testingSetX, testingSetY)
 
 def createSubsets(databaseName, numberOfSubsetsNeed):
-    dataset, datasetSettings = loadDataset(databaseName)
+    dataset, datasetSettings = loadRawDataset(databaseName)
     dataset = cleanDataset(dataset)
     numeric_data = dataset.select_dtypes(include=[np.number])
     assert not np.isinf(numeric_data.values).any(), "Inf in numeric input DataFrame"
@@ -113,8 +113,31 @@ def createSubsets(databaseName, numberOfSubsetsNeed):
 
     return trainingSets, testingSets, metaFeatures, seeds, subsetsCategoryColumns
 
+def loadDataset(databaseName):
+    dataset, datasetSettings = loadRawDataset(databaseName)
+    dataset = cleanDataset(dataset)
+    numeric_data = dataset.select_dtypes(include=[np.number])
+    assert not np.isinf(numeric_data.values).any(), "Inf in numeric input DataFrame"
+
+    seed = random.randint(1, 100000)
+    random.seed(seed)
+
+    dataset, datasetCategoryColumns = encodeCategoriesFeatures(dataset, datasetSettings['categoryColumns'])
+    metaFeatures = calculateMetaFeatures(dataset, datasetSettings['categoryColumns'])
+
+    dataset = normalise(dataset, datasetCategoryColumns, ["target"])
+
+    dataset = remapTargets(dataset)
+    dataset = applyOneHotEncode(dataset)
+
+    dataset.reset_index(drop=True, inplace=True)
+
+    trainingSet, testingSet = splitSet(dataset, seed)
+
+    return [trainingSet], [testingSet], [metaFeatures], [seed], [datasetCategoryColumns]
+
 def loadOptimiserDataset(databaseName, seed):
-    dataset, datasetSettings = loadDataset(databaseName)
+    dataset, datasetSettings = loadRawDataset(databaseName)
     dataset = cleanDataset(dataset)
     dataset = applyOneHotEncode(dataset)
 
@@ -181,7 +204,7 @@ def makeClassesSubsets(dataset, numberOfSubsetsNeed):
             continue
 
         usedClassCombos.add(combo)
-        subset = dataset[~dataset['class'].isin(combo)]
+        subset = dataset[~dataset['target'].isin(combo)]
 
         if len(subset) < MIN_INSTANCES_PER_SUBSET:
             continue
@@ -250,7 +273,7 @@ def makeInstancesSubsets(dataset, numberOfInstancesSubsetsNeeded):
 
     return subsets, seeds
 
-def loadDataset(databaseName):
+def loadRawDataset(databaseName):
     datasetsSettings = loadDatasetSetting()
     datasetSettings = None
     for dataset in datasetsSettings:

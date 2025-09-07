@@ -10,7 +10,7 @@ from datetime import datetime
 
 from Utils.fileHandler import loadMetaFeaturesCSV, saveMetaFeaturesDataset
 
-targetColumns = ["normal_testing_loss", "batch_normalisation_testing_loss", "dropout_testing_loss",
+targetColumns = ["baseline_testing_loss", "batch_normalisation_testing_loss", "dropout_testing_loss",
                  "layer_normalisation_testing_loss", "SMOTE_testing_loss", "prune_testing_loss",
                  "weight_decay_testing_loss", "weight_normalisation_testing_loss", "weight_perturbation_testing_loss"]
 
@@ -53,8 +53,8 @@ def cleanDataset(dataset):
     columns_to_drop = [
         "batch_size", "dropout_layers", "learning_rate", "momentum", "number_of_epochs", "number_of_hidden_layers",
         "number_of_neurons_in_layers", "prune_amount", "prune_epoch_interval", "weight_decay",
-        "weight_perturbation_amount", "weight_perturbation_interval", "dataset_name", "seed", "normal_training_loss",
-        "normal_validation_loss", "batch_normalisation_training_loss", "batch_normalisation_validation_loss",
+        "weight_perturbation_amount", "weight_perturbation_interval", "dataset_name", "seed", "baseline_training_loss",
+        "baseline_validation_loss", "batch_normalisation_training_loss", "batch_normalisation_validation_loss",
         "dropout_training_loss", "dropout_validation_loss", "layer_normalisation_training_loss",
         "layer_normalisation_validation_loss", "SMOTE_training_loss", "SMOTE_validation_loss", "prune_training_loss",
         "prune_validation_loss", "weight_decay_training_loss", "weight_decay_validation_loss",
@@ -62,6 +62,7 @@ def cleanDataset(dataset):
         "weight_perturbation_training_loss", "weight_perturbation_validation_loss", "best_training_technique",
         "best_validation_technique", "best_testing_technique"
     ]
+    shouldApplyZScoring = input("Apply Z scoring? (y/n): ").lower() == "y"
 
     dataset.drop(columns=columns_to_drop, errors="ignore", inplace=True)
     maxFloat = np.finfo(np.float32).max
@@ -69,16 +70,19 @@ def cleanDataset(dataset):
     for column in dataset.columns:
         if not(column in targetColumns):
             columnData = dataset[column].values.astype(np.float64)
+            if shouldApplyZScoring:
+                finiteMask = np.isfinite(columnData)
 
-            finiteMask = np.isfinite(columnData)
+                zColumn = np.empty_like(columnData)
+                zColumn[:] = columnData
+                zColumn[finiteMask] = zscore(columnData[finiteMask])
 
-            zColumn = np.empty_like(columnData)
-            zColumn[:] = columnData
-            zColumn[finiteMask] = zscore(columnData[finiteMask])
+                zColumn = np.where(zColumn == np.inf, maxFloat, zColumn)
 
-            zColumn = np.where(zColumn == np.inf, maxFloat, zColumn)
+                dataset[column] = zColumn
+            else:
+                dataset[column] = columnData
 
-            dataset[column] = zColumn
 
     return dataset
 

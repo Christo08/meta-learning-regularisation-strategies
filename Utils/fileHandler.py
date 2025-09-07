@@ -9,6 +9,7 @@ from datetime import datetime
 from Models.NN.Errors.fileNotFound import FileNotFound
 
 currentSettingsFilePath = ""
+dataSettings = {}
 
 def loadMetaFeaturesDataset(path):
     if os.path.exists(path) and os.path.isfile(path):
@@ -22,9 +23,12 @@ def loadMetaFeaturesDataset(path):
         raise FileNotFound(f"This is not a valid path {path}")
 
 def loadDatasetSetting():
-    with open('Data/Datasets/Input/dataset_info.json', 'r') as file:
-        data = json.load(file)
-    return data
+    global dataSettings
+    if dataSettings == {}:
+        datasetsSettingFilePath = input("What is the path to the datasets settings?")
+        with open(datasetsSettingFilePath, 'r') as file:
+            dataSettings = json.load(file)
+    return dataSettings
 
 def saveMetaFeaturesDataset(dataset, filePath):
     dataset.to_csv(filePath, index=False)

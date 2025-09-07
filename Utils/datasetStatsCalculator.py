@@ -21,9 +21,10 @@ def calculateDatasetStats(fullDataset):
     print("")
 
     print(f"Description:")
-    description = dataset.describe()
+    infRemoved = dataset.replace([np.inf, -np.inf], np.nan).dropna(axis=0, how='any')
+    description = infRemoved.describe()
     for column in description.columns.tolist():
-        print(dataset.describe()[column])
+        print(infRemoved.describe()[column])
     print("")
     for column in targetColumns:
         print(targets.describe()[column])
@@ -81,7 +82,8 @@ def calculateDatasetStats(fullDataset):
 
     for idx, feature in enumerate(numerical_columns, 1):
         plt.subplot(num_rows, num_cols, idx)
-        sns.histplot(dataset[feature], kde=True)
+        clean_data = dataset[feature].replace([np.inf, -np.inf], np.nan).dropna()
+        sns.histplot(clean_data, kde=True)
         plt.title(f"{feature}\nSkewness: {round(dataset[feature].skew(), 2)}")
 
     plt.tight_layout()
@@ -96,7 +98,7 @@ def calculateDatasetStats(fullDataset):
 
     for technique in targetColumns:
         plt.figure(figsize=(15, num_rows * 3))
-        plt.title('Box chart of meta features vs ' + technique)
+        plt.suptitle('Box charts of meta features vs ' + technique)
 
         for idx, feature in enumerate(numerical_columns, 1):
             plt.subplot(num_rows, num_cols, idx)

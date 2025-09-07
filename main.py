@@ -8,7 +8,7 @@ from Optimisers.randomForestOptimiser import optimiseRandomForest
 from Optimisers.svmOptimiser import optimiseSVM
 from Utils.createAvgNNSetting import createGenericNNSetting
 from Utils.datasetStatsCalculator import calculateDatasetStats
-from Utils.fileHandler import loadDatasetSetting
+from Utils.fileHandler import loadDatasetSetting, loadMetaFeaturesCSV
 from Utils.menus import showMenu
 from Utils.metaFeatureDatasetHandler import loadMetaFeatureDataset
 
@@ -63,7 +63,7 @@ def runDatasetProcess(function):
         if function.__name__ == "createDataset":
             outputPath = input("Enter the path of the Output dataset file or folder: ")
             settingsFilePath = input("Enter the path of the settings file: ")
-            numberOfInstances = int(input("How many instance do you what to create per dataset? "))
+            numberOfInstances = int(input("How many subsets do you what to create per dataset? "))
             numberOfFolds = int(input("How many folds do you what use per instance? "))
         if datasetName == datasetNames[0]:
             for datasetSettings in datasetsSettings:
@@ -112,7 +112,6 @@ def optimiseMetaLearning(dataset):
         optimiseRandomForest(dataset)
     else:
         optimiseSVM(dataset)
-        
 
 
 # Using the special variable
