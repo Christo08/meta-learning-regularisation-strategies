@@ -15,7 +15,6 @@ def trainNN(settings, technique, trainingSet, testingSet, seed, categoryColumns,
     numberOfOutputs = trainingSet[1].shape[1]
 
     allLabels = trainingSet[1].columns.tolist()
-
     if fold is not None and fold >= 3:
         kf = KFold(n_splits=fold, shuffle=True, random_state=seed)
         trainingLossValues = []
@@ -110,14 +109,16 @@ def trainingLoop(xTraining, yTraining, testingSet, settings, numberOfInputs, num
                           hidden_sizes=settings["number_of_neurons_in_layers"],
                           number_of_hidden_layers=settings["number_of_hidden_layers"],
                           output_size=numberOfOutputs)
-
+    xTesting = torch.tensor(testingSet[0].values, dtype=torch.float32)
+    yTesting = torch.tensor(testingSet[1].values, dtype=torch.float32)
     # Move network and tensors to GPU if available
     if torch.cuda.is_available():
         network = network.to(device)
         xTraining = xTraining.to(device)
         yTraining = yTraining.to(device)
-        xTesting = torch.tensor(testingSet[0].values, dtype=torch.float32).to(device)
-        yTesting = torch.tensor(testingSet[1].values, dtype=torch.float32).to(device)
+        xTesting = xTesting.to(device)
+        yTesting = yTesting.to(device)
+
 
     # Loss function and optimizer
     if technique == "weightDecay":

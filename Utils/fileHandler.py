@@ -7,6 +7,7 @@ import pandas as pd
 from datetime import datetime
 
 from Models.NN.Errors.fileNotFound import FileNotFound
+from Utils.menus import showMenu
 
 currentSettingsFilePath = ""
 dataSettings = {}
@@ -24,8 +25,13 @@ def loadMetaFeaturesDataset(path):
 
 def loadDatasetSetting():
     global dataSettings
+    datasetTypes = ["Training", "Testing"]
     if dataSettings == {}:
-        datasetsSettingFilePath = input("What is the path to the datasets settings?")
+        datasetType = showMenu("Do you want to use the default datasets settings or a custom one?", datasetTypes)
+        if datasetType == datasetTypes[0]:
+            datasetsSettingFilePath = "Data/Datasets/Input/training_dataset_info.json"
+        else:
+            datasetsSettingFilePath = "Data/Datasets/Input/test_dataset_info.json"
         with open(datasetsSettingFilePath, 'r') as file:
             dataSettings = json.load(file)
     return dataSettings

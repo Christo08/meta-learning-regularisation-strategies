@@ -41,6 +41,7 @@ def createDataset(databaseName, outputPath, numberOfInstances, settingsFilePath,
         counter+=1
         predictedDuration = totalDuration/counter * numberOfInstances
         print(f"{counter} instance created. It took {formatDuration(totalDuration)}/{formatDuration(predictedDuration)}")
+    return outputPath
 
 def createInstance(datasetName, settings, numberOfFolds, trainingSet, testingSet, metaFeature, seed, categoryColumns):
     startTime = time.time()

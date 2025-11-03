@@ -72,6 +72,7 @@ def loadMetaFeaturesDataset(seed, isSVM):
     return (subsetX, subsetY), (testingSetX, testingSetY)
 
 def createSubsets(databaseName, numberOfSubsetsNeed):
+    print("Creating "+str(numberOfSubsetsNeed)+" subsets for the "+databaseName+" dataset")
     dataset, datasetSettings = loadRawDataset(databaseName)
     dataset = cleanDataset(dataset)
     numeric_data = dataset.select_dtypes(include=[np.number])
@@ -96,16 +97,16 @@ def createSubsets(databaseName, numberOfSubsetsNeed):
     subsetsCategoryColumns = []
     for subset, seed in zip(subsets, seeds):
         subset, subsetCategoryColumns = encodeCategoriesFeatures(subset, datasetSettings['categoryColumns'])
+        subset = remapTargets(subset)
 
         metaFeatures.append(calculateMetaFeatures(subset, datasetSettings['categoryColumns']))
-        subset = normalise(subset, subsetCategoryColumns,["target"])
 
-        subset = remapTargets(subset)
-        subset = applyOneHotEncode(subset)
+        subset = normalise(subset, subsetCategoryColumns,["target"])
 
         subset.reset_index(drop=True, inplace=True)
 
         trainingSet, testingSet = splitSet(subset, seed)
+
         trainingSets.append(trainingSet)
         testingSets.append(testingSet)
         subsetsCategoryColumns.append(subsetCategoryColumns)
@@ -128,7 +129,6 @@ def loadDataset(databaseName):
     dataset = normalise(dataset, datasetCategoryColumns, ["target"])
 
     dataset = remapTargets(dataset)
-    dataset = applyOneHotEncode(dataset)
 
     dataset.reset_index(drop=True, inplace=True)
 
@@ -139,7 +139,6 @@ def loadDataset(databaseName):
 def loadOptimiserDataset(databaseName, seed):
     dataset, datasetSettings = loadRawDataset(databaseName)
     dataset = cleanDataset(dataset)
-    dataset = applyOneHotEncode(dataset)
 
     target_columns = [col for col in dataset.columns if 'target' in col]
     dataset = normalise(dataset, datasetSettings['categoryColumns'], target_columns)
@@ -147,23 +146,18 @@ def loadOptimiserDataset(databaseName, seed):
     return splitSet(dataset, seed), datasetSettings['categoryColumns']
 
 def applySMOTE(x, y, seed, numberOfNeighbors, categoryColumns):
-
-    # Convert one-hot encoded labels (DataFrame) to class indices (Series)
     if isinstance(y, pd.DataFrame):
         y = y.idxmax(axis=1).str.extract(r'(\d+)$').astype(int).squeeze()
 
-    # Check class distribution
     classCounts = Counter(y.values.ravel())
     minClassSamples = min(classCounts.values())
     if minClassSamples <= 1:
         raise ValueError("Cannot apply smote.")
 
-    # Adjust neighbors to be valid
     safeNeighbors = min(numberOfNeighbors, minClassSamples - 1)
     if safeNeighbors < 1:
         raise ValueError("Cannot apply smote.")
 
-    # Choose SMOTE or SMOTENC
     if not categoryColumns:
         oversample = SMOTE(random_state=seed, k_neighbors=safeNeighbors)
     else:
@@ -171,11 +165,10 @@ def applySMOTE(x, y, seed, numberOfNeighbors, categoryColumns):
         oversample = SMOTENC(random_state=seed, categorical_features=categoryIndices, k_neighbors=safeNeighbors)
 
     assert x.shape[0] == y.shape[0], "Mismatched number of samples between X and Y before applying SMOTE."
-    # Apply oversampling
+
     xResampled, yResampled = oversample.fit_resample(x, y)
     assert x.shape[0] == y.shape[0], "Mismatched number of samples between X and Y after applying SMOTE."
 
-    # Convert y back to one-hot encoded DataFrame
     encodedY = pd.get_dummies(yResampled).astype(int)
 
     return xResampled, encodedY
@@ -260,13 +253,24 @@ def makeInstancesSubsets(dataset, numberOfInstancesSubsetsNeeded):
         offset = random.randint(OFFSET_RANGE_START, intervalSize)
         subsetSize = MIN_INSTANCES_PER_SUBSET + intervalSize * counter + offset
         subsetSize = min(subsetSize, numberOfInstances)
+        createSubset = True
+        while createSubset:
+            subset, _ = train_test_split(
+                dataset,
+                train_size=subsetSize,
+                stratify=dataset['target'],
+                random_state=seed
+            )
+            createSubset = False
+            instancePerClasses = subset['target'].value_counts()
+            for target, count in instancePerClasses.items():
+                if count < 10:
+                    if len(subset['target'].unique()) > MIN_CLASSES_REQUIRED:
+                        subset = subset[~subset['target'].isin([target])]
+                    else:
+                        createSubset = True
+                        break
 
-        subset, _ = train_test_split(
-            dataset,
-            train_size=subsetSize,
-            stratify=dataset['target'],
-            random_state=seed
-        )
 
         subsets.append(subset.copy())
         seeds.append(seed)
@@ -321,26 +325,25 @@ def encodeCategoriesFeatures(subset, categoryColumns):
 
     return subset, subsetCategoryColumns
 
-def splitSet(dataset, seed):
-    dataset, testingSet = train_test_split(
-        dataset, test_size=0.2, random_state=seed
-    )
-    columnNames = dataset.columns.tolist()
-    featureColumnNames = []
-    targetColumnNames = []
-    for column in columnNames:
-        if 'target' in column:
-            targetColumnNames.append(column)
-        else:
-            featureColumnNames.append(column)
+def splitSet(dataset, seed, targetColumnName = 'target'):
+    try:
+        trainingSet, testingSet = train_test_split(
+            dataset,
+            test_size=0.2,
+            random_state=seed,
+            stratify=dataset["target"]
+        )
+    except Exception as e:
+        raise  e
+    trainingSet = applyOneHotEncode(trainingSet, targetColumnName)
+    testingSet = applyOneHotEncode(testingSet, targetColumnName)
 
-    datasetY = dataset[targetColumnNames]
-    datasetX = dataset[featureColumnNames]
-
-    testingSetY = testingSet[targetColumnNames]
-    testingSetX = testingSet[featureColumnNames]
-
-    return (datasetX, datasetY), (testingSetX, testingSetY)
+    featureColumns = [col for col in trainingSet.columns if not col.startswith(targetColumnName + "_")]
+    targetColumns  = [col for col in trainingSet.columns if col.startswith(targetColumnName + "_")]
+    try:
+        return (trainingSet[featureColumns], trainingSet[targetColumns]), (testingSet[featureColumns], testingSet[targetColumns])
+    except KeyError as e:
+        raise KeyError(f"KeyError during train-test split: {e}. Check if the target column exists in the dataset.") from e
 
 def remapTargets(dataset, targetColumnName = 'target'):
     uniqueValues = sorted(dataset[targetColumnName].unique())
@@ -353,67 +356,3 @@ def applyOneHotEncode(dataset, targetColumnName = 'target'):
     dataset = dataset.drop(columns=[targetColumnName])
     dataset = pd.concat([dataset, encodedColumns], axis=1)
     return dataset
-
-def cleanLabels(targets, num_classes, is_subset = True):
-    # Convert pandas Series to numpy array if necessary
-    if isinstance(targets, pd.Series):
-        targets = targets.to_numpy()
-
-    # Convert to torch tensor if not already a tensor
-    if not isinstance(targets, torch.Tensor):
-        targets = torch.tensor(targets, dtype=torch.int64)
-
-    # Validate that all target values exist in the mapping
-    mapped_targets = []
-    if not is_subset:
-        unique_classes = sorted(targets.unique().tolist())
-        newClassMapping = {oldClass: newClass for newClass, oldClass in enumerate(unique_classes)}
-    for target in targets:
-        if target.item() not in newClassMapping:
-            raise ValueError(f"Value {target.item()} in targets is not in the class mapping: {newClassMapping}")
-        mapped_targets.append(newClassMapping[target.item()])
-
-    targets = torch.tensor(mapped_targets, dtype=torch.int64)
-
-    # Initialize output tensor
-    num_samples = targets.size(0)
-    output_tensor = torch.zeros(num_samples, num_classes)
-
-    # Populate the one-hot encoding
-    output_tensor.scatter_(1, targets.unsqueeze(1), 1)
-    output_tensor = output_tensor.to(torch.float)
-
-    return output_tensor
-
-def getClassCombinations(dataset, numberOfClasses):
-    global minimumNumberOfClasses, minimumPercentsOfInstances
-
-    if numberOfClasses <= minimumNumberOfClasses:
-        return []
-
-    classCombos = []
-    for r in range(1, numberOfClasses - minimumNumberOfClasses + 1):
-        classCombos.extend([set(c) for c in combinations(range(numberOfClasses), r)])
-
-    counts = Counter(dataset["target"])
-    maximumInstanceDroppingAllowed = dataset.shape[0] * (1 - minimumPercentsOfInstances)
-    for counter in reversed(range(len(classCombos))):
-        totalDropping = 0
-        classCombo = classCombos[counter]
-        for clazz in classCombo:
-            totalDropping += counts[clazz]
-            if totalDropping > maximumInstanceDroppingAllowed:
-                classCombos.remove(classCombo)
-                break
-
-    return classCombos
-
-def getFeaturesCombinations(numberFeatures):
-    global minimumPercentsOfFeatures
-    minimumNumberOfFeatures = math.floor(numberFeatures * minimumPercentsOfFeatures)
-
-    featuresCombos = []
-    for r in range(1, numberFeatures - minimumNumberOfFeatures + 1):
-        featuresCombos.extend([set(c) for c in combinations(range(minimumNumberOfFeatures), r)])
-
-    return featuresCombos

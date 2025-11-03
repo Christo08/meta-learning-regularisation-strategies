@@ -1,7 +1,6 @@
-import numpy as np
 import time
 
-import pandas as pd
+import numpy as np
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.model_selection import KFold

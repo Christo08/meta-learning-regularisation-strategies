@@ -1,10 +1,5 @@
-
-from sklearn.feature_selection import mutual_info_regression, mutual_info_classif
-from sklearn.preprocessing import LabelEncoder
 import numpy as np
-import pandas as pd
-
-from Utils.datasetHandler import loadRawDataset
+from sklearn.feature_selection import mutual_info_classif
 
 
 def calculateMetaFeatures(dataset, categoryColumns):
@@ -26,58 +21,38 @@ def calculateMetaFeatures(dataset, categoryColumns):
 
     #Calculate information meta features
     miScores = calculateMutualInformation(dataset, categoryColumns)
-    metaFeatures["average_mutual_information"] = calculateAverageMiScore(miScores)
-    metaFeatures["equivalent_number_of_features"] = calculateEna(miScores[0], miScores[1])
-    metaFeatures["noise_to_signal_ratio_of_features"] = calculateNsr(miScores[0], miScores[1], dataset)
+    metaFeatures["average_mutual_information"] = np.mean(miScores)
+    metaFeatures["minimum_mutual_information"] = np.min(miScores)
+    metaFeatures["maximum_mutual_information"] = np.max(miScores)
+    metaFeatures["equivalent_number_of_features"] = np.exp(np.mean(miScores))
+    metaFeatures["noise_to_signal_ratio_of_features"] = calculateNsr(miScores, dataset)
 
     return metaFeatures
 
-
-
 def calculateMutualInformation(dataset, categoryColumns):
-    X = dataset.drop(columns=["target"])
     Y = dataset["target"]
+    X = dataset.drop(columns=["target"])
 
-    XDiscrete = X[categoryColumns]
-    XContinuous = X.drop(columns=categoryColumns)
+    discreteMask = [col in categoryColumns for col in X.columns]
 
-    # Continuous mutual information
-    if XContinuous.shape[1] > 0:
-        miContinuous = mutual_info_regression(XContinuous, Y)
-    else:
-        miContinuous = np.array([0])
+    miScores = mutual_info_classif(X, Y, discrete_features=discreteMask, random_state=42)
+    return miScores
 
-    # Discrete mutual information
-    if XDiscrete.shape[1] > 0:
-        miDiscrete = mutual_info_classif(XDiscrete, Y, discrete_features=True)
-    else:
-        miDiscrete = np.array([0])
-
-    return [normaliseMiScores(miContinuous), normaliseMiScores(miDiscrete)]
-
-def calculateAverageMiScore(miScores):
-    return miScores.average()
-
-def calculateEna(miContinuous, miDiscrete):
-    # Calculate Equivalent Number of Features
-    miScores = np.concatenate((miContinuous, miDiscrete))
-    return np.exp(np.mean(miScores))
-
-def calculateNsr(miContinuous, miDiscrete, dataset):
+def calculateNsr(miScores, dataset):
     Y = dataset["target"]
 
     # Total Mutual Information (I)
-    totalMi = np.sum(miContinuous) + np.sum(miDiscrete)
+    totalMi = np.sum(miScores)
 
     # Calculate Entropy (H) of the target
-    pY = Y.value_counts(normalize=True)  # Probability distribution of target values
-    entropy = -np.sum(pY * np.log2(pY))
+    pY = Y.value_counts(normalize=True)
+    entropy = -np.sum(pY * np.log(pY))
 
     if totalMi == 0:
         return float('inf')
 
-    # Calculate Noise-Signal Ratio (NSR)
-    return (entropy - totalMi) / totalMi
+    nsr = (entropy - totalMi) / totalMi
+    return nsr
 
 def countNumberOfFeaturesWithOutliers(dataset, categoryColumns):
     numberOfFeaturesWithoutOutliers = 0
@@ -102,7 +77,29 @@ def countNumberOfFeaturesWithOutliers(dataset, categoryColumns):
                     numberOfFeaturesWithoutOutliers += 1
     return numberOfFeaturesWithoutOutliers
 
-def normaliseMiScores(miScores):
-    if len(miScores) == 0 or np.all(miScores == 0):
-        return miScores
-    return (miScores - miScores.min()) / (miScores.max() - miScores.min())
+def pairwiseEuclidean(A: np.ndarray) -> np.ndarray:
+    if A.ndim == 1:
+        A = A.reshape(-1, 1)
+    # Efficient squared distance computation
+    # ||a-b||^2 = ||a||^2 + ||b||^2 - 2 a.b
+    s = np.sum(A * A, axis=1)
+    D2 = s[:, None] + s[None, :] - 2 * (A @ A.T)
+    D2 = np.maximum(D2, 0.0)
+    return np.sqrt(D2)
+
+
+def digammaInteger(n: int) -> float:
+    """Digamma(psi) for positive integer n using harmonic numbers.
+    psi(n) = H_{n-1} - gamma, where H_m = sum_{i=1}^m 1/i and gamma is Euler-Mascheroni.
+    """
+    EULER_GAMMA = 0.5772156649015328606
+    if n <= 0:
+        raise ValueError("digamma integer requires n>=1")
+    if n == 1:
+     return -EULER_GAMMA
+    # compute harmonic number H_{n-1}
+    # For moderate n this is fine; vectorization not needed here.
+    h = 0.0
+    for i in range(1, n):
+        h += 1.0 / i
+    return h - EULER_GAMMA

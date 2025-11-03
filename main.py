@@ -25,11 +25,6 @@ datasetsSettings = {}
 
 def main():
     global datasetsSettings
-    datasetsSettings = loadDatasetSetting()
-    for datasetSettings in datasetsSettings:
-        datasetNames.append(datasetSettings["name"])
-    datasetNames.append("Custom")
-    datasetNames.append("Back")
     print(f"PyTorch version: {torch.__version__}")  # Ensure it's a CUDA-compatible version
     if torch.cuda.is_available():
         print(f"Device: {torch.cuda.get_device_name(0)}")
@@ -37,14 +32,54 @@ def main():
     else:
         print(f"Device: CPU")
     print(f"")
+    datasetsSettings = loadDatasetSetting()
+    for datasetSettings in datasetsSettings:
+        datasetNames.append(datasetSettings["name"])
+    datasetNames.append("Custom")
+    datasetNames.append("Back")
     while True:
         process = showMenu("Select process by entering a number: ", processes)
         if process == processes[0]:
-            runDatasetProcess(optimiseNN)
+            while True:
+                datasetName = showMenu("Select dataset by entering a number: ", datasetNames)
+                if datasetName == datasetNames[0]:
+                    for datasetSettings in datasetsSettings:
+                        quited = optimiseNN(datasetSettings["name"])
+                        if quited:
+                            break
+                elif datasetName == datasetNames[len(datasetNames) - 2]:
+                    print("Select dataset by entering numbers separated by a comma:")
+                    selectDatasetIndexes =  input().replace(' ', '').split(",")
+                    selectDatasetNames = []
+                    for selectDatasetIndex in selectDatasetIndexes:
+                        selectDatasetNames.append(datasetNames[int(selectDatasetIndex)-1])
+                    for datasetSettings in datasetsSettings:
+                        if datasetSettings["name"] in selectDatasetNames:
+                            quited = optimiseNN(datasetSettings["name"])
+                            if quited:
+                                break
         elif process == processes[1]:
             createGenericNNSetting()
         elif process == processes[2]:
-            runDatasetProcess(createDataset)
+            while True:
+                datasetsOption = showMenu("Select dataset by entering a number: ", datasetNames)
+                outputPath = "Data/Datasets/Output/Raw" #input("Enter the path of the Output dataset file or folder: ")
+                settingsFilePath = "Data/Settings/NNSettings/Generic_nn_setting_20250811_073629.json"#input("Enter the path of the settings file: ")
+                numberOfInstances = 15#int(input("How many subsets do you what to create per dataset? "))
+                numberOfFolds = 5#int(input("How many folds do you what use per instance? "))
+                if datasetsOption == datasetNames[0]:
+                    for datasetSettings in datasetsSettings:
+                        outputPath = createDataset(datasetSettings["name"], outputPath, numberOfInstances,
+                                                   settingsFilePath, numberOfFolds)
+                elif datasetsOption == datasetNames[len(datasetNames) - 2]:
+                    print("Select dataset by entering numbers separated by a comma:")
+                    selectDatasetIndexes = input().replace(' ', '').split(",")
+                    for selectDatasetIndex in selectDatasetIndexes:
+                        datasetName = datasetNames[int(selectDatasetIndex) - 1]
+                        for datasetSettings in datasetsSettings:
+                            if datasetSettings["name"] == datasetName:
+                                outputPath = createDataset(datasetSettings["name"], outputPath, numberOfInstances,
+                                                           settingsFilePath, numberOfFolds)
         elif process == processes[3]:
             runMetaFeatureDatasetProcess(calculateDatasetStats)
         elif process == processes[4]:
@@ -61,16 +96,16 @@ def runDatasetProcess(function):
             print("Select dataset by entering numbers separated by a comma:")
             selectDatasetIndexes = input()
         if function.__name__ == "createDataset":
-            outputPath = input("Enter the path of the Output dataset file or folder: ")
-            settingsFilePath = input("Enter the path of the settings file: ")
-            numberOfInstances = int(input("How many subsets do you what to create per dataset? "))
-            numberOfFolds = int(input("How many folds do you what use per instance? "))
+            outputPath = "Data/Datasets/Output/Raw/regularisation_20250923_071924.csv" #input("Enter the path of the Output dataset file or folder: ")
+            settingsFilePath = "Data/Datasets/Output/Raw/regularisation_20250918_070808.csv"#input("Enter the path of the settings file: ")
+            numberOfInstances = 15#int(input("How many subsets do you what to create per dataset? "))
+            numberOfFolds = 5#int(input("How many folds do you what use per instance? "))
         if datasetName == datasetNames[0]:
             for datasetSettings in datasetsSettings:
                 if function.__name__ == "optimiseNN":
                     quited = function(datasetSettings["name"])
                 else:
-                    quited = function(datasetSettings["name"], outputPath, numberOfInstances,settingsFilePath, numberOfFolds)
+                    quited = function(datasetSettings["name"], outputPath, numberOfInstances, settingsFilePath, numberOfFolds)
                 if quited:
                     break
         elif  datasetName == datasetNames[len(datasetNames) - 2]:
