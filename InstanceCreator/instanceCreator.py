@@ -1,11 +1,14 @@
+import os
 import random
 import time
 
 import numpy as np
 import pandas as pd
 
+from datetime import datetime
+
 from ModelTrainer.nnTrainer import trainNN
-from Utils.datasetHandler import createSubsets, loadRawDataset, loadDataset
+from Utils.datasetHandler import createSubsets, loadDataset, createSubsetsWithSeeds, loadSubset
 from Utils.fileHandler import loadMetaFeaturesDataset, saveMetaFeaturesDataset, loadSettings
 from Utils.timeFormatter import formatDuration
 
@@ -20,6 +23,85 @@ configurations = [
     {"name": "weightNormalisation", "param": "weightNormalisation", "fileName": "weight_normalisation"},
     {"name": "weightPerturbation", "param": "weightPerturbation", "fileName": "weight_perturbation"}
 ]
+
+def recreateSubsets(metaFeatureDataset, numberOfInstances):
+    seeds = []
+    for name, group in metaFeatureDataset.groupby('dataset_name'):
+        seed ={
+            "name": name,
+            "classSeeds": [],
+            "featuresSeeds": [],
+            "instancesSeeds": [],
+            "isComplete": True
+        }
+        if group.shape[0] < numberOfInstances:
+            seed["isComplete"] = False
+        else:
+            seed["isComplete"] = True
+            for index, row in group.iterrows():
+                if row['subset_type'] == "classes":
+                    seed["classSeeds"].append({"seed": row['seed'], "subsetType": row['subset_type']})
+                elif row['subset_type'] == "instances":
+                    seed["instancesSeeds"].append({"seed": row['seed'], "subsetType": row['subset_type']})
+                else:
+                    seed["featuresSeeds"].append({"seed": row['seed'], "subsetType": row['subset_type']})
+        seeds.append(seed)
+
+    metaFeatureDataset = []
+    for seed in seeds:
+        if seed["isComplete"]:
+            subsets, metaFeatures, returnSeeds, subsetCategoryColumns = createSubsetsWithSeeds(seed["name"],
+                                                                                                  numberOfInstances,
+                                                                                                  seed["classSeeds"],
+                                                                                                  seed["featuresSeeds"],
+                                                                                                  seed["instancesSeeds"])
+        else:
+            subsets, metaFeatures, returnSeeds, subsetCategoryColumns = createSubsets(seed["name"], numberOfInstances, False)
+        for subset, metaFeature, returnSeed, categoryColumns in zip(subsets, metaFeatures,
+                                                                               returnSeeds, subsetCategoryColumns):
+
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            fileName = f"{returnSeed["seed"]}_{timestamp}.csv"
+            filePath = "Data/Datasets/Input/Subsets/"+seed["name"]+"/"+fileName
+
+            os.makedirs("Data/Datasets/Input/Subsets/" + seed["name"], exist_ok=True)
+            subset.to_csv(filePath, index=False)
+
+            instanceJSONObject= {"dataset_name": seed["name"], "seed": returnSeed["seed"], "subset_type": returnSeed["subsetType"], "file_name": filePath}
+            instanceJSONObject = {**instanceJSONObject, **metaFeature}
+            metaFeatureDataset.append(instanceJSONObject)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    pd.DataFrame(metaFeatureDataset).to_csv(f"Data/Datasets/Output/Raw/SubsetMetaFeatures_{timestamp}.csv", index=False)
+
+def recreateDataset(subsetDataset, datasetNames, indexes, settingsFilePath, outputPath):
+    dataset, outputPath = loadMetaFeaturesDataset(outputPath)
+    settings = loadSettings(settingsFilePath)
+    seeds = []
+    for name, group in subsetDataset.groupby('dataset_name'):
+        if name in datasetNames:
+            seed = {
+                "name": name,
+                "rows": [],
+            }
+            for index, row in group.iterrows():
+                seed["rows"].append({"seed": row['seed'], "subsetType": row['subset_type'], "file_path": row["file_name"], "index": index})
+            seeds.append(seed)
+    totalDuration = 0
+    metaFeatures = subsetDataset.drop(columns=["dataset_name","seed","subset_type","file_name"])
+    for seed in seeds:
+        counter = 1
+        for index in indexes:
+            row = seed["rows"][index]
+            trainingSet, testingSet, subsetCategoryColumns = loadSubset(row["file_path"], seed["name"], row["seed"])
+            metaFeature = metaFeatures.iloc[row["index"]]
+            instance, duration = createInstance(seed["name"], settings, trainingSet, testingSet, metaFeature, row, subsetCategoryColumns)
+            totalDuration += duration
+            dataset = pd.concat([dataset, instance], ignore_index=True)
+            saveMetaFeaturesDataset(dataset, outputPath)
+            counter+=1
+            predictedDuration = totalDuration/counter * (len(indexes) * len(datasetNames))
+            print(f"{counter} instance created from the {datasetNames} dataset subset. It took {formatDuration(totalDuration)}/{formatDuration(predictedDuration)}")
+            counter+=1
 
 def createDataset(databaseName, outputPath, numberOfInstances, settingsFilePath, numberOfFolds):
     dataset, outputPath = loadMetaFeaturesDataset(outputPath)
@@ -47,14 +129,15 @@ def createInstance(datasetName, settings, numberOfFolds, trainingSet, testingSet
     startTime = time.time()
     print("")
     print("Dataset name: "+datasetName)
-    print("Seed: " + str(seed))
+    print("Seed: " + str(seed["seed"]))
     # Add dataset name, seed and meta feature
-    instanceJSONObject= {"dataset_name": datasetName, "seed": seed}
+    instanceJSONObject= {"dataset_name": datasetName, "seed": seed["seed"], "subset_type": seed["subsetType"]}
     instanceJSONObject = {**instanceJSONObject, **metaFeature}
     bestTrainingLoss = float('inf')
     bestTrainingTechnique = ""
     bestTestingLoss = float('inf')
     bestTestingTechnique = ""
+    random.seed(seed["seed"])
     seed = random.randint(0, 2**32 - 1)
     random.seed(seed)
 

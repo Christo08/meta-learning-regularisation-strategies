@@ -1,11 +1,9 @@
 import math
 import random
 from collections import Counter
-from itertools import combinations
 
 import numpy as np
 import pandas as pd
-import torch
 from imblearn.over_sampling import SMOTE, SMOTENC
 from pmlb import fetch_data
 from scipy.stats import zscore
@@ -71,8 +69,50 @@ def loadMetaFeaturesDataset(seed, isSVM):
 
     return (subsetX, subsetY), (testingSetX, testingSetY)
 
-def createSubsets(databaseName, numberOfSubsetsNeed):
-    print("Creating "+str(numberOfSubsetsNeed)+" subsets for the "+databaseName+" dataset")
+def createSubsetsWithSeeds(databaseName, numberOfSubsetsNeed, classSeeds, featuresSeeds, instancesSeeds):
+    print("Recreating "+str(numberOfSubsetsNeed)+" Subsets for the "+databaseName+" dataset")
+    dataset, datasetSettings = loadRawDataset(databaseName)
+    dataset = cleanDataset(dataset)
+    numeric_data = dataset.select_dtypes(include=[np.number])
+    assert not np.isinf(numeric_data.values).any(), "Inf in numeric input DataFrame"
+
+    classSubsets, classSeeds = makeClassesSubsets(dataset, len(classSeeds), classSeeds)
+
+    featuresSubsets, featuresSeeds = makeFeaturesSubsets(dataset, len(featuresSeeds), featuresSeeds)
+
+    instancesSubsets, instancesSeeds = makeInstancesSubsets(dataset, len(instancesSeeds), instancesSeeds)
+
+    subsets = classSubsets + featuresSubsets + instancesSubsets
+    seeds = classSeeds + featuresSeeds + instancesSeeds
+
+    subsets = np.array(subsets, dtype=object)
+
+    returnSubsets = []
+    metaFeatures = []
+    subsetsCategoryColumns = []
+    for subset, seed in zip(subsets, seeds):
+        subset, subsetCategoryColumns = encodeCategoriesFeatures(subset, datasetSettings['categoryColumns'])
+        subset = remapTargets(subset)
+
+        metaFeatures.append(calculateMetaFeatures(subset, datasetSettings['categoryColumns']))
+
+        subset = normalise(subset, subsetCategoryColumns,["target"])
+
+        subset.reset_index(drop=True, inplace=True)
+        returnSubsets.append(subset)
+        subsetsCategoryColumns.append(subsetCategoryColumns)
+
+    return returnSubsets, metaFeatures, seeds, subsetsCategoryColumns
+
+def loadSubset(filePath,databaseName, seed):
+    subset = pd.read_csv(filePath)
+    _, datasetSettings = loadRawDataset(databaseName)
+    trainingSet, testingSet = splitSet(subset, seed)
+
+    return trainingSet, testingSet, datasetSettings['categoryColumns']
+
+def createSubsets(databaseName, numberOfSubsetsNeed, needSplit=True):
+    print("Creating "+str(numberOfSubsetsNeed)+" Subsets for the "+databaseName+" dataset")
     dataset, datasetSettings = loadRawDataset(databaseName)
     dataset = cleanDataset(dataset)
     numeric_data = dataset.select_dtypes(include=[np.number])
@@ -91,6 +131,7 @@ def createSubsets(databaseName, numberOfSubsetsNeed):
 
     subsets = np.array(subsets, dtype=object)
 
+    returnSubsets = []
     trainingSets = []
     testingSets = []
     metaFeatures = []
@@ -104,15 +145,19 @@ def createSubsets(databaseName, numberOfSubsetsNeed):
         subset = normalise(subset, subsetCategoryColumns,["target"])
 
         subset.reset_index(drop=True, inplace=True)
+        if needSplit:
+            trainingSet, testingSet = splitSet(subset, seed["seed"])
 
-        trainingSet, testingSet = splitSet(subset, seed)
-
-        trainingSets.append(trainingSet)
-        testingSets.append(testingSet)
+            trainingSets.append(trainingSet)
+            testingSets.append(testingSet)
+        else:
+            returnSubsets.append(subset)
         subsetsCategoryColumns.append(subsetCategoryColumns)
 
-
-    return trainingSets, testingSets, metaFeatures, seeds, subsetsCategoryColumns
+    if needSplit:
+        return trainingSets, testingSets, metaFeatures, seeds, subsetsCategoryColumns
+    else:
+        return returnSubsets, metaFeatures, seeds, subsetsCategoryColumns
 
 def loadDataset(databaseName):
     dataset, datasetSettings = loadRawDataset(databaseName)
@@ -174,8 +219,9 @@ def applySMOTE(x, y, seed, numberOfNeighbors, categoryColumns):
     return xResampled, encodedY
 
 #helper function
-def makeClassesSubsets(dataset, numberOfSubsetsNeed):
-    seeds = []
+def makeClassesSubsets(dataset, numberOfSubsetsNeed, seeds=None):
+    if seeds is None:
+        seeds = []
     subsets = []
     classLabels = dataset['target'].unique().tolist()
     numberOfClasses = len(classLabels)
@@ -186,9 +232,12 @@ def makeClassesSubsets(dataset, numberOfSubsetsNeed):
     numberOfUniqueClassesCombos = sum(math.comb(numberOfClasses, k) for k in range(1, numberOfClasses - MIN_CLASSES_REQUIRED)) - 1
     counter = 0
     usedClassCombos = set()
+    newSeeds =  len(seeds) < numberOfClassSubset
     while counter < numberOfUniqueClassesCombos and len(subsets) < numberOfClassSubset:
-        seed = random.randint(1, 100000)
-        random.seed(seed)
+        if newSeeds:
+            seed = random.randint(1, 100000)
+        else:
+            seed = seeds[counter]["seed"]
 
         comboSize = random.randint(1, numberOfClasses - MIN_CLASSES_REQUIRED)
         combo = tuple(sorted(random.sample(classLabels, comboSize)))
@@ -203,14 +252,16 @@ def makeClassesSubsets(dataset, numberOfSubsetsNeed):
             continue
 
         subsets.append(subset.copy())
-        seeds.append(seed)
+        if newSeeds:
+            seeds.append({"seed": seed, "subsetType": "classes"})
 
         counter += 1
 
     return subsets, seeds
 
-def makeFeaturesSubsets(dataset, numberOfFeatureSubset):
-    seeds = []
+def makeFeaturesSubsets(dataset, numberOfFeatureSubset, seeds=None):
+    if seeds is None:
+        seeds = []
     subsets = []
     features = [col for col in dataset.columns if col != 'target']
 
@@ -221,8 +272,12 @@ def makeFeaturesSubsets(dataset, numberOfFeatureSubset):
     numberOfUniqueFeatureCombos = sum(math.comb(numberOfFeatures, k) for k in range(1, maximumSubsetSize)) - 1
 
     usedFeaturesCombos = set()
+    newSeeds =  len(seeds) < numberOfFeatureSubset
     while counter < numberOfUniqueFeatureCombos and len(subsets) < numberOfFeatureSubset:
-        seed = random.randint(1, 100000)
+        if newSeeds:
+            seed = random.randint(1, 100000)
+        else:
+            seed = seeds[counter]["seed"]
         random.seed(seed)
 
         comboSize = random.randint(1, maximumSubsetSize)
@@ -234,21 +289,26 @@ def makeFeaturesSubsets(dataset, numberOfFeatureSubset):
         subset = dataset.drop(columns=list(combo))
 
         subsets.append(subset.copy())
-        seeds.append(seed)
+        if newSeeds:
+            seeds.append({"seed": seed, "subsetType": "features"})
 
         counter += 1
 
     return subsets,seeds
 
-def makeInstancesSubsets(dataset, numberOfInstancesSubsetsNeeded):
-    seeds = []
+def makeInstancesSubsets(dataset, numberOfInstancesSubsetsNeeded, seeds=None):
+    if seeds is None:
+        seeds = []
     subsets = []
     numberOfInstances = len(dataset)
     intervalSize = (numberOfInstances - MIN_INSTANCES_PER_SUBSET) // numberOfInstancesSubsetsNeeded
+    newSeeds =  len(seeds) < numberOfInstancesSubsetsNeeded
 
     for counter in range(numberOfInstancesSubsetsNeeded):
-        seed = random.randint(1, 100000)
-        random.seed(seed)
+        if newSeeds:
+            seed = random.randint(1, 100000)
+        else:
+            seed = seeds[counter]["seed"]
 
         offset = random.randint(OFFSET_RANGE_START, intervalSize)
         subsetSize = MIN_INSTANCES_PER_SUBSET + intervalSize * counter + offset
@@ -273,7 +333,8 @@ def makeInstancesSubsets(dataset, numberOfInstancesSubsetsNeeded):
 
 
         subsets.append(subset.copy())
-        seeds.append(seed)
+        if newSeeds:
+            seeds.append({"seed": seed, "subsetType": "instances"})
 
     return subsets, seeds
 
