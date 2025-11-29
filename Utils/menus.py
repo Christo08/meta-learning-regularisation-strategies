@@ -13,6 +13,7 @@ def showDatasetMenu(datasetNames):
     if datasetsOption == datasetNames[0]:
         names =  datasetNames[1:-2]
     elif datasetsOption == datasetNames[len(datasetNames) - 2]:
+        print("Enter the datasets' numbers separated by a comma:")
         selectDatasetIndexes = input().replace(' ', '').split(",")
         names = []
         for selectDatasetIndex in selectDatasetIndexes:
