@@ -312,7 +312,7 @@ def makeInstancesSubsets(dataset, numberOfInstancesSubsetsNeeded, seeds=None):
 
         offset = random.randint(OFFSET_RANGE_START, intervalSize)
         subsetSize = MIN_INSTANCES_PER_SUBSET + intervalSize * counter + offset
-        subsetSize = min(subsetSize, numberOfInstances)
+        subsetSize = min(subsetSize, math.floor(numberOfInstances-dataset.shape[0]*0.1))
         createSubset = True
         while createSubset:
             subset, _ = train_test_split(

@@ -31,7 +31,7 @@ def loadDatasetSetting():
         if datasetType == datasetTypes[0]:
             datasetsSettingFilePath = "Data/Datasets/Input/training_dataset_info.json"
         else:
-            datasetsSettingFilePath = "Data/Datasets/Input/test_dataset_info.json"
+            datasetsSettingFilePath = "Data/Datasets/Input/testing_dataset_info.json"
         with open(datasetsSettingFilePath, 'r') as file:
             dataSettings = json.load(file)
     return dataSettings

@@ -24,28 +24,36 @@ configurations = [
     {"name": "weightPerturbation", "param": "weightPerturbation", "fileName": "weight_perturbation"}
 ]
 
-def recreateSubsets(metaFeatureDataset, numberOfInstances):
+def recreateSubsets(metaFeatureDataset, numberOfInstances, names=[]):
     seeds = []
-    for name, group in metaFeatureDataset.groupby('dataset_name'):
-        seed ={
-            "name": name,
-            "classSeeds": [],
-            "featuresSeeds": [],
-            "instancesSeeds": [],
-            "isComplete": True
-        }
-        if group.shape[0] < numberOfInstances:
-            seed["isComplete"] = False
-        else:
-            seed["isComplete"] = True
-            for index, row in group.iterrows():
-                if row['subset_type'] == "classes":
-                    seed["classSeeds"].append({"seed": row['seed'], "subsetType": row['subset_type']})
-                elif row['subset_type'] == "instances":
-                    seed["instancesSeeds"].append({"seed": row['seed'], "subsetType": row['subset_type']})
-                else:
-                    seed["featuresSeeds"].append({"seed": row['seed'], "subsetType": row['subset_type']})
-        seeds.append(seed)
+    if len(metaFeatureDataset)>0:
+        for name, group in metaFeatureDataset.groupby('dataset_name'):
+            seed ={
+                "name": name,
+                "classSeeds": [],
+                "featuresSeeds": [],
+                "instancesSeeds": [],
+                "isComplete": True
+            }
+            if group.shape[0] < numberOfInstances:
+                seed["isComplete"] = False
+            else:
+                seed["isComplete"] = True
+                for index, row in group.iterrows():
+                    if row['subset_type'] == "classes":
+                        seed["classSeeds"].append({"seed": row['seed'], "subsetType": row['subset_type']})
+                    elif row['subset_type'] == "instances":
+                        seed["instancesSeeds"].append({"seed": row['seed'], "subsetType": row['subset_type']})
+                    else:
+                        seed["featuresSeeds"].append({"seed": row['seed'], "subsetType": row['subset_type']})
+            seeds.append(seed)
+    else:
+        for name in names:
+            seed ={
+                "name": name,
+                "isComplete": False
+            }
+            seeds.append(seed)
 
     metaFeatureDataset = []
     for seed in seeds:
@@ -61,10 +69,11 @@ def recreateSubsets(metaFeatureDataset, numberOfInstances):
                                                                                returnSeeds, subsetCategoryColumns):
 
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            fileName = f"{returnSeed["seed"]}_{timestamp}.csv"
-            filePath = "Data/Datasets/Input/Subsets/"+seed["name"]+"/"+fileName
+            fileName = f"{returnSeed['seed']}_{timestamp}.csv"
+            folderPath = f"Data/Datasets/Input/Subsets/{seed['name']}"
+            filePath = f"{folderPath}/{fileName}"
 
-            os.makedirs("Data/Datasets/Input/Subsets/" + seed["name"], exist_ok=True)
+            os.makedirs(folderPath, exist_ok=True)
             subset.to_csv(filePath, index=False)
 
             instanceJSONObject= {"dataset_name": seed["name"], "seed": returnSeed["seed"], "subset_type": returnSeed["subsetType"], "file_name": filePath}
@@ -73,7 +82,7 @@ def recreateSubsets(metaFeatureDataset, numberOfInstances):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     pd.DataFrame(metaFeatureDataset).to_csv(f"Data/Datasets/Output/Raw/SubsetMetaFeatures_{timestamp}.csv", index=False)
 
-def recreateDataset(subsetDataset, datasetNames, indexes, settingsFilePath, outputPath):
+def recreateDataset(subsetDataset, datasetNames, indexes, settingsFilePath, outputPath, numberOfFolds):
     dataset, outputPath = loadMetaFeaturesDataset(outputPath)
     settings = loadSettings(settingsFilePath)
     seeds = []
@@ -94,7 +103,7 @@ def recreateDataset(subsetDataset, datasetNames, indexes, settingsFilePath, outp
             row = seed["rows"][index]
             trainingSet, testingSet, subsetCategoryColumns = loadSubset(row["file_path"], seed["name"], row["seed"])
             metaFeature = metaFeatures.iloc[row["index"]]
-            instance, duration = createInstance(seed["name"], settings, trainingSet, testingSet, metaFeature, row, subsetCategoryColumns)
+            instance, duration = createInstance(seed["name"], settings, numberOfFolds, trainingSet, testingSet, metaFeature, row, subsetCategoryColumns)
             totalDuration += duration
             dataset = pd.concat([dataset, instance], ignore_index=True)
             saveMetaFeaturesDataset(dataset, outputPath)

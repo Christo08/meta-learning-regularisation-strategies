@@ -1,3 +1,4 @@
+import pandas as pd
 import torch
 
 from InstanceCreator.instanceCreator import createDataset, recreateSubsets, recreateDataset
@@ -9,7 +10,7 @@ from Optimisers.svmOptimiser import optimiseSVM
 from Utils.createAvgNNSetting import createGenericNNSetting
 from Utils.datasetStatsCalculator import calculateDatasetStats
 from Utils.fileHandler import loadDatasetSetting, loadMetaFeaturesCSV
-from Utils.menus import showMenu
+from Utils.menus import showMenu, showDatasetMenu
 from Utils.metaFeatureDatasetHandler import loadMetaFeatureDataset
 
 datasetNames = ["All"]
@@ -63,48 +64,53 @@ def main():
         elif process == processes[1]:
             createGenericNNSetting()
         elif process == processes[2]:
-            dataset = loadMetaFeatureDataset(True)
-            numberOfInstances = 15  # int(input("How many Subsets do you what to create per dataset? "))
-            recreateSubsets(dataset, numberOfInstances)
-        elif process == processes[3]:
-            datasetsOption = showMenu("Select dataset by entering a number: ", datasetNames)
-            if datasetsOption == datasetNames[0]:
-                names =  datasetNames[1:-2]
-            elif datasetsOption == datasetNames[len(datasetNames) - 2]:
-                selectDatasetIndexes = input().replace(' ', '').split(",")
-                names = []
-                for selectDatasetIndex in selectDatasetIndexes:
-                    names.append(datasetNames[int(selectDatasetIndex) - 1])
-            elif datasetsOption == datasetNames[len(datasetNames) - 1]:
-                continue
+            if input("Do you have a meta-feature file? (y/n): ").lower() == "y":
+                dataset = loadMetaFeatureDataset(True)
+                names =[]
             else:
-                names = [datasetsOption]
+                dataset = pd.DataFrame(columns=["dataset_name","seed","number_of_features","proportion_of_numeric_features",
+                                                "number_of_instances","number_of_classes","ratio_of_instances_to_features",
+                                                "ratio_of_classes_to_features","ratio_of_instances_to_classes",
+                                                "ratio_of_min_to_max_instances_per_class","proportion_of_features_with_outliers",
+                                                "average_mutual_information","minimum_mutual_information",
+                                                "maximum_mutual_information","equivalent_number_of_features",
+                                                "noise_to_signal_ratio_of_features","baseline_training_loss",
+                                                "baseline_testing_loss","batch_normalisation_training_loss",
+                                                "batch_normalisation_testing_loss","dropout_training_loss","dropout_testing_loss",
+                                                "layer_normalisation_training_loss","layer_normalisation_testing_loss",
+                                                "SMOTE_training_loss","SMOTE_testing_loss","prune_training_loss","prune_testing_loss",
+                                                "weight_decay_training_loss","weight_decay_testing_loss","weight_normalisation_training_loss",
+                                                "weight_normalisation_testing_loss","weight_perturbation_training_loss",
+                                                "weight_perturbation_testing_loss","best_training_technique","best_testing_technique",
+                                                "subset_type"])
+                names = showDatasetMenu(datasetNames)
+                if names == []:
+                    continue
+            numberOfInstances = 15  # int(input("How many Subsets do you what to create per dataset? "))
+            recreateSubsets(dataset, numberOfInstances, names)
+        elif process == processes[3]:
+            names = showDatasetMenu(datasetNames)
+            if names == []:
+                continue
 
             subsetDataset = loadMetaFeatureDataset(True)
-            outputPath = "Data/Datasets/Output/Raw/regularisation_20251023_203810.csv"  # input("Enter the path of the Output dataset file or folder: ")
+            outputPath = input("Enter the path of the Output dataset file or folder: ")
             settingsFilePath = "Data/Settings/NNSettings/Generic_nn_setting_20250811_073629.json"#input("Enter the path of the settings file: ")
-            indexToCreate = [14]
-            recreateDataset(subsetDataset, names, indexToCreate, settingsFilePath, outputPath)
+            numberOfInstances = 15#int(input("How many Subsets do you what to create per dataset? "))
+            numberOfFolds = 5#int(input("How many folds do you what use per instance? "))
+            indexToCreate = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
+            recreateDataset(subsetDataset, names, indexToCreate, settingsFilePath, outputPath, numberOfFolds)
         elif process == processes[4]:
             while True:
-                datasetsOption = showMenu("Select dataset by entering a number: ", datasetNames)
-                outputPath = "Data/Datasets/Output/Raw/regularisation_20251023_203810.csv" #input("Enter the path of the Output dataset file or folder: ")
+                names = showDatasetMenu(datasetNames)
+                if names == []:
+                    continue
+                outputPath = input("Enter the path of the Output dataset file or folder: ")
                 settingsFilePath = "Data/Settings/NNSettings/Generic_nn_setting_20250811_073629.json"#input("Enter the path of the settings file: ")
                 numberOfInstances = 15#int(input("How many Subsets do you what to create per dataset? "))
                 numberOfFolds = 5#int(input("How many folds do you what use per instance? "))
-                if datasetsOption == datasetNames[0]:
-                    for datasetSettings in datasetsSettings:
-                        outputPath = createDataset(datasetSettings["name"], outputPath, numberOfInstances,
-                                                   settingsFilePath, numberOfFolds)
-                elif datasetsOption == datasetNames[len(datasetNames) - 2]:
-                    print("Select dataset by entering numbers separated by a comma:")
-                    selectDatasetIndexes = input().replace(' ', '').split(",")
-                    for selectDatasetIndex in selectDatasetIndexes:
-                        datasetName = datasetNames[int(selectDatasetIndex) - 1]
-                        for datasetSettings in datasetsSettings:
-                            if datasetSettings["name"] == datasetName:
-                                outputPath = createDataset(datasetSettings["name"], outputPath, numberOfInstances,
-                                                           settingsFilePath, numberOfFolds)
+                for name in names:
+                    outputPath = createDataset(name, outputPath, numberOfInstances, settingsFilePath, numberOfFolds)
         elif process == processes[5]:
             runMetaFeatureDatasetProcess(calculateDatasetStats)
         elif process == processes[6]:
