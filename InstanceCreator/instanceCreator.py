@@ -107,7 +107,6 @@ def recreateDataset(subsetDataset, datasetNames, indexes, settingsFilePath, outp
             totalDuration += duration
             dataset = pd.concat([dataset, instance], ignore_index=True)
             saveMetaFeaturesDataset(dataset, outputPath)
-            counter+=1
             predictedDuration = totalDuration/counter * (len(indexes) * len(datasetNames))
             print(f"{counter} instance created from the {datasetNames} dataset subset. It took {formatDuration(totalDuration)}/{formatDuration(predictedDuration)}")
             counter+=1
