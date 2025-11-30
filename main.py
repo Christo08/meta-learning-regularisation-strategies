@@ -94,9 +94,8 @@ def main():
                 continue
 
             subsetDataset = loadMetaFeatureDataset(True)
-            outputPath = "Data/Datasets/Output/Raw"#input("Enter the path of the Output dataset file or folder: ")
+            outputPath = "Data/Datasets/Output/Raw/Testing"#input("Enter the path of the Output dataset file or folder: ")
             settingsFilePath = "Data/Settings/NNSettings/Generic_nn_setting_20250811_073629.json"#input("Enter the path of the settings file: ")
-            numberOfInstances = 15#int(input("How many Subsets do you what to create per dataset? "))
             numberOfFolds = 5#int(input("How many folds do you what use per instance? "))
             indexToCreate = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
             recreateDataset(subsetDataset, names, indexToCreate, settingsFilePath, outputPath, numberOfFolds)

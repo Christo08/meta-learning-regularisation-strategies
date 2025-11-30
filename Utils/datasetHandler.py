@@ -76,7 +76,7 @@ def createSubsetsWithSeeds(databaseName, numberOfSubsetsNeed, classSeeds, featur
     numeric_data = dataset.select_dtypes(include=[np.number])
     assert not np.isinf(numeric_data.values).any(), "Inf in numeric input DataFrame"
 
-    classSubsets, classSeeds = makeClassesSubsets(dataset, len(classSeeds), classSeeds)
+    classSubsets, classSeeds = makeClassesSubsets(dataset, numberOfSubsetsNeed, classSeeds)
 
     featuresSubsets, featuresSeeds = makeFeaturesSubsets(dataset, len(featuresSeeds), featuresSeeds)
 
