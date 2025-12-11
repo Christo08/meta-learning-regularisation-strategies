@@ -3,7 +3,7 @@
     "name": "Dry Bean",
     "type": "csv",
     "filePath": "Data/Datasets/Input/DryBeanDataset/Dry_Bean_Dataset.csv",
-    "categoryColumns": ["Class"],
+    "categoryColumns": [],
     "targetColumn": "Class",
     "dropColumns": []
   },
@@ -27,7 +27,7 @@
     "name": "Obesity Levels",
     "type": "csv",
     "filePath": "Data/Datasets/Input/ObesityDataset/ObesityDataSet_raw_and_data_sinthetic.csv",
-    "categoryColumns": ["Gender", "family_history_with_overweight","FAVC","CAEC","SMOKE","SCC","CALC","MTRANS","NObeyesdad"],
+    "categoryColumns": ["Gender", "family_history_with_overweight","FAVC","CAEC","SMOKE","SCC","CALC","MTRANS"],
     "targetColumn": "NObeyesdad",
     "dropColumns": []
   },
@@ -35,7 +35,7 @@
     "name": "Online shopper",
     "type": "csv",
     "filePath": "Data/Datasets/Input/OnlineDataset/online_shoppers_intention.csv",
-    "categoryColumns": ["Month","VisitorType", "Weekend", "Revenue"],
+    "categoryColumns": ["Month","VisitorType", "Weekend"],
     "targetColumn": "Revenue",
     "dropColumns": []
   },

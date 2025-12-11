@@ -108,8 +108,13 @@ def loadSubset(filePath,databaseName, seed):
     subset = pd.read_csv(filePath)
     _, datasetSettings = loadRawDataset(databaseName)
     trainingSet, testingSet = splitSet(subset, seed)
+    fullCategoryColumns = datasetSettings['categoryColumns']
+    categoryColumns = []
+    for categoryColumn in fullCategoryColumns:
+        if categoryColumn in subset.columns:
+            categoryColumns.append(categoryColumn)
 
-    return trainingSet, testingSet, datasetSettings['categoryColumns']
+    return trainingSet, testingSet, categoryColumns
 
 def createSubsets(databaseName, numberOfSubsetsNeed, needSplit=True):
     print("Creating "+str(numberOfSubsetsNeed)+" Subsets for the "+databaseName+" dataset")

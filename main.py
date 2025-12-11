@@ -9,9 +9,9 @@ from Optimisers.randomForestOptimiser import optimiseRandomForest
 from Optimisers.svmOptimiser import optimiseSVM
 from Utils.createAvgNNSetting import createGenericNNSetting
 from Utils.datasetStatsCalculator import calculateDatasetStats
-from Utils.fileHandler import loadDatasetSetting, loadMetaFeaturesCSV
-from Utils.menus import showMenu, showDatasetMenu
+from Utils.fileHandler import loadDatasetSetting
 from Utils.metaFeatureDatasetHandler import loadMetaFeatureDataset
+from Utils.menus import showDatasetMenu, showMenu
 
 datasetNames = ["All"]
 processes = ["Optimise NN", #0
