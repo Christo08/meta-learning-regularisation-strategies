@@ -101,15 +101,13 @@ def recreateDataset(subsetDataset, datasetNames, indexes, settingsFilePath, outp
         counter = 1
         for index in indexes:
             row = seed["rows"][index]
-            if counter == 5:
-                print("1")
             trainingSet, testingSet, subsetCategoryColumns = loadSubset(row["file_path"], seed["name"], row["seed"])
             metaFeature = metaFeatures.iloc[row["index"]]
             instance, duration = createInstance(seed["name"], settings, numberOfFolds, trainingSet, testingSet, metaFeature, row, subsetCategoryColumns)
             totalDuration += duration
             dataset = pd.concat([dataset, instance], ignore_index=True)
             saveMetaFeaturesDataset(dataset, outputPath)
-            predictedDuration = totalDuration/counter * (len(indexes) * len(datasetNames))
+            predictedDuration = totalDuration/counter * (len(datasetNames))
             print(f"{counter} instance created from the {seed["name"]} dataset subset. It took {formatDuration(totalDuration)}/{formatDuration(predictedDuration)}")
             counter+=1
 
