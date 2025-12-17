@@ -149,7 +149,7 @@ def createInstance(datasetName, settings, numberOfFolds, trainingSet, testingSet
     seed = random.randint(0, 2**32 - 1)
     random.seed(seed)
 
-    # Perform Training for each configuration
+    # Perform training for each configuration
     for config in configurations:
         print(config["param"])
         trainingLosses, testingLosses = trainNN(settings, config["param"], trainingSet, testingSet, seed, categoryColumns, numberOfFolds)
@@ -166,7 +166,7 @@ def createInstance(datasetName, settings, numberOfFolds, trainingSet, testingSet
             bestTestingTechnique = config['fileName']
 
     instanceJSONObject["best_training_technique"] = bestTrainingTechnique
-    print("best Training technique: "+bestTrainingTechnique)
+    print("best training technique: "+bestTrainingTechnique)
 
     instanceJSONObject["best_testing_technique"] = bestTestingTechnique
     print("best testing technique: "+bestTestingTechnique)

@@ -151,9 +151,9 @@ def trainingLoop(xTraining, yTraining, testingSet, settings, numberOfInputs, num
                     print(f"NaN detected in sample index {index} of the batch, skipping this sample.")
 
             if torch.isnan(xBatch).any():
-                print("NaN detected in Training batch, skipping this batch.")
+                print("NaN detected in training batch, skipping this batch.")
             if torch.isnan(trainingOutputs).any():
-                print("NaN detected in Training outputs, skipping this batch.")
+                print("NaN detected in training outputs, skipping this batch.")
 
             if technique == "weightDecay":
                 trainingLoss = lossFunction(trainingOutputs, yBatch, network)
@@ -164,13 +164,13 @@ def trainingLoop(xTraining, yTraining, testingSet, settings, numberOfInputs, num
             trainingLoss.backward()
             optimiser.step()
 
-        # Perform specific techniques during Training
+        # Perform specific techniques during training
         if technique == "weightPerturbation" and epoch % settings["weight_perturbation_interval"] == 0 and epoch != 0:
             network.perturb_weights(perturbation_factor=settings["weight_perturbation_amount"])
         if technique == "prune" and epoch % settings["prune_epoch_interval"] == 0 and epoch != 0:
             network.prune(amount=settings["prune_amount"])
 
-    # Final loss computation on Training, validation, and testing sets
+    # Final loss computation on training, validation, and testing sets
     with torch.no_grad():
         if technique == "weightDecay":
             trainingLossValue = lossFunction(network(xTraining), yTraining, network).item()

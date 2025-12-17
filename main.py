@@ -94,9 +94,9 @@ def main():
                 continue
 
             subsetDataset = loadMetaFeatureDataset(True)
-            outputPath = "Data/Datasets/Output/Raw/Testing"#input("Enter the path of the Output dataset file or folder: ")
-            settingsFilePath = "Data/Settings/NNSettings/Generic_nn_setting_20250811_073629.json"#input("Enter the path of the settings file: ")
-            numberOfFolds = 5#int(input("How many folds do you what use per instance? "))
+            outputPath = input("Enter the path of the Output dataset file or folder: ")
+            settingsFilePath =input("Enter the path of the settings file: ")
+            numberOfFolds = int(input("How many folds do you what use per instance? "))
             indexToCreate = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
             recreateDataset(subsetDataset, names, indexToCreate, settingsFilePath, outputPath, numberOfFolds)
         elif process == processes[4]:
@@ -105,9 +105,9 @@ def main():
                 if names == []:
                     continue
                 outputPath = input("Enter the path of the Output dataset file or folder: ")
-                settingsFilePath = "Data/Settings/NNSettings/Generic_nn_setting_20250811_073629.json"#input("Enter the path of the settings file: ")
-                numberOfInstances = 15#int(input("How many Subsets do you what to create per dataset? "))
-                numberOfFolds = 5#int(input("How many folds do you what use per instance? "))
+                settingsFilePath = input("Enter the path of the settings file: ")
+                numberOfInstances = int(input("How many Subsets do you what to create per dataset? "))
+                numberOfFolds = int(input("How many folds do you what use per instance? "))
                 for name in names:
                     outputPath = createDataset(name, outputPath, numberOfInstances, settingsFilePath, numberOfFolds)
         elif process == processes[5]:
@@ -126,10 +126,10 @@ def runDatasetProcess(function):
             print("Select dataset by entering numbers separated by a comma:")
             selectDatasetIndexes = input()
         if function.__name__ == "createDataset":
-            outputPath = "Data/Datasets/Output/Raw/regularisation_20250923_071924.csv" #input("Enter the path of the Output dataset file or folder: ")
-            settingsFilePath = "Data/Datasets/Output/Raw/regularisation_20250918_070808.csv"#input("Enter the path of the settings file: ")
-            numberOfInstances = 15#int(input("How many Subsets do you what to create per dataset? "))
-            numberOfFolds = 5#int(input("How many folds do you what use per instance? "))
+            outputPath = input("Enter the path of the Output dataset file or folder: ")
+            settingsFilePath = input("Enter the path of the settings file: ")
+            numberOfInstances = int(input("How many Subsets do you what to create per dataset? "))
+            numberOfFolds = int(input("How many folds do you what use per instance? "))
         if datasetName == datasetNames[0]:
             for datasetSettings in datasetsSettings:
                 if function.__name__ == "optimiseNN":
