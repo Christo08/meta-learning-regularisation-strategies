@@ -124,8 +124,14 @@ def rankTechniques(dataset):
     for idx, row in meansDataset.iterrows():
         pvalMatrix = pvalsMatrices.loc[idx]
         means = row.to_dict()
-        remaining = set(means.keys())
+        remaining = set()
         ranks = {}
+        for col in row.index:
+            if math.isinf(row[col]):
+                ranks[col] = -1
+            else:
+                remaining.add(col)
+
         rank = 1
         while remaining:
             group = []
@@ -139,9 +145,7 @@ def rankTechniques(dataset):
             rank += 1
         ranked_rows.append(ranks)
 
-    rankedData = pd.DataFrame(ranked_rows, index=meansDataset.index)
-
-    return rankedData
+    return pd.DataFrame(ranked_rows, index=meansDataset.index)
 
 def cellParse(cell):
     if isinstance(cell, list):
