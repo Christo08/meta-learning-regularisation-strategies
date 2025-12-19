@@ -2,70 +2,69 @@ import numpy as np
 from sklearn.feature_selection import mutual_info_classif
 
 
-def calculate_meta_features(dataset, categoryColumns):
-    metaFeatures = {}
-    categoryColumns = list(set( dataset.columns.tolist()) & set(categoryColumns))
+def calculate_meta_features(dataset, category_columns):
+    meta_features = {}
+    category_columns = list(set(dataset.columns.tolist()) & set(category_columns))
 
     #Calculate basic meta features
-    metaFeatures["number_of_features"] = dataset.shape[1] - 1
+    meta_features["number_of_features"] = dataset.shape[1] - 1
     #what if here are no category fields change to %
-    metaFeatures["proportion_of_numeric_features"] =  (metaFeatures["number_of_features"] - len(categoryColumns))/metaFeatures["number_of_features"]
-    metaFeatures["number_of_instances"] = dataset.shape[0]
-    metaFeatures["number_of_classes"] = len(dataset['target'].unique().tolist())
-    metaFeatures["ratio_of_instances_to_features"] = metaFeatures["number_of_instances"]/metaFeatures["number_of_features"]
-    metaFeatures["ratio_of_classes_to_features"] = metaFeatures["number_of_classes"]/metaFeatures["number_of_features"]
-    metaFeatures["ratio_of_instances_to_classes"] = metaFeatures["number_of_instances"]/metaFeatures["number_of_classes"]
-    instancePerClass = dataset['target'].value_counts()
-    metaFeatures["ratio_of_min_to_max_instances_per_class"] = instancePerClass.min()/instancePerClass.max()
-    metaFeatures["proportion_of_features_with_outliers"] = countNumberOfFeaturesWithOutliers(dataset, categoryColumns)/metaFeatures["number_of_features"]
+    meta_features["proportion_of_numeric_features"] = (meta_features["number_of_features"] - len(category_columns)) / meta_features["number_of_features"]
+    meta_features["number_of_instances"] = dataset.shape[0]
+    meta_features["number_of_classes"] = len(dataset['target'].unique().tolist())
+    meta_features["ratio_of_instances_to_features"] = meta_features["number_of_instances"]/meta_features["number_of_features"]
+    meta_features["ratio_of_classes_to_features"] = meta_features["number_of_classes"]/meta_features["number_of_features"]
+    meta_features["ratio_of_instances_to_classes"] = meta_features["number_of_instances"]/meta_features["number_of_classes"]
+    instance_per_class = dataset['target'].value_counts()
+    meta_features["ratio_of_min_to_max_instances_per_class"] = instance_per_class.min()/instance_per_class.max()
+    meta_features["proportion_of_features_with_outliers"] = count_number_of_features_with_outliers(dataset, category_columns) / meta_features["number_of_features"]
 
     #Calculate information meta features
-    miScores = calculateMutualInformation(dataset, categoryColumns)
-    metaFeatures["average_mutual_information"] = np.mean(miScores)
-    metaFeatures["minimum_mutual_information"] = np.min(miScores)
-    metaFeatures["maximum_mutual_information"] = np.max(miScores)
-    metaFeatures["equivalent_number_of_features"] = np.exp(np.mean(miScores))
-    metaFeatures["noise_to_signal_ratio_of_features"] = calculateNsr(miScores, dataset)
+    mi_scores = calculate_mutual_information(dataset, category_columns)
+    meta_features["average_mutual_information"] = np.mean(mi_scores)
+    meta_features["minimum_mutual_information"] = np.min(mi_scores)
+    meta_features["maximum_mutual_information"] = np.max(mi_scores)
+    meta_features["equivalent_number_of_features"] = np.exp(np.mean(mi_scores))
+    meta_features["noise_to_signal_ratio_of_features"] = calculate_nsr(mi_scores, dataset)
 
-    return metaFeatures
+    return meta_features
 
-def calculateMutualInformation(dataset, categoryColumns):
-    Y = dataset["target"]
-    X = dataset.drop(columns=["target"])
+def calculate_mutual_information(dataset, category_columns):
+    y = dataset["target"]
+    x = dataset.drop(columns=["target"])
 
-    discreteMask = [col in categoryColumns for col in X.columns]
+    discrete_mask = [col in category_columns for col in x.columns]
 
-    miScores = mutual_info_classif(X, Y, discrete_features=discreteMask, random_state=42)
-    return miScores
+    return mutual_info_classif(x, y, discrete_features=discrete_mask, random_state=42)
 
-def calculateNsr(miScores, dataset):
-    Y = dataset["target"]
+def calculate_nsr(mi_scores, dataset):
+    y = dataset["target"]
 
     # Total Mutual Information (I)
-    totalMi = np.sum(miScores)
+    total_mi = np.sum(mi_scores)
 
     # Calculate Entropy (H) of the target
-    pY = Y.value_counts(normalize=True)
-    entropy = -np.sum(pY * np.log(pY))
+    p_y = y.value_counts(normalize=True)
+    entropy = -np.sum(p_y * np.log(p_y))
 
-    if totalMi == 0:
+    if total_mi == 0:
         return float('inf')
 
-    nsr = (entropy - totalMi) / totalMi
+    nsr = (entropy - total_mi) / total_mi
     return nsr
 
-def countNumberOfFeaturesWithOutliers(dataset, categoryColumns):
-    numberOfFeaturesWithoutOutliers = 0
+def count_number_of_features_with_outliers(dataset, category_columns):
+    number_of_features_without_outliers = 0
     for column in dataset.columns:
-        if not column in categoryColumns and column != "target":
-            Q1 = dataset[column].quantile(0.25)  # First quartile
-            Q3 = dataset[column].quantile(0.75)  # Third quartile
-            IQR = Q3 - Q1
-            lower_bound = Q1 - 1.5 * IQR
-            upper_bound = Q3 + 1.5 * IQR
+        if not column in category_columns and column != "target":
+            q1 = dataset[column].quantile(0.25)  # First quartile
+            q3 = dataset[column].quantile(0.75)  # Third quartile
+            iqr = q3 - q1
+            lower_bound = q1 - 1.5 * iqr
+            upper_bound = q3 + 1.5 * iqr
 
             if ((dataset[column] < lower_bound) | (dataset[column] > upper_bound)).any():
-                numberOfFeaturesWithoutOutliers += 1
+                number_of_features_without_outliers += 1
             else:
                 mean = dataset[column].mean()
                 std_dev = dataset[column].std()
@@ -74,5 +73,5 @@ def countNumberOfFeaturesWithOutliers(dataset, categoryColumns):
                 lower_threshold = mean - 3 * std_dev
                 upper_threshold = mean + 3 * std_dev
                 if ((dataset[column] < lower_threshold) | (dataset[column] > upper_threshold)).any():
-                    numberOfFeaturesWithoutOutliers += 1
-    return numberOfFeaturesWithoutOutliers
+                    number_of_features_without_outliers += 1
+    return number_of_features_without_outliers
