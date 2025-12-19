@@ -48,14 +48,15 @@ categoryColumns = []
 seed = random.randint(0, 4294967295)
 
 
-def optimiseNN(datasetNameInput):
+def optimiseNN(datasetNameInput, datasetSettings):
     global datasetName, basicSettings, trainingSet, validationSet, categoryColumns
     parameterGroup = showMenu("Select parameter group by entering a number:", parameterGroups)
+    if parameterGroup == parameterGroups[len(parameterGroups)-1]:
+        return True
     datasetName = datasetNameInput
-    sets, categoryColumns = loadOptimiserDataset(datasetName, seed)
+    sets, categoryColumns = loadOptimiserDataset(seed, datasetSettings)
     trainingSet = sets[0]
     validationSet = sets[1]
-    settingsFilePath = input("Enter the path of the settings file:")
     while parameterGroup != parameterGroups[len(parameterGroups)-1]:
         if parameterGroup == parameterGroups[0]:
             bestParams = setupOptimiserAndRunIt(datasetName, "Basic", basicParameters, 300)
@@ -77,7 +78,7 @@ def optimiseNN(datasetNameInput):
             if parameterGroup == parameterGroups[1]:
                 bestParams = setupOptimiserAndRunIt(datasetName, parameterGroup, basicParameters, 300)
             else:
-                basicSettings = loadSettings(settingsFilePath)
+                basicSettings = loadSettings(input("Enter the path to the basic settings file of the NN:"))
                 if parameterGroup == parameterGroups[2]:
                     bestParams = setupOptimiserAndRunIt(datasetName, parameterGroup, dropoutParameters, 50)
                 elif parameterGroup == parameterGroups[3]:

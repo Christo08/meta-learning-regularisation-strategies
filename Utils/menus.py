@@ -1,3 +1,5 @@
+from Utils.fileHandler import loadDatasetSettingFile
+
 
 def showMenu(prompt, items):
     selection = -1
@@ -8,7 +10,12 @@ def showMenu(prompt, items):
         selection = int(input())-1
     return items[selection]
 
-def showDatasetMenu(datasetNames):
+def showDatasetMenu(dataSettings):
+    datasetNames = ["All"]
+    for datasetSettings in dataSettings:
+        datasetNames.append(datasetSettings["name"])
+    datasetNames.append("Custom")
+    datasetNames.append("Back")
     datasetsOption = showMenu("Select dataset by entering a number: ", datasetNames)
     if datasetsOption == datasetNames[0]:
         names =  datasetNames[1:-2]
@@ -19,7 +26,18 @@ def showDatasetMenu(datasetNames):
         for selectDatasetIndex in selectDatasetIndexes:
             names.append(datasetNames[int(selectDatasetIndex) - 1])
     elif datasetsOption == datasetNames[len(datasetNames) - 1]:
-        return []
+        return False
     else:
         names = [datasetsOption]
     return names
+
+def showDatasetSettingMenu():
+    datasetTypes = ["Training", "Testing", "Back"]
+    datasetType = showMenu("Do you want to use the training datasets or testing datasets?", datasetTypes)
+    if datasetType == datasetTypes[2]:
+        return False
+    elif datasetType == datasetTypes[0]:
+        datasetsSettingFilePath = "Data/Datasets/Input/training_dataset_info.json"
+    else:
+        datasetsSettingFilePath = "Data/Datasets/Input/testing_dataset_info.json"
+    return loadDatasetSettingFile(datasetsSettingFilePath)

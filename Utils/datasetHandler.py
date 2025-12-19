@@ -9,7 +9,6 @@ from pmlb import fetch_data
 from scipy.stats import zscore
 from sklearn.model_selection import train_test_split
 
-from Utils.fileHandler import loadDatasetSetting
 from Utils.fileHandler import loadMetaFeaturesCSV
 from Utils.metaFeatureCalculator import calculateMetaFeatures
 
@@ -69,9 +68,9 @@ def loadMetaFeaturesDataset(seed, isSVM):
 
     return (subsetX, subsetY), (testingSetX, testingSetY)
 
-def createSubsetsWithSeeds(databaseName, numberOfSubsetsNeed, classSeeds, featuresSeeds, instancesSeeds):
+def createSubsetsWithSeeds(databaseName, numberOfSubsetsNeed, classSeeds, featuresSeeds, instancesSeeds, datasetSettings):
     print("Recreating "+str(numberOfSubsetsNeed)+" Subsets for the "+databaseName+" dataset")
-    dataset, datasetSettings = loadRawDataset(databaseName)
+    dataset = loadRawDataset(datasetSettings)
     dataset = cleanDataset(dataset)
     numeric_data = dataset.select_dtypes(include=[np.number])
     assert not np.isinf(numeric_data.values).any(), "Inf in numeric input DataFrame"
@@ -104,9 +103,8 @@ def createSubsetsWithSeeds(databaseName, numberOfSubsetsNeed, classSeeds, featur
 
     return returnSubsets, metaFeatures, seeds, subsetsCategoryColumns
 
-def loadSubset(filePath,databaseName, seed):
+def loadSubset(filePath, seed, datasetSettings):
     subset = pd.read_csv(filePath)
-    _, datasetSettings = loadRawDataset(databaseName)
     trainingSet, testingSet = splitSet(subset, seed)
     fullCategoryColumns = datasetSettings['categoryColumns']
     categoryColumns = []
@@ -116,9 +114,9 @@ def loadSubset(filePath,databaseName, seed):
 
     return trainingSet, testingSet, categoryColumns
 
-def createSubsets(databaseName, numberOfSubsetsNeed, needSplit=True):
+def createSubsets(databaseName, numberOfSubsetsNeed, datasetSettings, needSplit=True):
     print("Creating "+str(numberOfSubsetsNeed)+" Subsets for the "+databaseName+" dataset")
-    dataset, datasetSettings = loadRawDataset(databaseName)
+    dataset = loadRawDataset(datasetSettings)
     dataset = cleanDataset(dataset)
     numeric_data = dataset.select_dtypes(include=[np.number])
     assert not np.isinf(numeric_data.values).any(), "Inf in numeric input DataFrame"
@@ -164,8 +162,8 @@ def createSubsets(databaseName, numberOfSubsetsNeed, needSplit=True):
     else:
         return returnSubsets, metaFeatures, seeds, subsetsCategoryColumns
 
-def loadDataset(databaseName):
-    dataset, datasetSettings = loadRawDataset(databaseName)
+def loadDataset(datasetSettings):
+    dataset = loadRawDataset(datasetSettings)
     dataset = cleanDataset(dataset)
     numeric_data = dataset.select_dtypes(include=[np.number])
     assert not np.isinf(numeric_data.values).any(), "Inf in numeric input DataFrame"
@@ -186,8 +184,8 @@ def loadDataset(databaseName):
 
     return [trainingSet], [testingSet], [metaFeatures], [seed], [datasetCategoryColumns]
 
-def loadOptimiserDataset(databaseName, seed):
-    dataset, datasetSettings = loadRawDataset(databaseName)
+def loadOptimiserDataset(seed, datasetSettings):
+    dataset = loadRawDataset(datasetSettings)
     dataset = cleanDataset(dataset)
 
     target_columns = [col for col in dataset.columns if 'target' in col]
@@ -343,16 +341,7 @@ def makeInstancesSubsets(dataset, numberOfInstancesSubsetsNeeded, seeds=None):
 
     return subsets, seeds
 
-def loadRawDataset(databaseName):
-    datasetsSettings = loadDatasetSetting()
-    datasetSettings = None
-    for dataset in datasetsSettings:
-        if databaseName == dataset['name']:
-            datasetSettings = dataset
-            break
-    if not datasetSettings:
-        raise Exception("Dataset not fond")
-
+def loadRawDataset(datasetSettings):
     if datasetSettings["type"] == "csv":
         dataset = pd.read_csv(datasetSettings["filePath"])
     else:
@@ -366,7 +355,7 @@ def loadRawDataset(databaseName):
 
     dataset['target'] = dataset['target'].astype('category')
     dataset['target'] = dataset['target'].cat.codes
-    return dataset,datasetSettings
+    return dataset
 
 def cleanDataset(dataset):
     for column in dataset.columns:

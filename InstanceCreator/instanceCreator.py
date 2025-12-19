@@ -24,12 +24,13 @@ configurations = [
     {"name": "weightPerturbation", "param": "weightPerturbation", "fileName": "weight_perturbation"}
 ]
 
-def recreateSubsets(metaFeatureDataset, numberOfInstances, names=[]):
+def recreateSubsets(metaFeatureDataset, numberOfInstances, datasetsSettings, names=[]):
     seeds = []
     if len(metaFeatureDataset)>0:
         for name, group in metaFeatureDataset.groupby('dataset_name'):
             seed ={
                 "name": name,
+                "datasetSettings": next((item for item in datasetsSettings if item["name"] == name), None),
                 "classSeeds": [],
                 "featuresSeeds": [],
                 "instancesSeeds": [],
@@ -51,6 +52,7 @@ def recreateSubsets(metaFeatureDataset, numberOfInstances, names=[]):
         for name in names:
             seed ={
                 "name": name,
+                "datasetSettings": next((item for item in datasetsSettings if item["name"] == name), None),
                 "isComplete": False
             }
             seeds.append(seed)
@@ -59,12 +61,16 @@ def recreateSubsets(metaFeatureDataset, numberOfInstances, names=[]):
     for seed in seeds:
         if seed["isComplete"]:
             subsets, metaFeatures, returnSeeds, subsetCategoryColumns = createSubsetsWithSeeds(seed["name"],
-                                                                                                  numberOfInstances,
-                                                                                                  seed["classSeeds"],
-                                                                                                  seed["featuresSeeds"],
-                                                                                                  seed["instancesSeeds"])
+                                                                                               numberOfInstances,
+                                                                                               seed["classSeeds"],
+                                                                                               seed["featuresSeeds"],
+                                                                                               seed["instancesSeeds"],
+                                                                                               seed["datasetSettings"])
         else:
-            subsets, metaFeatures, returnSeeds, subsetCategoryColumns = createSubsets(seed["name"], numberOfInstances, False)
+            subsets, metaFeatures, returnSeeds, subsetCategoryColumns = createSubsets(seed["name"],
+                                                                                      numberOfInstances,
+                                                                                      seed["datasetSettings"],
+                                                                                      False)
         for subset, metaFeature, returnSeed, categoryColumns in zip(subsets, metaFeatures,
                                                                                returnSeeds, subsetCategoryColumns):
 
@@ -76,9 +82,13 @@ def recreateSubsets(metaFeatureDataset, numberOfInstances, names=[]):
             os.makedirs(folderPath, exist_ok=True)
             subset.to_csv(filePath, index=False)
 
-            instanceJSONObject= {"dataset_name": seed["name"], "seed": returnSeed["seed"], "subset_type": returnSeed["subsetType"], "file_name": filePath}
-            instanceJSONObject = {**instanceJSONObject, **metaFeature}
-            metaFeatureDataset.append(instanceJSONObject)
+            metaFeatureDataset.append({
+                "dataset_name": seed["name"],
+                "seed": returnSeed["seed"],
+                "subset_type": returnSeed["subsetType"],
+                "file_name": filePath,
+                **metaFeature
+            })
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     pd.DataFrame(metaFeatureDataset).to_csv(f"Data/Datasets/Output/Raw/SubsetMetaFeatures_{timestamp}.csv", index=False)
 
@@ -111,15 +121,15 @@ def recreateDataset(subsetDataset, datasetNames, indexes, settingsFilePath, outp
             print(f"{counter} instance created from the {seed["name"]} dataset subset. It took {formatDuration(totalDuration)}/{formatDuration(predictedDuration)}")
             counter+=1
 
-def createDataset(databaseName, outputPath, numberOfInstances, settingsFilePath, numberOfFolds):
+def createDataset(databaseName, outputPath, numberOfInstances, settingsFilePath, numberOfFolds, datasetSettings):
     dataset, outputPath = loadMetaFeaturesDataset(outputPath)
     settings = loadSettings(settingsFilePath)
     totalDuration = 0
 
     if numberOfInstances > 1:
-        trainingSets, testingSets, metaFeatures, seeds, subsetCategoryColumns = createSubsets(databaseName, numberOfInstances)
+        trainingSets, testingSets, metaFeatures, seeds, subsetCategoryColumns = createSubsets(databaseName, numberOfInstances, datasetSettings)
     else:
-        trainingSets, testingSets, metaFeatures, seeds, subsetCategoryColumns = loadDataset(databaseName)
+        trainingSets, testingSets, metaFeatures, seeds, subsetCategoryColumns = loadDataset(datasetSettings)
 
     counter = 0
 
