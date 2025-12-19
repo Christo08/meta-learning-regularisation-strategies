@@ -59,7 +59,7 @@ def main():
                 output_path = input("Enter the path of the Output dataset file or folder: ")
                 settings_file_path = input("Enter the path of the NN's settings file: ")
                 number_of_instances = int(input("How many Subsets do you want to create per dataset? "))
-                number_of_folds = int(input("How many folds do you want to use per instance? "))"))
+                number_of_folds = int(input("How many folds do you want to use per instance? "))
                 for name in names:
                     dataset_settings = next((item for item in datasets_settings if item["name"] == name), None)
                     output_path = create_dataset(name,
