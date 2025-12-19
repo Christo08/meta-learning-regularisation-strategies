@@ -2,26 +2,21 @@ import pandas as pd
 import torch
 
 from InstanceCreator.instanceCreator import create_dataset, recreate_subsets, recreate_dataset
-from ModelTrainer.metaLearningTrainer import meta_learning_trainer
-from Optimisers.decisionTreeOptimiser import optimise_decision_trees
 from Optimisers.nnOptimiser import optimise_nn
-from Optimisers.randomForestOptimiser import optimise_random_forest
-from Optimisers.svmOptimiser import optimise_svm
 from Utils.createAvgNNSetting import create_generic_nn_setting
 from Utils.datasetStatsCalculator import calculate_dataset_stats
 from Utils.metaFeatureDatasetHandler import load_meta_feature_dataset
 from Utils.menus import show_dataset_menu, show_menu, show_dataset_setting_menu
 
 process_options = ["Optimise NN",  #0-1
-             "Create Avg NN Settings",  #1-2
-             "Create Subsets and instances",  #2-3
-             "Recreate Subsets",  #3-4
-             "Recreate instances",  #4-5
-             "Get Statistics of Meta Learning Dataset",  #5-6
-             "Optimise Meta Learning",  #6-7
-             "Train Meta Learning",  #7-8
-             "Exit"]
-model_types = ["All", "Random Forest", "Support Vector Machines", "NN", "Back"]
+                   "Create Avg NN Settings",  #1-2
+                   "Create Subsets and instances",  #2-3
+                   "Recreate Subsets",  #3-4
+                   "Recreate instances",  #4-5
+                   "Get Statistics of Meta Learning Dataset",  #5-6
+                   "Optimise Meta Learning",  #6-7
+                   "Train Meta Learning",  #7-8
+                   "Exit"]
 
 def main():
     print(f"PyTorch version: {torch.__version__}")  # Ensure it's a CUDA-compatible version
@@ -111,25 +106,9 @@ def main():
             dataset = load_meta_feature_dataset()
             calculate_dataset_stats(dataset)
         elif process == process_options[6]:
-            model_type = show_menu("Select model type by entering a number: ", model_types)
-            if model_type == model_types[len(model_types) - 1]:
-                return
-            elif model_type == model_types[0]:
-                dataset = load_meta_feature_dataset()
-                optimise_decision_trees(dataset)
-                optimise_random_forest(dataset)
-                optimise_svm(dataset)
-            elif model_type == model_types[1]:
-                dataset = load_meta_feature_dataset()
-                optimise_random_forest(dataset)
-            elif model_type == model_types[2]:
-                dataset = load_meta_feature_dataset()
-                optimise_svm(dataset)
-            else:
-                optimise_svm(dataset)
+            pass  # Placeholder for future implementation
         elif process == process_options[7]:
-            dataset = load_meta_feature_dataset()
-            meta_learning_trainer(dataset)
+            pass  # Placeholder for future implementation
         else:
             break
 

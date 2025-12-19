@@ -30,16 +30,6 @@ def spiltDatasetAndTargets(dataset):
         dataset = dataset.drop(targetColumns, axis=1)
         return dataset, targets
 
-def createTestingSet(dataset, targetColumn, seed):
-    subset, testingSet = train_test_split(
-        dataset, test_size=0.2, random_state=seed
-    )
-    testingSetX, testingSetY = spiltDatasetAndTargets(testingSet)
-    testingSetY = testingSetY[targetColumn]
-    subsetX, subsetY = spiltDatasetAndTargets(subset)
-    subsetY = subsetY[targetColumn]
-    return (subsetX, subsetY), (testingSetX, testingSetY)
-
 def load_meta_feature_dataset(needSubsetsInfo = False):
     shouldRankTechniques = input("Is the dataset raw? (y/n): ").lower() == "y"
     dataset = loadMetaFeaturesCSV()

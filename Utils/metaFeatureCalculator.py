@@ -76,30 +76,3 @@ def countNumberOfFeaturesWithOutliers(dataset, categoryColumns):
                 if ((dataset[column] < lower_threshold) | (dataset[column] > upper_threshold)).any():
                     numberOfFeaturesWithoutOutliers += 1
     return numberOfFeaturesWithoutOutliers
-
-def pairwiseEuclidean(A: np.ndarray) -> np.ndarray:
-    if A.ndim == 1:
-        A = A.reshape(-1, 1)
-    # Efficient squared distance computation
-    # ||a-b||^2 = ||a||^2 + ||b||^2 - 2 a.b
-    s = np.sum(A * A, axis=1)
-    D2 = s[:, None] + s[None, :] - 2 * (A @ A.T)
-    D2 = np.maximum(D2, 0.0)
-    return np.sqrt(D2)
-
-
-def digammaInteger(n: int) -> float:
-    """Digamma(psi) for positive integer n using harmonic numbers.
-    psi(n) = H_{n-1} - gamma, where H_m = sum_{i=1}^m 1/i and gamma is Euler-Mascheroni.
-    """
-    EULER_GAMMA = 0.5772156649015328606
-    if n <= 0:
-        raise ValueError("digamma integer requires n>=1")
-    if n == 1:
-     return -EULER_GAMMA
-    # compute harmonic number H_{n-1}
-    # For moderate n this is fine; vectorization not needed here.
-    h = 0.0
-    for i in range(1, n):
-        h += 1.0 / i
-    return h - EULER_GAMMA

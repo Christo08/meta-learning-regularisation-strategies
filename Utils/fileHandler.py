@@ -36,19 +36,6 @@ def loadMetaFeaturesCSV():
     else:
         raise FileNotFound(f"This is not a valid path {path}")
 
-def saveRunsDataset(runsPath, runsDataset):
-    runsDataset.to_csv(runsPath, index=False)
-
-def loadRunsDataset(path):
-    if os.path.exists(path) and os.path.isfile(path):
-        return pd.read_csv(path), ""
-    elif os.path.exists(path) and os.path.isdir(path):
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        fileName = f"runs_{timestamp}.csv"
-        return pd.DataFrame(), fileName
-    else:
-        raise FileNotFound(f"This is not a valid path {path}")
-
 def saveSettings(settings, datasetName, path):
     if path == "":
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -65,24 +52,6 @@ def saveSettings(settings, datasetName, path):
         return path
 
 def load_settings(path):
-    try:
-        with open(path, 'r', encoding='utf-8') as file:
-            return json.load(file)
-    except FileNotFoundError as e:
-        print(f"Error: File not found - {e}")
-        raise
-    except json.JSONDecodeError as e:
-        print(f"Error: Invalid JSON format - {e}")
-        raise
-
-def saveModuleSettings(settings, moduleType, technique):
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    fileName = f"{technique}_setting_{timestamp}.json"
-    currentSettingsFilePath = f"Data/Settings/ModelSettings/{moduleType}/{fileName}"
-    with open(currentSettingsFilePath, "x") as file:
-        json.dump(settings, file, indent=4, cls=ObjectEncoder)
-
-def loadModuleSettings(path):
     try:
         with open(path, 'r', encoding='utf-8') as file:
             return json.load(file)

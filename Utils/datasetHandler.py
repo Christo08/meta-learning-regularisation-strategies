@@ -22,52 +22,6 @@ MIN_INSTANCES_PER_SUBSET = 100
 MIN_FEATURE_FRACTION = 0.5
 OFFSET_RANGE_START = 1
 
-def loadMetaFeaturesDataset(seed, isSVM):
-    dataset = loadMetaFeaturesCSV()
-
-    columns_to_drop = [
-        "batch_size", "dropout_layers", "learning_rate", "momentum", "number_of_epochs", "number_of_hidden_layers",
-        "number_of_neurons_in_layers", "prune_amount", "prune_epoch_interval", "weight_decay",
-        "weight_perturbation_amount", "weight_perturbation_interval", "dataset_name", "seed", "baseline_training_loss",
-        "baseline_validation_loss", "batch_normalisation_training_loss", "batch_normalisation_validation_loss",
-        "dropout_training_loss", "dropout_validation_loss", "layer_normalisation_training_loss",
-        "layer_normalisation_validation_loss", "SMOTE_training_loss", "SMOTE_validation_loss", "prune_training_loss",
-        "prune_validation_loss", "weight_decay_training_loss", "weight_decay_validation_loss",
-        "weight_normalisation_training_loss", "weight_normalisation_validation_loss",
-        "weight_perturbation_training_loss", "weight_perturbation_validation_loss", "best_training_technique",
-        "best_validation_technique", "best_testing_technique"
-    ]
-    targetColumns = ["baseline_testing_loss", "batch_normalisation_testing_loss", "dropout_testing_loss",
-                      "layer_normalisation_testing_loss", "SMOTE_testing_loss", "prune_testing_loss",
-                      "weight_decay_testing_loss", "weight_normalisation_testing_loss", "weight_perturbation_testing_loss"]
-
-    dataset.drop(columns=columns_to_drop, errors="ignore", inplace=True)
-
-    for column in dataset.columns:
-        columnValues = dataset[column].replace([np.inf, -np.inf], np.nan)
-        maxFinite = columnValues.max(skipna=True)
-
-        if pd.isna(maxFinite):
-            maxFinite = 1e6
-
-        dataset[column] = dataset[column].replace([np.inf, -np.inf], maxFinite)
-
-    ranks = dataset[targetColumns].rank(axis=1, method="dense", ascending=True)
-    dataset.drop(columns=targetColumns, errors="ignore", inplace=True)
-
-    dataset_with_ranks = pd.concat([dataset, ranks], axis=1)
-    dataset_with_ranks = normalise(dataset_with_ranks, targetColumns)
-
-    subset, testingSet = train_test_split(
-        dataset_with_ranks, test_size=0.2, random_state=seed
-    )
-    testingSetX = testingSet.drop(columns=targetColumns)
-    subsetX = subset.drop(columns=targetColumns)
-    testingSetY = testingSet[targetColumns]
-    subsetY = subset[targetColumns]
-
-    return (subsetX, subsetY), (testingSetX, testingSetY)
-
 def create_subsets_with_seeds(databaseName, numberOfSubsetsNeed, classSeeds, featuresSeeds, instancesSeeds, datasetSettings):
     print("Recreating "+str(numberOfSubsetsNeed)+" Subsets for the "+databaseName+" dataset")
     dataset = loadRawDataset(datasetSettings)
