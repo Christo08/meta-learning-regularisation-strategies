@@ -5,13 +5,13 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-from Utils.metaFeatureDatasetHandler import targetColumns, spiltDatasetAndTargets
+from Utils.metaFeatureDatasetHandler import target_columns, spilt_dataset_and_targets
 
 wr.filterwarnings('ignore')
 
-def calculate_dataset_stats(fullDataset):
-    dataset, targets = spiltDatasetAndTargets(fullDataset)
-    hasTarget = not targets.empty
+def calculate_dataset_stats(full_dataset):
+    dataset, targets = spilt_dataset_and_targets(full_dataset)
+    has_target = not targets.empty
 
     pd.set_option("display.max_columns", None)
     print(f"Shape: {dataset.shape}")
@@ -22,20 +22,20 @@ def calculate_dataset_stats(fullDataset):
     print("")
 
     print(f"Description:")
-    infRemoved = dataset.replace([np.inf, -np.inf], np.nan).dropna(axis=0, how='any')
-    description = infRemoved.describe()
+    inf_removed = dataset.replace([np.inf, -np.inf], np.nan).dropna(axis=0, how='any')
+    description = inf_removed.describe()
     for column in description.columns.tolist():
-        print(infRemoved.describe()[column])
+        print(inf_removed.describe()[column])
     print("")
 
-    if hasTarget:
-        for column in targetColumns:
-                print(targets[column].describe())
+    if has_target:
+        for column in target_columns:
+            print(targets[column].describe())
 
         print("")
 
     #Make Technique rankings summary
-    if hasTarget:
+    if has_target:
         worst_counts = targets.idxmax(axis=1).value_counts().reindex(targets.columns, fill_value=0)
 
         summary = pd.DataFrame({
@@ -50,16 +50,16 @@ def calculate_dataset_stats(fullDataset):
         print(summary)
 
     #Make Technique count bar chart
-    if hasTarget:
+    if has_target:
         print("Making technique count bar chart")
 
         num_cols = 3
-        num_rows = int(np.ceil(len(targetColumns) / num_cols))
+        num_rows = int(np.ceil(len(target_columns) / num_cols))
 
         plt.figure(figsize=(12, num_rows * 3))
         plt.title('Bar chart of technique rankings')
 
-        for idx, column in enumerate(targetColumns, start=1):
+        for idx, column in enumerate(target_columns, start=1):
             ranking_counts = targets[column].value_counts()
             # Ensure the index is numeric, then sort
             ranking_counts.index = ranking_counts.index.astype(int)
@@ -96,27 +96,27 @@ def calculate_dataset_stats(fullDataset):
     plt.show()
 
     #Show outlier
-    if hasTarget:
+    if has_target:
         print("Making box plot")
         sns.set_style("darkgrid")
 
-        numerical_columns_base = fullDataset.select_dtypes(include=["int64", "float64", "int8"]).columns
-        numerical_columns = [col for col in numerical_columns_base if col not in targetColumns]
+        numerical_columns_base = full_dataset.select_dtypes(include=["int64", "float64", "int8"]).columns
+        numerical_columns = [col for col in numerical_columns_base if col not in target_columns]
 
-        for technique in targetColumns:
+        for technique in target_columns:
             plt.figure(figsize=(15, num_rows * 3))
             plt.suptitle('Box charts of meta features vs ' + technique)
 
             for idx, feature in enumerate(numerical_columns, 1):
                 plt.subplot(num_rows, num_cols, idx)
-                sns.boxplot(y=feature, x=technique, data=fullDataset)  # Ensure 'technique' is string/categorical
+                sns.boxplot(y=feature, x=technique, data=full_dataset)  # Ensure 'technique' is string/categorical
                 plt.title(f"{feature}")
 
             plt.tight_layout()
             plt.show()
 
     #Bivariate Analysis
-    if hasTarget:
+    if has_target:
         dataset = pd.concat([dataset, targets], axis=1)
 
     print("Making pair plot")

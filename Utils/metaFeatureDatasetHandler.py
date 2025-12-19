@@ -12,13 +12,13 @@ from sympy import false
 
 from Utils.fileHandler import loadMetaFeaturesCSV, save_meta_features_dataset
 
-targetColumns = ["baseline_testing_loss", "batch_normalisation_testing_loss", "dropout_testing_loss",
+target_columns = ["baseline_testing_loss", "batch_normalisation_testing_loss", "dropout_testing_loss",
                  "layer_normalisation_testing_loss", "SMOTE_testing_loss", "prune_testing_loss",
                  "weight_decay_testing_loss", "weight_normalisation_testing_loss", "weight_perturbation_testing_loss"]
 
-def spiltDatasetAndTargets(dataset):
+def spilt_dataset_and_targets(dataset):
     missing = False
-    for targetColumn in targetColumns:
+    for targetColumn in target_columns:
         if targetColumn not in dataset.columns:
             missing = True
             break
@@ -26,8 +26,8 @@ def spiltDatasetAndTargets(dataset):
         targets = pd.DataFrame()
         return dataset, targets
     else:
-        targets = dataset[targetColumns]
-        dataset = dataset.drop(targetColumns, axis=1)
+        targets = dataset[target_columns]
+        dataset = dataset.drop(target_columns, axis=1)
         return dataset, targets
 
 def load_meta_feature_dataset(needSubsetsInfo = False):
@@ -37,15 +37,15 @@ def load_meta_feature_dataset(needSubsetsInfo = False):
     if not needSubsetsInfo:
         columns_to_drop = ["dataset_name", "seed", "file_name", "subset_type"]
         dataset.drop(columns=columns_to_drop, errors="ignore", inplace=True)
-    for targetColumn in targetColumns:
+    for targetColumn in target_columns:
         if targetColumn not in dataset.columns:
             missing = True
             break
     if shouldRankTechniques and not(missing):
         dataset = cleanDataset(dataset)
 
-        targets = dataset[targetColumns]
-        dataset = dataset.drop(targetColumns, axis=1)
+        targets = dataset[target_columns]
+        dataset = dataset.drop(target_columns, axis=1)
 
         targets = rankTechniques(targets)
 
@@ -74,7 +74,7 @@ def cleanDataset(dataset):
     maxFloat = np.finfo(np.float32).max
 
     for column in dataset.columns:
-        if not(column in targetColumns):
+        if not(column in target_columns):
             columnData = dataset[column].values.astype(np.float64)
             if shouldApplyZScoring:
                 finiteMask = np.isfinite(columnData)
