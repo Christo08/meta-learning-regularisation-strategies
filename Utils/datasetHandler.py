@@ -13,8 +13,8 @@ from Utils.fileHandler import loadMetaFeaturesCSV
 from Utils.metaFeatureCalculator import calculateMetaFeatures
 
 dataset = pd.DataFrame()
-datasetName = ""
-categoryColumns = []
+dataset_name = ""
+category_columns = []
 
 # Constants
 MIN_CLASSES_REQUIRED = 2
@@ -138,7 +138,7 @@ def load_dataset(datasetSettings):
 
     return [trainingSet], [testingSet], [metaFeatures], [seed], [datasetCategoryColumns]
 
-def loadOptimiserDataset(seed, datasetSettings):
+def load_optimiser_dataset(seed, datasetSettings):
     dataset = loadRawDataset(datasetSettings)
     dataset = cleanDataset(dataset)
 
@@ -147,7 +147,7 @@ def loadOptimiserDataset(seed, datasetSettings):
 
     return splitSet(dataset, seed), datasetSettings['categoryColumns']
 
-def applySMOTE(x, y, seed, numberOfNeighbors, categoryColumns):
+def apply_smote(x, y, seed, numberOfNeighbors, categoryColumns):
     if isinstance(y, pd.DataFrame):
         y = y.idxmax(axis=1).str.extract(r'(\d+)$').astype(int).squeeze()
 

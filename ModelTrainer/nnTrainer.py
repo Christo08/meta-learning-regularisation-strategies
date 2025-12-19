@@ -5,61 +5,61 @@ from torch.utils.data import DataLoader
 
 from Models.NN.customDataset import CustomDataset
 from Models.NN.network import Network
-from Utils.datasetHandler import applySMOTE
+from Utils.datasetHandler import apply_smote
 from Utils.lossFucntions import CustomCrossEntropyLoss, CustomCrossEntropyRegularisationTermLoss
 
 
-def train_nn(settings, technique, trainingSet, testingSet, seed, categoryColumns, fold=None):
+def train_nn(settings, technique, training_set, testing_set, seed, category_columns, fold=None):
 
-    numberOfInputs = trainingSet[0].shape[1]
-    numberOfOutputs = trainingSet[1].shape[1]
+    number_of_inputs = training_set[0].shape[1]
+    number_of_outputs = training_set[1].shape[1]
 
-    allLabels = trainingSet[1].columns.tolist()
+    all_labels = training_set[1].columns.tolist()
     if fold is not None and fold >= 3:
         kf = KFold(n_splits=fold, shuffle=True, random_state=seed)
-        trainingLossValues = []
-        testingLossValues = []
+        training_loss_values = []
+        testing_loss_values = []
         counter =0
 
-        for train_idx, _ in kf.split(trainingSet[0]):
+        for train_idx, _ in kf.split(training_set[0]):
             counter+=1
-            trainingSetX = trainingSet[0].iloc[train_idx]
-            trainingSetY = trainingSet[1].iloc[train_idx]
-            trainingLossValue, testingLossValue= trainingLoop(trainingSetX,
-                                                              trainingSetY,
-                                                              testingSet,
-                                                              settings,
-                                                              numberOfInputs,
-                                                              numberOfOutputs,
-                                                              technique,
-                                                              seed,
-                                                              allLabels,
-                                                              categoryColumns)
-            trainingLossValues.append(trainingLossValue)
-            testingLossValues.append(testingLossValue)
-        return trainingLossValues, testingLossValues
+            training_set_x = training_set[0].iloc[train_idx]
+            training_set_y = training_set[1].iloc[train_idx]
+            training_loss_value, testing_loss_value = training_loop(training_set_x,
+                                                                    training_set_y,
+                                                                    testing_set,
+                                                                    settings,
+                                                                    number_of_inputs,
+                                                                    number_of_outputs,
+                                                                    technique,
+                                                                    seed,
+                                                                    all_labels,
+                                                                    category_columns)
+            training_loss_values.append(training_loss_value)
+            testing_loss_values.append(testing_loss_value)
+        return training_loss_values, testing_loss_values
     else:
-        trainingLossValues, testingLossValues= trainingLoop(trainingSet[0],
-                            trainingSet[1],
-                            testingSet,
-                            settings,
-                            numberOfInputs,
-                            numberOfOutputs,
-                            technique,
-                            seed,
-                            allLabels,
-                            categoryColumns)
-        return trainingLossValues, testingLossValues
+        training_loss_values, testing_loss_values= training_loop(training_set[0],
+                                                                 training_set[1],
+                                                                 testing_set,
+                                                                 settings,
+                                                                 number_of_inputs,
+                                                                 number_of_outputs,
+                                                                 technique,
+                                                                 seed,
+                                                                 all_labels,
+                                                                 category_columns)
+        return training_loss_values, testing_loss_values
 
-def trainingLoop(xTraining, yTraining, testingSet, settings, numberOfInputs, numberOfOutputs, technique, seed, allLabels, categoryColumns):
+def training_loop(x_training, y_training, testing_set, settings, number_of_inputs, number_of_outputs, technique, seed, all_labels, category_columns):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     if technique == "SMOTE":
-        numberOfNeighbors = numberOfOutputs - 1
-        if numberOfNeighbors < 3 or xTraining.shape[1] - len(categoryColumns) < 2:
+        number_of_neighbors = number_of_outputs - 1
+        if number_of_neighbors < 3 or x_training.shape[1] - len(category_columns) < 2:
             return float('inf'), float('inf')
         try:
-            xTraining, yTraining = applySMOTE(xTraining, yTraining, seed, numberOfNeighbors, categoryColumns)
+            x_training, y_training = apply_smote(x_training, y_training, seed, number_of_neighbors, category_columns)
         except Exception as e:
             if "Cannot apply smote." in str(e):
                 return float('inf'), float('inf')
@@ -67,64 +67,64 @@ def trainingLoop(xTraining, yTraining, testingSet, settings, numberOfInputs, num
                 raise e
 
 
-        for label in allLabels:
-            if label not in yTraining.columns:
-                yTraining[label] = 0
-        yTraining = yTraining[allLabels]
+        for label in all_labels:
+            if label not in y_training.columns:
+                y_training[label] = 0
+        y_training = y_training[all_labels]
 
     # Convert data to tensors
-    xTraining = torch.tensor(xTraining.values, dtype=torch.float32)
-    yTraining = torch.tensor(yTraining.values, dtype=torch.float32)
+    x_training = torch.tensor(x_training.values, dtype=torch.float32)
+    y_training = torch.tensor(y_training.values, dtype=torch.float32)
 
     # Create custom dataset and DataLoader
-    train_dataset = CustomDataset(xTraining, yTraining)
+    train_dataset = CustomDataset(x_training, y_training)
     train_loader = DataLoader(train_dataset, batch_size=settings["batch_size"], shuffle=True)
     # Initialize the network based on the technique
     if technique == "batchNormalisation":
-        network = Network(input_size=numberOfInputs,
+        network = Network(input_size=number_of_inputs,
                           hidden_sizes=settings["number_of_neurons_in_layers"],
                           number_of_hidden_layers=settings["number_of_hidden_layers"],
-                          output_size=numberOfOutputs,
+                          output_size=number_of_outputs,
                           batch_norm=True)
     elif technique == "dropout":
-        network = Network(input_size=numberOfInputs,
+        network = Network(input_size=number_of_inputs,
                           hidden_sizes=settings["number_of_neurons_in_layers"],
                           number_of_hidden_layers=settings["number_of_hidden_layers"],
-                          output_size=numberOfOutputs,
+                          output_size=number_of_outputs,
                           dropout_layer=settings["dropout_layers"])
     elif technique == "layerNormalisation":
-        network = Network(input_size=numberOfInputs,
+        network = Network(input_size=number_of_inputs,
                           hidden_sizes=settings["number_of_neurons_in_layers"],
                           number_of_hidden_layers=settings["number_of_hidden_layers"],
-                          output_size=numberOfOutputs,
+                          output_size=number_of_outputs,
                           layer_norm=True)
     elif technique == "weightNormalisation":
-        network = Network(input_size=numberOfInputs,
+        network = Network(input_size=number_of_inputs,
                           hidden_sizes=settings["number_of_neurons_in_layers"],
                           number_of_hidden_layers=settings["number_of_hidden_layers"],
-                          output_size=numberOfOutputs,
+                          output_size=number_of_outputs,
                           weight_norm_needed=True)
     else:
-        network = Network(input_size=numberOfInputs,
+        network = Network(input_size=number_of_inputs,
                           hidden_sizes=settings["number_of_neurons_in_layers"],
                           number_of_hidden_layers=settings["number_of_hidden_layers"],
-                          output_size=numberOfOutputs)
-    xTesting = torch.tensor(testingSet[0].values, dtype=torch.float32)
-    yTesting = torch.tensor(testingSet[1].values, dtype=torch.float32)
+                          output_size=number_of_outputs)
+    x_testing = torch.tensor(testing_set[0].values, dtype=torch.float32)
+    y_testing = torch.tensor(testing_set[1].values, dtype=torch.float32)
     # Move network and tensors to GPU if available
     if torch.cuda.is_available():
         network = network.to(device)
-        xTraining = xTraining.to(device)
-        yTraining = yTraining.to(device)
-        xTesting = xTesting.to(device)
-        yTesting = yTesting.to(device)
+        x_training = x_training.to(device)
+        y_training = y_training.to(device)
+        x_testing = x_testing.to(device)
+        y_testing = y_testing.to(device)
 
 
     # Loss function and optimizer
     if technique == "weightDecay":
-        lossFunction = CustomCrossEntropyRegularisationTermLoss(settings["weight_decay"])
+        loss_function = CustomCrossEntropyRegularisationTermLoss(settings["weight_decay"])
     else:
-        lossFunction = CustomCrossEntropyLoss()
+        loss_function = CustomCrossEntropyLoss()
 
     optimiser = optim.SGD(network.parameters(), lr=settings["learning_rate"], momentum=settings["momentum"])
 
@@ -132,36 +132,36 @@ def trainingLoop(xTraining, yTraining, testingSet, settings, numberOfInputs, num
     for epoch in range(settings["number_of_epochs"]):
         for batch in train_loader:
             network.train()
-            xBatch = batch["data"]
-            yBatch = batch["label"]
+            x_batch = batch["data"]
+            y_batch = batch["label"]
 
 
-            if xBatch.shape[0] == 1 and technique == "batchNormalisation":
+            if x_batch.shape[0] == 1 and technique == "batchNormalisation":
                 continue
 
             if torch.cuda.is_available():
-                xBatch = xBatch.to(device)
-                yBatch = yBatch.to(device)
+                x_batch = x_batch.to(device)
+                y_batch = y_batch.to(device)
 
-            trainingOutputs = network(xBatch)
-            for index in range(xBatch.shape[0]):
-                batch = xBatch[index]
-                output = trainingOutputs[index]
+            training_outputs = network(x_batch)
+            for index in range(x_batch.shape[0]):
+                batch = x_batch[index]
+                output = training_outputs[index]
                 if torch.isnan(batch).any() or torch.isnan(output).any():
                     print(f"NaN detected in sample index {index} of the batch, skipping this sample.")
 
-            if torch.isnan(xBatch).any():
+            if torch.isnan(x_batch).any():
                 print("NaN detected in training batch, skipping this batch.")
-            if torch.isnan(trainingOutputs).any():
+            if torch.isnan(training_outputs).any():
                 print("NaN detected in training outputs, skipping this batch.")
 
             if technique == "weightDecay":
-                trainingLoss = lossFunction(trainingOutputs, yBatch, network)
+                training_loss = loss_function(training_outputs, y_batch, network)
             else:
-                trainingLoss = lossFunction(trainingOutputs, yBatch)
+                training_loss = loss_function(training_outputs, y_batch)
 
             optimiser.zero_grad()
-            trainingLoss.backward()
+            training_loss.backward()
             optimiser.step()
 
         # Perform specific techniques during training
@@ -173,10 +173,10 @@ def trainingLoop(xTraining, yTraining, testingSet, settings, numberOfInputs, num
     # Final loss computation on training, validation, and testing sets
     with torch.no_grad():
         if technique == "weightDecay":
-            trainingLossValue = lossFunction(network(xTraining), yTraining, network).item()
-            testingLossValue = lossFunction(network(xTesting), yTesting, network).item()
+            training_loss_value = loss_function(network(x_training), y_training, network).item()
+            testing_loss_value = loss_function(network(x_testing), y_testing, network).item()
         else:
-            trainingLossValue = lossFunction(network(xTraining), yTraining).item()
-            testingLossValue = lossFunction(network(xTesting), yTesting).item()
+            training_loss_value = loss_function(network(x_training), y_training).item()
+            testing_loss_value = loss_function(network(x_testing), y_testing).item()
 
-    return trainingLossValue, testingLossValue
+    return training_loss_value, testing_loss_value

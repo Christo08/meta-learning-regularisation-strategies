@@ -36,7 +36,7 @@ def loadMetaFeaturesCSV():
     else:
         raise FileNotFound(f"This is not a valid path {path}")
 
-def saveSettings(settings, datasetName, path):
+def save_settings(settings, datasetName, path):
     if path == "":
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         fileName = f"{datasetName}_nn_setting_{timestamp}.json"
