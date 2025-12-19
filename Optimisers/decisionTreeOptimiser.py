@@ -15,7 +15,7 @@ basicParameters = {
     "max_depth": pyhopper.int(5, 1000)
 }
 
-def optimiseDecisionTrees(dataset):
+def optimise_decision_trees(dataset):
     global seed
     for targetColumn in targetColumns:
         seed = random.randint(0, 4294967295)

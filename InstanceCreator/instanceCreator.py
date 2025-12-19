@@ -24,7 +24,7 @@ configurations = [
     {"name": "weightPerturbation", "param": "weightPerturbation", "fileName": "weight_perturbation"}
 ]
 
-def recreateSubsets(metaFeatureDataset, numberOfInstances, datasetsSettings, names=[]):
+def recreate_subsets(metaFeatureDataset, numberOfInstances, datasetsSettings, names=[]):
     seeds = []
     if len(metaFeatureDataset)>0:
         for name, group in metaFeatureDataset.groupby('dataset_name'):
@@ -92,7 +92,7 @@ def recreateSubsets(metaFeatureDataset, numberOfInstances, datasetsSettings, nam
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     pd.DataFrame(metaFeatureDataset).to_csv(f"Data/Datasets/Output/Raw/SubsetMetaFeatures_{timestamp}.csv", index=False)
 
-def recreateDataset(subsetDataset, datasetNames, indexes, settingsFilePath, outputPath, numberOfFolds):
+def recreate_dataset(subsetDataset, datasetNames, indexes, settingsFilePath, outputPath, numberOfFolds):
     dataset, outputPath = loadMetaFeaturesDataset(outputPath)
     settings = loadSettings(settingsFilePath)
     seeds = []
@@ -121,7 +121,7 @@ def recreateDataset(subsetDataset, datasetNames, indexes, settingsFilePath, outp
             print(f"{counter} instance created from the {seed["name"]} dataset subset. It took {formatDuration(totalDuration)}/{formatDuration(predictedDuration)}")
             counter+=1
 
-def createDataset(databaseName, outputPath, numberOfInstances, settingsFilePath, numberOfFolds, datasetSettings):
+def create_dataset(databaseName, outputPath, numberOfInstances, settingsFilePath, numberOfFolds, datasetSettings):
     dataset, outputPath = loadMetaFeaturesDataset(outputPath)
     settings = loadSettings(settingsFilePath)
     totalDuration = 0

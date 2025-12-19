@@ -1,28 +1,27 @@
 import pandas as pd
 import torch
 
-from InstanceCreator.instanceCreator import createDataset, recreateSubsets, recreateDataset
-from ModelTrainer.metaLearningTrainer import metaLearningTrainer
-from Optimisers.decisionTreeOptimiser import optimiseDecisionTrees
-from Optimisers.nnOptimiser import optimiseNN
-from Optimisers.randomForestOptimiser import optimiseRandomForest
-from Optimisers.svmOptimiser import optimiseSVM
-from Utils.createAvgNNSetting import createGenericNNSetting
-from Utils.datasetStatsCalculator import calculateDatasetStats
-from Utils.metaFeatureDatasetHandler import loadMetaFeatureDataset
-from Utils.menus import showDatasetMenu, showMenu, showDatasetSettingMenu
+from InstanceCreator.instanceCreator import create_dataset, recreate_subsets, recreate_dataset
+from ModelTrainer.metaLearningTrainer import meta_learning_trainer
+from Optimisers.decisionTreeOptimiser import optimise_decision_trees
+from Optimisers.nnOptimiser import optimise_nn
+from Optimisers.randomForestOptimiser import optimise_random_forest
+from Optimisers.svmOptimiser import optimise_svm
+from Utils.createAvgNNSetting import create_generic_nn_setting
+from Utils.datasetStatsCalculator import calculate_dataset_stats
+from Utils.metaFeatureDatasetHandler import load_meta_feature_dataset
+from Utils.menus import show_dataset_menu, show_menu, show_dataset_setting_menu
 
-datasetNames = ["All"]
-processes = ["Optimise NN", #0-1
-             "Create Avg NN Settings",#1-2
-             "Create Subsets and instances",#2-3
-             "Recreate Subsets",#3-4
-             "Recreate instances",#4-5
-             "Get Statistics of Meta Learning Dataset",#5-6
-             "Optimise Meta Learning",#6-7
-             "Train Meta Learning",#7-8
+process_options = ["Optimise NN",  #0-1
+             "Create Avg NN Settings",  #1-2
+             "Create Subsets and instances",  #2-3
+             "Recreate Subsets",  #3-4
+             "Recreate instances",  #4-5
+             "Get Statistics of Meta Learning Dataset",  #5-6
+             "Optimise Meta Learning",  #6-7
+             "Train Meta Learning",  #7-8
              "Exit"]
-modulTypesNames = ["All", "Random Forest", "Support Vector Machines", "NN", "Back"]
+model_types = ["All", "Random Forest", "Support Vector Machines", "NN", "Back"]
 
 def main():
     print(f"PyTorch version: {torch.__version__}")  # Ensure it's a CUDA-compatible version
@@ -33,50 +32,50 @@ def main():
         print(f"Device: CPU")
     print(f"")
     while True:
-        process = showMenu("Select process by entering a number: ", processes)
-        if process == processes[0]:
+        process = show_menu("Select process by entering a number: ", process_options)
+        if process == process_options[0]:
             while True:
-                datasetsSettings = showDatasetSettingMenu()
-                if not datasetsSettings:
+                datasets_settings = show_dataset_setting_menu()
+                if not datasets_settings:
                     break
-                names = showDatasetMenu(datasetsSettings)
+                names = show_dataset_menu(datasets_settings)
                 if not names:
                     break
                 for name in names:
-                    datasetSettings = next((item for item in datasetsSettings if item["name"] == name), None)
-                    quited = optimiseNN(name, datasetSettings)
+                    dataset_settings = next((item for item in datasets_settings if item["name"] == name), None)
+                    quited = optimise_nn(name, dataset_settings)
                     if quited:
                          break
-        elif process == processes[1]:
-            createGenericNNSetting()
-        elif process == processes[2]:
+        elif process == process_options[1]:
+            create_generic_nn_setting()
+        elif process == process_options[2]:
             while True:
-                datasetsSettings = showDatasetSettingMenu()
-                if not datasetsSettings:
+                datasets_settings = show_dataset_setting_menu()
+                if not datasets_settings:
                     break
-                names = showDatasetMenu(datasetsSettings)
+                names = show_dataset_menu(datasets_settings)
                 if not names:
                     break
-                outputPath = input("Enter the path of the Output dataset file or folder: ")
-                settingsFilePath = input("Enter the path of the NN's settings file: ")
-                numberOfInstances = int(input("How many Subsets do you what to create per dataset? "))
-                numberOfFolds = int(input("How many folds do you what use per instance? "))
+                output_path = input("Enter the path of the Output dataset file or folder: ")
+                settings_file_path = input("Enter the path of the NN's settings file: ")
+                number_of_instances = int(input("How many Subsets do you want to create per dataset? "))
+                number_of_folds = int(input("How many folds do you want to use per instance? "))"))
                 for name in names:
-                    datasetSettings = next((item for item in datasetsSettings if item["name"] == name), None)
-                    outputPath = createDataset(name,
-                                               outputPath,
-                                               numberOfInstances,
-                                               settingsFilePath,
-                                               numberOfFolds,
-                                               datasetSettings)
-        elif process == processes[3]:
-            datasetsSettings = showDatasetSettingMenu()
-            if datasetsSettings:
+                    dataset_settings = next((item for item in datasets_settings if item["name"] == name), None)
+                    output_path = create_dataset(name,
+                                                 output_path,
+                                                 number_of_instances,
+                                                 settings_file_path,
+                                                 number_of_folds,
+                                                 dataset_settings)
+        elif process == process_options[3]:
+            datasets_settings = show_dataset_setting_menu()
+            if datasets_settings:
                 if input("Do you have a meta-feature file? (y/n): ").lower() == "y":
-                    dataset = loadMetaFeatureDataset(True)
+                    dataset = load_meta_feature_dataset(True)
                     names =[]
-                    numberOfInstances = int(input("How many Subsets do you what to create per dataset? "))
-                    recreateSubsets(dataset, numberOfInstances, datasetsSettings, names)
+                    number_of_instances = int(input("How many Subsets do you what to create per dataset? "))
+                    recreate_subsets(dataset, number_of_instances, datasets_settings, names)
                 else:
                     dataset = pd.DataFrame(columns=["dataset_name","seed","number_of_features","proportion_of_numeric_features",
                                                     "number_of_instances","number_of_classes","ratio_of_instances_to_features",
@@ -93,44 +92,44 @@ def main():
                                                     "weight_normalisation_testing_loss","weight_perturbation_training_loss",
                                                     "weight_perturbation_testing_loss","best_training_technique","best_testing_technique",
                                                     "subset_type"])
-                    names = showDatasetMenu(datasetsSettings)
+                    names = show_dataset_menu(datasets_settings)
                     if names:
-                        numberOfInstances = int(input("How many Subsets do you what to create per dataset? "))
-                        recreateSubsets(dataset, numberOfInstances, datasetsSettings, names)
-        elif process == processes[4]:
-            datasetsSettings = showDatasetSettingMenu()
-            if datasetsSettings:
-                names = showDatasetMenu(datasetsSettings)
+                        number_of_instances = int(input("How many Subsets do you what to create per dataset? "))
+                        recreate_subsets(dataset, number_of_instances, datasets_settings, names)
+        elif process == process_options[4]:
+            datasets_settings = show_dataset_setting_menu()
+            if datasets_settings:
+                names = show_dataset_menu(datasets_settings)
                 if names:
-                    subsetDataset = loadMetaFeatureDataset(True)
-                    outputPath = input("Enter the path of the Output dataset file or folder: ")
-                    settingsFilePath =input("Enter the path of the NN's settings file: ")
-                    numberOfFolds = int(input("How many folds do you what use per instance? "))
-                    indexToCreate = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
-                    recreateDataset(subsetDataset, names, indexToCreate, settingsFilePath, outputPath, numberOfFolds)
-        elif process == processes[5]:
-            dataset = loadMetaFeatureDataset()
-            calculateDatasetStats(dataset)
-        elif process == processes[6]:
-            modulTypesName = showMenu("Select model type by entering a number: ", modulTypesNames)
-            if modulTypesName == modulTypesNames[len(modulTypesNames)-1]:
+                    subset_dataset = load_meta_feature_dataset(True)
+                    output_path = input("Enter the path of the Output dataset file or folder: ")
+                    settings_file_path =input("Enter the path of the NN's settings file: ")
+                    number_of_folds = int(input("How many folds do you what use per instance? "))
+                    index_to_create = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
+                    recreate_dataset(subset_dataset, names, index_to_create, settings_file_path, output_path, number_of_folds)
+        elif process == process_options[5]:
+            dataset = load_meta_feature_dataset()
+            calculate_dataset_stats(dataset)
+        elif process == process_options[6]:
+            model_type = show_menu("Select model type by entering a number: ", model_types)
+            if model_type == model_types[len(model_types) - 1]:
                 return
-            elif modulTypesName == modulTypesNames[0]:
-                dataset = loadMetaFeatureDataset()
-                optimiseDecisionTrees(dataset)
-                optimiseRandomForest(dataset)
-                optimiseSVM(dataset)
-            elif modulTypesName == modulTypesNames[1]:
-                dataset = loadMetaFeatureDataset()
-                optimiseRandomForest(dataset)
-            elif modulTypesName == modulTypesNames[2]:
-                dataset = loadMetaFeatureDataset()
-                optimiseSVM(dataset)
+            elif model_type == model_types[0]:
+                dataset = load_meta_feature_dataset()
+                optimise_decision_trees(dataset)
+                optimise_random_forest(dataset)
+                optimise_svm(dataset)
+            elif model_type == model_types[1]:
+                dataset = load_meta_feature_dataset()
+                optimise_random_forest(dataset)
+            elif model_type == model_types[2]:
+                dataset = load_meta_feature_dataset()
+                optimise_svm(dataset)
             else:
-                optimiseSVM(dataset)
-        elif process == processes[7]:
-            dataset = loadMetaFeatureDataset()
-            metaLearningTrainer(dataset)
+                optimise_svm(dataset)
+        elif process == process_options[7]:
+            dataset = load_meta_feature_dataset()
+            meta_learning_trainer(dataset)
         else:
             break
 

@@ -15,7 +15,7 @@ basicParameters = {
 }
 seed = random.randint(0, 4294967295)
 
-def optimiseSVM():
+def optimise_svm():
     global dataset, testing, seed
     dataset, testing = loadMetaFeaturesDataset(seed, True)
     search = pyhopper.Search(basicParameters)

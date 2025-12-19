@@ -3,7 +3,7 @@ import random
 import pyhopper
 
 from Utils.fileHandler import saveSettings, loadSettings
-from Utils.menus import showMenu
+from Utils.menus import show_menu
 from ModelTrainer.nnTrainer import trainNN
 from Utils.datasetHandler import loadOptimiserDataset
 
@@ -48,9 +48,9 @@ categoryColumns = []
 seed = random.randint(0, 4294967295)
 
 
-def optimiseNN(datasetNameInput, datasetSettings):
+def optimise_nn(datasetNameInput, datasetSettings):
     global datasetName, basicSettings, trainingSet, validationSet, categoryColumns
-    parameterGroup = showMenu("Select parameter group by entering a number:", parameterGroups)
+    parameterGroup = show_menu("Select parameter group by entering a number:", parameterGroups)
     if parameterGroup == parameterGroups[len(parameterGroups)-1]:
         return True
     datasetName = datasetNameInput
@@ -88,7 +88,7 @@ def optimiseNN(datasetNameInput, datasetSettings):
                 else:
                     bestParams = setupOptimiserAndRunIt(datasetName, parameterGroup, weightPerturbationParameters, 100)
             saveSettings(bestParams, datasetName, "")
-        parameterGroup = showMenu("Select parameter group by entering a number:", parameterGroups)
+        parameterGroup = show_menu("Select parameter group by entering a number:", parameterGroups)
     return parameterGroup == parameterGroups[len(parameterGroups)-1]
 
 

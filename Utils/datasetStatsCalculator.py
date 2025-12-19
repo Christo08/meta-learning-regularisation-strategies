@@ -9,7 +9,7 @@ from Utils.metaFeatureDatasetHandler import targetColumns, spiltDatasetAndTarget
 
 wr.filterwarnings('ignore')
 
-def calculateDatasetStats(fullDataset):
+def calculate_dataset_stats(fullDataset):
     dataset, targets = spiltDatasetAndTargets(fullDataset)
     hasTarget = not targets.empty
 

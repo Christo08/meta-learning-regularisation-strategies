@@ -40,7 +40,7 @@ def createTestingSet(dataset, targetColumn, seed):
     subsetY = subsetY[targetColumn]
     return (subsetX, subsetY), (testingSetX, testingSetY)
 
-def loadMetaFeatureDataset(needSubsetsInfo = False):
+def load_meta_feature_dataset(needSubsetsInfo = False):
     shouldRankTechniques = input("Is the dataset raw? (y/n): ").lower() == "y"
     dataset = loadMetaFeaturesCSV()
     missing = False

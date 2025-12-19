@@ -4,7 +4,7 @@ import os
 from Utils.fileHandler import saveSettings
 
 
-def createGenericNNSetting():
+def create_generic_nn_setting():
     settings = []
     genericNNSettings ={
         "batch_size": 0,

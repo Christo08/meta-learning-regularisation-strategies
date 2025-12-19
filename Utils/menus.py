@@ -1,7 +1,7 @@
 from Utils.fileHandler import loadDatasetSettingFile
 
 
-def showMenu(prompt, items):
+def show_menu(prompt, items):
     selection = -1
     while selection > len(items) or selection < 0:
         print(prompt)
@@ -10,13 +10,13 @@ def showMenu(prompt, items):
         selection = int(input())-1
     return items[selection]
 
-def showDatasetMenu(dataSettings):
+def show_dataset_menu(dataSettings):
     datasetNames = ["All"]
     for datasetSettings in dataSettings:
         datasetNames.append(datasetSettings["name"])
     datasetNames.append("Custom")
     datasetNames.append("Back")
-    datasetsOption = showMenu("Select dataset by entering a number: ", datasetNames)
+    datasetsOption = show_menu("Select dataset by entering a number: ", datasetNames)
     if datasetsOption == datasetNames[0]:
         names =  datasetNames[1:-2]
     elif datasetsOption == datasetNames[len(datasetNames) - 2]:
@@ -31,9 +31,9 @@ def showDatasetMenu(dataSettings):
         names = [datasetsOption]
     return names
 
-def showDatasetSettingMenu():
+def show_dataset_setting_menu():
     datasetTypes = ["Training", "Testing", "Back"]
-    datasetType = showMenu("Do you want to use the training datasets or testing datasets?", datasetTypes)
+    datasetType = show_menu("Do you want to use the training datasets or testing datasets?", datasetTypes)
     if datasetType == datasetTypes[2]:
         return False
     elif datasetType == datasetTypes[0]:

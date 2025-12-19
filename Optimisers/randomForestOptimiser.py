@@ -17,7 +17,7 @@ basicParameters = {
 
 seed = random.randint(0, 4294967295)
 
-def optimiseRandomForest():
+def optimise_random_forest():
     global dataset, testing, seed
     dataset, testing = loadMetaFeaturesDataset(seed, False)
     search = pyhopper.Search(basicParameters)
