@@ -68,7 +68,7 @@ def loadMetaFeaturesDataset(seed, isSVM):
 
     return (subsetX, subsetY), (testingSetX, testingSetY)
 
-def createSubsetsWithSeeds(databaseName, numberOfSubsetsNeed, classSeeds, featuresSeeds, instancesSeeds, datasetSettings):
+def create_subsets_with_seeds(databaseName, numberOfSubsetsNeed, classSeeds, featuresSeeds, instancesSeeds, datasetSettings):
     print("Recreating "+str(numberOfSubsetsNeed)+" Subsets for the "+databaseName+" dataset")
     dataset = loadRawDataset(datasetSettings)
     dataset = cleanDataset(dataset)
@@ -103,7 +103,7 @@ def createSubsetsWithSeeds(databaseName, numberOfSubsetsNeed, classSeeds, featur
 
     return returnSubsets, metaFeatures, seeds, subsetsCategoryColumns
 
-def loadSubset(filePath, seed, datasetSettings):
+def load_subset(filePath, seed, datasetSettings):
     subset = pd.read_csv(filePath)
     trainingSet, testingSet = splitSet(subset, seed)
     fullCategoryColumns = datasetSettings['categoryColumns']
@@ -114,7 +114,7 @@ def loadSubset(filePath, seed, datasetSettings):
 
     return trainingSet, testingSet, categoryColumns
 
-def createSubsets(databaseName, numberOfSubsetsNeed, datasetSettings, needSplit=True):
+def create_subsets(databaseName, numberOfSubsetsNeed, datasetSettings, needSplit=True):
     print("Creating "+str(numberOfSubsetsNeed)+" Subsets for the "+databaseName+" dataset")
     dataset = loadRawDataset(datasetSettings)
     dataset = cleanDataset(dataset)
@@ -162,7 +162,7 @@ def createSubsets(databaseName, numberOfSubsetsNeed, datasetSettings, needSplit=
     else:
         return returnSubsets, metaFeatures, seeds, subsetsCategoryColumns
 
-def loadDataset(datasetSettings):
+def load_dataset(datasetSettings):
     dataset = loadRawDataset(datasetSettings)
     dataset = cleanDataset(dataset)
     numeric_data = dataset.select_dtypes(include=[np.number])

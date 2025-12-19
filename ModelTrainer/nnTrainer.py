@@ -9,7 +9,7 @@ from Utils.datasetHandler import applySMOTE
 from Utils.lossFucntions import CustomCrossEntropyLoss, CustomCrossEntropyRegularisationTermLoss
 
 
-def trainNN(settings, technique, trainingSet, testingSet, seed, categoryColumns, fold=None):
+def train_nn(settings, technique, trainingSet, testingSet, seed, categoryColumns, fold=None):
 
     numberOfInputs = trainingSet[0].shape[1]
     numberOfOutputs = trainingSet[1].shape[1]

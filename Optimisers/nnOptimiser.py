@@ -2,9 +2,9 @@ import random
 
 import pyhopper
 
-from Utils.fileHandler import saveSettings, loadSettings
+from Utils.fileHandler import saveSettings, load_settings
 from Utils.menus import show_menu
-from ModelTrainer.nnTrainer import trainNN
+from ModelTrainer.nnTrainer import train_nn
 from Utils.datasetHandler import loadOptimiserDataset
 
 maxNumberOfLayers = 10
@@ -61,7 +61,7 @@ def optimise_nn(datasetNameInput, datasetSettings):
         if parameterGroup == parameterGroups[0]:
             bestParams = setupOptimiserAndRunIt(datasetName, "Basic", basicParameters, 300)
             path = saveSettings(bestParams, datasetName, "")
-            basicSettings = loadSettings(path)
+            basicSettings = load_settings(path)
 
             bestParams = setupOptimiserAndRunIt(datasetName, "Dropout", dropoutParameters, 50)
             saveSettings(bestParams, datasetName, path)
@@ -78,7 +78,7 @@ def optimise_nn(datasetNameInput, datasetSettings):
             if parameterGroup == parameterGroups[1]:
                 bestParams = setupOptimiserAndRunIt(datasetName, parameterGroup, basicParameters, 300)
             else:
-                basicSettings = loadSettings(input("Enter the path to the basic settings file of the NN:"))
+                basicSettings = load_settings(input("Enter the path to the basic settings file of the NN:"))
                 if parameterGroup == parameterGroups[2]:
                     bestParams = setupOptimiserAndRunIt(datasetName, parameterGroup, dropoutParameters, 50)
                 elif parameterGroup == parameterGroups[3]:
@@ -111,15 +111,15 @@ def trainNNWarp(params):
     global trainingSet, validationSet, categoryColumns
     if "batch_size" in params:
         settings = params
-        trainingLosses, validationLosses = trainNN(settings, "", trainingSet, validationSet, categoryColumns, seed)
+        trainingLosses, validationLosses = train_nn(settings, "", trainingSet, validationSet, categoryColumns, seed)
     else:
         settings = {**basicSettings, **params}
         if "dropout_layers" in params:
-            trainingLosses, validationLosses = trainNN(settings, "dropout", trainingSet, validationSet, categoryColumns, seed)
+            trainingLosses, validationLosses = train_nn(settings, "dropout", trainingSet, validationSet, categoryColumns, seed)
         elif "prune_amount" in params:
-            trainingLosses, validationLosses = trainNN(settings, "prune", trainingSet, validationSet, categoryColumns, seed)
+            trainingLosses, validationLosses = train_nn(settings, "prune", trainingSet, validationSet, categoryColumns, seed)
         elif "weight_decay" in params:
-            trainingLosses, validationLosses = trainNN(settings, "weightDecay", trainingSet, validationSet, categoryColumns, seed)
+            trainingLosses, validationLosses = train_nn(settings, "weightDecay", trainingSet, validationSet, categoryColumns, seed)
         else:
-            trainingLosses, validationLosses = trainNN(settings, "weightPerturbation", trainingSet, validationSet,categoryColumns, seed)
+            trainingLosses, validationLosses = train_nn(settings, "weightPerturbation", trainingSet, validationSet, categoryColumns, seed)
     return validationLosses

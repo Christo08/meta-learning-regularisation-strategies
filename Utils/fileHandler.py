@@ -9,7 +9,7 @@ from Models.NN.Errors.fileNotFound import FileNotFound
 
 currentSettingsFilePath = ""
 
-def loadMetaFeaturesDataset(path):
+def load_meta_features_dataset(path):
     if os.path.exists(path) and os.path.isfile(path):
         return pd.read_csv(path), path
     elif os.path.exists(path) and os.path.isdir(path):
@@ -26,7 +26,7 @@ def loadDatasetSettingFile(path):
     return dataSettings
 
 
-def saveMetaFeaturesDataset(dataset, filePath):
+def save_meta_features_dataset(dataset, filePath):
     dataset.to_csv(filePath, index=False)
 
 def loadMetaFeaturesCSV():
@@ -58,13 +58,13 @@ def saveSettings(settings, datasetName, path):
             json.dump(settings, file, indent=4, cls=ObjectEncoder)
         return newPath
     else:
-        oldSettings = loadSettings(path)
+        oldSettings = load_settings(path)
         newSettings = {**oldSettings, **settings}
         with open(path, "w") as file:
             json.dump(newSettings, file, indent=4, cls=ObjectEncoder)
         return path
 
-def loadSettings(path):
+def load_settings(path):
     try:
         with open(path, 'r', encoding='utf-8') as file:
             return json.load(file)

@@ -6,7 +6,7 @@ from ModelTrainer.randomForestTrainer import trainRandomForest
 from Utils.datasetHandler import loadMetaFeaturesDataset
 from Utils.fileHandler import loadRunsDataset, saveRunsDataset, loadModuleSettings
 from Utils.menus import show_menu
-from Utils.timeFormatter import formatDuration
+from Utils.timeFormatter import format_duration
 
 modelTypes = ["All", "Decision Tree", "Support Vector Machines", "Random Forest", "Exit"]
 
@@ -53,4 +53,4 @@ def meta_learning_trainer(dataset):
                 numberOfRuns = numberOfRuns * (len(modelTypes) - 2)
 
             predictedDuration = totalDuration / numberOfRuns * numberOfInstances
-            print(f"{numberOfRuns} runs created. It took {formatDuration(totalDuration)}/{formatDuration(predictedDuration)}")
+            print(f"{numberOfRuns} runs created. It took {format_duration(totalDuration)}/{format_duration(predictedDuration)}")

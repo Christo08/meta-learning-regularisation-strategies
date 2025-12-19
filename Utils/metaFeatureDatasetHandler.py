@@ -10,7 +10,7 @@ from datetime import datetime
 
 from sympy import false
 
-from Utils.fileHandler import loadMetaFeaturesCSV, saveMetaFeaturesDataset
+from Utils.fileHandler import loadMetaFeaturesCSV, save_meta_features_dataset
 
 targetColumns = ["baseline_testing_loss", "batch_normalisation_testing_loss", "dropout_testing_loss",
                  "layer_normalisation_testing_loss", "SMOTE_testing_loss", "prune_testing_loss",
@@ -65,7 +65,7 @@ def load_meta_feature_dataset(needSubsetsInfo = False):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         fileName = f"processed_meta_feature_{timestamp}.csv"
         filePath = outputPath + "\\" + fileName
-        saveMetaFeaturesDataset(dataset, filePath)
+        save_meta_features_dataset(dataset, filePath)
     return dataset
 
 def cleanDataset(dataset):
