@@ -99,7 +99,7 @@ def setup_optimiser_and_run_it(dataset_name, parameter_group_name, parameter_gro
         train_nn_warp,
         direction="min",
         steps=number_of_steps,
-        checkpoint_path="Data/CheckPoints/" + dataset_name.strip().replace(" ", "_") + "_" + parameter_group_name + "_Checkpoint",
+        checkpoint_path="Data/CheckPoints/NN/" + dataset_name.strip().replace(" ", "_") + "_" + parameter_group_name + "_Checkpoint",
         # n_jobs="per-gpu"
     )
     test_loss = train_nn_warp(best_params)
@@ -111,15 +111,15 @@ def train_nn_warp(params):
     global training_set, validation_set, category_columns
     if "batch_size" in params:
         settings = params
-        trainingLosses, validationLosses = train_nn(settings, "", training_set, validation_set, category_columns, seed)
+        training_losses, validation_losses = train_nn(settings, "", training_set, validation_set, category_columns, seed)
     else:
         settings = {**basic_settings, **params}
         if "dropout_layers" in params:
-            trainingLosses, validationLosses = train_nn(settings, "dropout", training_set, validation_set, category_columns, seed)
+            training_losses, validation_losses = train_nn(settings, "dropout", training_set, validation_set, category_columns, seed)
         elif "prune_amount" in params:
-            trainingLosses, validationLosses = train_nn(settings, "prune", training_set, validation_set, category_columns, seed)
+            training_losses, validation_losses = train_nn(settings, "prune", training_set, validation_set, category_columns, seed)
         elif "weight_decay" in params:
-            trainingLosses, validationLosses = train_nn(settings, "weightDecay", training_set, validation_set, category_columns, seed)
+            training_losses, validation_losses = train_nn(settings, "weightDecay", training_set, validation_set, category_columns, seed)
         else:
-            trainingLosses, validationLosses = train_nn(settings, "weightPerturbation", training_set, validation_set, category_columns, seed)
-    return validationLosses
+            training_losses, validation_losses = train_nn(settings, "weightPerturbation", training_set, validation_set, category_columns, seed)
+    return validation_losses
