@@ -1,14 +1,10 @@
 import ast
 import math
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
-
 from scipy.stats import ttest_ind, zscore
-from sklearn.model_selection import train_test_split
-from datetime import datetime
-
-from sympy import false
 
 from Utils.fileHandler import load_meta_features_csv, save_meta_features_dataset
 
@@ -30,35 +26,35 @@ def spilt_dataset_and_targets(dataset):
         dataset = dataset.drop(target_columns, axis=1)
         return dataset, targets
 
-def load_meta_feature_dataset(needSubsetsInfo = False):
-    shouldRankTechniques = input("Is the dataset raw? (y/n): ").lower() == "y"
+def load_meta_feature_dataset(need_subsets_info = False):
+    should_rank_techniques = input("Is the dataset raw? (y/n): ").lower() == "y"
     dataset = load_meta_features_csv()
     missing = False
-    if not needSubsetsInfo:
+    if not need_subsets_info:
         columns_to_drop = ["dataset_name", "seed", "file_name", "subset_type"]
         dataset.drop(columns=columns_to_drop, errors="ignore", inplace=True)
-    for targetColumn in target_columns:
-        if targetColumn not in dataset.columns:
+    for target_column in target_columns:
+        if target_column not in dataset.columns:
             missing = True
             break
-    if shouldRankTechniques and not(missing):
-        dataset = cleanDataset(dataset)
+    if should_rank_techniques and not(missing):
+        dataset = clean_dataset(dataset)
 
         targets = dataset[target_columns]
         dataset = dataset.drop(target_columns, axis=1)
 
-        targets = rankTechniques(targets)
+        targets = rank_techniques(targets)
 
         dataset = pd.concat([dataset, targets], axis=1)
 
-        outputPath = input("Enter the path of the Output dataset folder: ")
+        output_path = input("Enter the path of the Output dataset folder: ")
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        fileName = f"processed_meta_feature_{timestamp}.csv"
-        filePath = outputPath + "\\" + fileName
-        save_meta_features_dataset(dataset, filePath)
+        file_name = f"processed_meta_feature_{timestamp}.csv"
+        file_path = output_path + "\\" + file_name
+        save_meta_features_dataset(dataset, file_path)
     return dataset
 
-def cleanDataset(dataset):
+def clean_dataset(dataset):
     columns_to_drop = [
         "baseline_training_loss", "baseline_validation_loss", "batch_normalisation_training_loss",
         "batch_normalisation_validation_loss", "dropout_training_loss", "dropout_validation_loss",
@@ -68,51 +64,51 @@ def cleanDataset(dataset):
         "weight_perturbation_training_loss", "weight_perturbation_validation_loss", "best_training_technique",
         "best_validation_technique", "best_testing_technique"
     ]
-    shouldApplyZScoring = input("Apply Z scoring? (y/n): ").lower() == "y"
+    should_apply_z_scoring = input("Apply Z scoring? (y/n): ").lower() == "y"
 
     dataset.drop(columns=columns_to_drop, errors="ignore", inplace=True)
-    maxFloat = np.finfo(np.float32).max
+    max_float = np.finfo(np.float32).max
 
     for column in dataset.columns:
         if not(column in target_columns):
-            columnData = dataset[column].values.astype(np.float64)
-            if shouldApplyZScoring:
-                finiteMask = np.isfinite(columnData)
+            column_data = dataset[column].values.astype(np.float64)
+            if should_apply_z_scoring:
+                finite_mask = np.isfinite(column_data)
 
-                zColumn = np.empty_like(columnData)
-                zColumn[:] = columnData
-                zColumn[finiteMask] = zscore(columnData[finiteMask])
+                z_column = np.empty_like(column_data)
+                z_column[:] = column_data
+                z_column[finite_mask] = zscore(column_data[finite_mask])
 
-                zColumn = np.where(zColumn == np.inf, maxFloat, zColumn)
+                z_column = np.where(z_column == np.inf, max_float, z_column)
 
-                dataset[column] = zColumn
+                dataset[column] = z_column
             else:
-                dataset[column] = columnData
+                dataset[column] = column_data
 
 
     return dataset
 
-def rankTechniques(dataset):
+def rank_techniques(dataset):
     assert dataset.shape[1] >= 2, "Need at least two techniques to compare."
 
     # apply hypothesis test
-    def rowWisePvalMatrix(row):
+    def row_wise_pval_matrix(row):
         return pd.DataFrame({
-            col1: [applyTtest(row[col1], row[col2]) for col2 in dataset.columns]
+            col1: [apply_ttest(row[col1], row[col2]) for col2 in dataset.columns]
             for col1 in dataset.columns
         }, index=dataset.columns)
 
     print("Calculating the pvals of each cell.")
-    pvalsMatrices = dataset.apply(rowWisePvalMatrix, axis=1)
+    pvals_matrices = dataset.apply(row_wise_pval_matrix, axis=1)
     # calculate mean
     print("Calculating the mean of each cell.")
-    meansDataset = dataset.applymap(calculate_mean)
+    means_dataset = dataset.applymap(calculate_mean)
 
     # Apply custom ranking with equivalence (pval >= 0.5 means not significantly different)
     ranked_rows = []
     print("Ranking the columns for each row.")
-    for idx, row in meansDataset.iterrows():
-        pvalMatrix = pvalsMatrices.loc[idx]
+    for idx, row in means_dataset.iterrows():
+        pval_matrix = pvals_matrices.loc[idx]
         means = row.to_dict()
         remaining = set()
         ranks = {}
@@ -127,7 +123,7 @@ def rankTechniques(dataset):
             group = []
             ref = min(remaining, key=lambda x: means[x])
             for other in list(remaining):
-                if pvalMatrix.loc[ref, other]:
+                if pval_matrix.loc[ref, other]:
                     group.append(other)
             for technique in group:
                 ranks[technique] = rank
@@ -135,9 +131,9 @@ def rankTechniques(dataset):
             rank += 1
         ranked_rows.append(ranks)
 
-    return pd.DataFrame(ranked_rows, index=meansDataset.index)
+    return pd.DataFrame(ranked_rows, index=means_dataset.index)
 
-def cellParse(cell):
+def cell_parse(cell):
     if isinstance(cell, list):
         values = cell
     else:
@@ -146,11 +142,11 @@ def cellParse(cell):
     values = [float('inf') if value == 'inf' else value for value in values]
     return values
 
-def applyTtest(cell1, cell2):
+def apply_ttest(cell1, cell2):
     if cell1 == cell2:
         return True
-    values1 = cellParse(cell1)
-    values2 = cellParse(cell2)
+    values1 = cell_parse(cell1)
+    values2 = cell_parse(cell2)
 
     # Handle cases with inf values
     if any(math.isinf(v) for v in values1) and any(math.isinf(v) for v in values2):
@@ -162,5 +158,5 @@ def applyTtest(cell1, cell2):
     return p_value >= 0.5
 
 def calculate_mean(cell):
-    values = cellParse(cell)
+    values = cell_parse(cell)
     return sum(values) / len(values)
