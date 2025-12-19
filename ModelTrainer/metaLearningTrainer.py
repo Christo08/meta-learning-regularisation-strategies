@@ -1,7 +1,7 @@
 import pandas as pd
 
 from ModelTrainer.SVMTrainer import trainSVM
-from ModelTrainer.decisionTreeTrainer import trainDecisionTree
+from ModelTrainer.decisionTreeTrainer import train_decision_tree
 from ModelTrainer.randomForestTrainer import trainRandomForest
 from Utils.datasetHandler import loadMetaFeaturesDataset
 from Utils.fileHandler import loadRunsDataset, saveRunsDataset, loadModuleSettings
@@ -34,7 +34,7 @@ def meta_learning_trainer(dataset):
         totalDuration = 0
         for counter in range(numberOfInstances):
             if modelType == modelTypes[0] or modelType == modelTypes[1]:
-                run, duration = trainDecisionTree(decisionTreeSettings, dataset)
+                run, duration = train_decision_tree(decisionTreeSettings, dataset)
                 totalDuration += duration
                 runsDataset = pd.concat([runsDataset, pd.DataFrame([run])])
                 saveRunsDataset(runsPath, runsDataset)

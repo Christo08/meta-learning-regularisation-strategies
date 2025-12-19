@@ -2,7 +2,7 @@ import random
 
 import pyhopper
 
-from ModelTrainer.decisionTreeTrainer import trainDecisionTree
+from ModelTrainer.decisionTreeTrainer import train_decision_tree
 from Utils.fileHandler import saveModuleSettings
 from Utils.metaFeatureDatasetHandler import createTestingSet, targetColumns
 
@@ -34,12 +34,12 @@ def optimiseDecisionTree(fullDataset, targetColumn):
         checkpoint_path="Data/CheckPoints/DecisionTrees/"+technique+"_Decision_Tree_Checkpoint",
         n_jobs="per-gpu"
     )
-    run, duration =  trainDecisionTree(bestParams, dataset, testing, seed, technique)
+    run, duration =  train_decision_tree(bestParams, dataset, testing, seed, technique)
     print(f"Tuned params for Decision Tree using basic parameter group resulting in a of loss: {run}")
     saveModuleSettings(bestParams, "DecisionTrees", technique)
 
 
 def train(bestParams):
     global dataset, testing, seed, technique
-    run, duration =  trainDecisionTree(bestParams, dataset, testing, seed, technique,False)
+    run, duration =  train_decision_tree(bestParams, dataset, testing, seed, technique, False)
     return run["validation_MSE"]
