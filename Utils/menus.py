@@ -1,4 +1,4 @@
-from Utils.fileHandler import loadDatasetSettingFile
+from Utils.fileHandler import load_dataset_setting_file
 
 
 def show_menu(prompt, items):
@@ -40,4 +40,4 @@ def show_dataset_setting_menu():
         datasetsSettingFilePath = "Data/Datasets/Input/training_dataset_info.json"
     else:
         datasetsSettingFilePath = "Data/Datasets/Input/testing_dataset_info.json"
-    return loadDatasetSettingFile(datasetsSettingFilePath)
+    return load_dataset_setting_file(datasetsSettingFilePath)

@@ -7,48 +7,47 @@ import pandas as pd
 from datetime import datetime
 from Models.NN.Errors.fileNotFound import FileNotFound
 
-currentSettingsFilePath = ""
+current_settings_file_path = ""
 
 def load_meta_features_dataset(path):
     if os.path.exists(path) and os.path.isfile(path):
         return pd.read_csv(path), path
     elif os.path.exists(path) and os.path.isdir(path):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        fileName = f"regularisation_{timestamp}.csv"
-        filePath = path + "\\" + fileName
-        return pd.DataFrame(), filePath
+        file_name = f"regularisation_{timestamp}.csv"
+        file_path = path + "\\" + file_name
+        return pd.DataFrame(), file_path
     else:
         raise FileNotFound(f"This is not a valid path {path}")
 
-def loadDatasetSettingFile(path):
+def load_dataset_setting_file(path):
     with open(path, 'r') as file:
-        dataSettings = json.load(file)
-    return dataSettings
+        data_settings = json.load(file)
+    return data_settings
 
+def save_meta_features_dataset(dataset, file_path):
+    dataset.to_csv(file_path, index=False)
 
-def save_meta_features_dataset(dataset, filePath):
-    dataset.to_csv(filePath, index=False)
-
-def loadMetaFeaturesCSV():
+def load_meta_features_csv():
     path = input("Enter the path of the meta features dataset file:")
     if os.path.exists(path) and os.path.isfile(path):
         return pd.read_csv(path, sep=",", quotechar='"')
     else:
         raise FileNotFound(f"This is not a valid path {path}")
 
-def save_settings(settings, datasetName, path):
+def save_settings(settings, dataset_name, path):
     if path == "":
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        fileName = f"{datasetName}_nn_setting_{timestamp}.json"
-        newPath = f"Data/Settings/NNSettings/{fileName}"
-        with open(newPath, "x") as file:
+        file_name = f"{dataset_name}_nn_setting_{timestamp}.json"
+        new_path = f"Data/Settings/NNSettings/{file_name}"
+        with open(new_path, "x") as file:
             json.dump(settings, file, indent=4, cls=ObjectEncoder)
-        return newPath
+        return new_path
     else:
-        oldSettings = load_settings(path)
-        newSettings = {**oldSettings, **settings}
+        old_settings = load_settings(path)
+        new_settings = {**old_settings, **settings}
         with open(path, "w") as file:
-            json.dump(newSettings, file, indent=4, cls=ObjectEncoder)
+            json.dump(new_settings, file, indent=4, cls=ObjectEncoder)
         return path
 
 def load_settings(path):

@@ -10,7 +10,7 @@ from datetime import datetime
 
 from sympy import false
 
-from Utils.fileHandler import loadMetaFeaturesCSV, save_meta_features_dataset
+from Utils.fileHandler import load_meta_features_csv, save_meta_features_dataset
 
 target_columns = ["baseline_testing_loss", "batch_normalisation_testing_loss", "dropout_testing_loss",
                  "layer_normalisation_testing_loss", "SMOTE_testing_loss", "prune_testing_loss",
@@ -32,7 +32,7 @@ def spilt_dataset_and_targets(dataset):
 
 def load_meta_feature_dataset(needSubsetsInfo = False):
     shouldRankTechniques = input("Is the dataset raw? (y/n): ").lower() == "y"
-    dataset = loadMetaFeaturesCSV()
+    dataset = load_meta_features_csv()
     missing = False
     if not needSubsetsInfo:
         columns_to_drop = ["dataset_name", "seed", "file_name", "subset_type"]
