@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 from Models.NN.customDataset import CustomDataset
 from Models.NN.network import Network
 from Utils.datasetHandler import apply_smote
-from Utils.lossFucntions import CustomCrossEntropyLoss, CustomCrossEntropyRegularisationTermLoss
+from Utils.lossFunctions import CustomCrossEntropyLoss, CustomCrossEntropyRegularisationTermLoss
 
 
 def train_nn(settings, technique, training_set, testing_set, seed, category_columns, fold=None):

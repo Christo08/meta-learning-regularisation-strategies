@@ -26,8 +26,8 @@ class CustomCrossEntropyRegularisationTermLoss(nn.Module):
         self.loss = nn.CrossEntropyLoss()
 
     def forward(self, predictions, targets, model):
-        l2RegularizationTerm = sum(torch.sum(param ** 2) for param in model.parameters())
-        output = self.loss(predictions, targets) + 0.5 * self.lambda_ * l2RegularizationTerm
+        l2_regularization_term = sum(torch.sum(param ** 2) for param in model.parameters())
+        output = self.loss(predictions, targets) + 0.5 * self.lambda_ * l2_regularization_term
         if math.isnan(output):
             raise Exception("Not a number")
         if math.isinf(output):
