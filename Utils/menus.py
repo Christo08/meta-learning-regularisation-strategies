@@ -5,30 +5,30 @@ def show_menu(prompt, items):
     selection = -1
     while selection > len(items) or selection < 0:
         print(prompt)
-        for databaseName in items:
-            print(str((items.index(databaseName)+1))+". "+databaseName)
+        for database_name in items:
+            print(str((items.index(database_name)+1))+". "+database_name)
         selection = int(input())-1
     return items[selection]
 
-def show_dataset_menu(dataSettings):
-    datasetNames = ["All"]
-    for datasetSettings in dataSettings:
-        datasetNames.append(datasetSettings["name"])
-    datasetNames.append("Custom")
-    datasetNames.append("Back")
-    datasetsOption = show_menu("Select dataset by entering a number: ", datasetNames)
-    if datasetsOption == datasetNames[0]:
-        names =  datasetNames[1:-2]
-    elif datasetsOption == datasetNames[len(datasetNames) - 2]:
+def show_dataset_menu(data_settings):
+    dataset_names = ["All"]
+    for datasetSettings in data_settings:
+        dataset_names.append(datasetSettings["name"])
+    dataset_names.append("Custom")
+    dataset_names.append("Back")
+    datasets_option = show_menu("Select dataset by entering a number: ", dataset_names)
+    if datasets_option == dataset_names[0]:
+        names =  dataset_names[1:-2]
+    elif datasets_option == dataset_names[len(dataset_names) - 2]:
         print("Enter the datasets' numbers separated by a comma:")
-        selectDatasetIndexes = input().replace(' ', '').split(",")
+        select_dataset_indexes = input().replace(' ', '').split(",")
         names = []
-        for selectDatasetIndex in selectDatasetIndexes:
-            names.append(datasetNames[int(selectDatasetIndex) - 1])
-    elif datasetsOption == datasetNames[len(datasetNames) - 1]:
+        for select_dataset_index in select_dataset_indexes:
+            names.append(dataset_names[int(select_dataset_index) - 1])
+    elif datasets_option == dataset_names[len(dataset_names) - 1]:
         return False
     else:
-        names = [datasetsOption]
+        names = [datasets_option]
     return names
 
 def show_dataset_setting_menu():
