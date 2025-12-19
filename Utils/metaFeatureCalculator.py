@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.feature_selection import mutual_info_classif
 
 
-def calculateMetaFeatures(dataset, categoryColumns):
+def calculate_meta_features(dataset, categoryColumns):
     metaFeatures = {}
     categoryColumns = list(set( dataset.columns.tolist()) & set(categoryColumns))
 
