@@ -364,3 +364,36 @@ def apply_one_hot_encode(dataset, target_column_name ='target'):
     dataset = dataset.drop(columns=[target_column_name])
     dataset = pd.concat([dataset, encoded_columns], axis=1)
     return dataset
+
+def prepared_meta_feature_dataset(dataset, target_columns, target_column):
+    seed = random.randint(0, 4294967295)
+
+    # Find classes with only one instance
+    class_counts = dataset[target_column].value_counts()
+    single_instance_classes = class_counts[class_counts == 1].index.tolist()
+
+    # Separate instances with single-instance classes
+    single_instance_mask = dataset[target_column].isin(single_instance_classes)
+    single_instance_data = dataset[single_instance_mask]
+    remaining_data = dataset[~single_instance_mask]
+
+    dataset_x = np.array(remaining_data.drop(target_columns, axis=1))
+    dataset_y = remaining_data[target_column]
+
+    training_x, validation_x, training_y, validation_y = train_test_split(
+        dataset_x,
+        dataset_y,
+        test_size=0.2,
+        random_state=seed,
+        stratify=dataset_y
+    )
+
+    # Append single-instance data to validation set
+    if not single_instance_data.empty:
+        single_x = np.array(single_instance_data.drop(target_columns, axis=1))
+        single_y = single_instance_data[target_column].values
+
+        validation_x = np.concatenate([validation_x, single_x], axis=0)
+        validation_y = pd.Series(np.concatenate([validation_y, single_y], axis=0), name=target_column)
+
+    return (training_x, training_y), (validation_x, validation_y)

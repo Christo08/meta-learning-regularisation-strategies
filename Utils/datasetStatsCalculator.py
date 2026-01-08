@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
+from Utils.fileHandler import load_results_csv
 from Utils.metaFeatureDatasetHandler import target_columns, spilt_dataset_and_targets
 
 wr.filterwarnings('ignore')
@@ -137,3 +138,60 @@ def calculate_dataset_stats(full_dataset):
 
     plt.title('Correlation Heatmap')
     plt.show()
+
+def calculate_meta_learners_stats():
+    meta_learners_results = load_results_csv()
+
+    print("Meta Learners Results Info:")
+    print(meta_learners_results.info())
+
+    print("Meta Learners Results Correlation:")
+    sns.set_style("darkgrid")
+
+    techniques = list(meta_learners_results['technique'].unique())
+    number_cols = 3
+    number_rows = int(np.ceil(len(techniques) / number_cols))
+
+    fig, axes = plt.subplots(number_rows, number_cols, figsize=(14, number_rows * 5))
+    axes = axes.flatten()
+
+    for idx, technique in enumerate(techniques):
+        group = meta_learners_results[meta_learners_results['technique'] == technique]
+
+        for mse_col in ['testing mses', 'training mses']:
+            if mse_col not in group.columns:
+                continue
+            group_exp = group[['model type', mse_col]].reset_index(drop=True)
+            group_exp = explode_mses(group_exp, mse_col)
+            group_exp[mse_col] = group_exp[mse_col].astype(float)
+
+            stats = group_exp.groupby('model type')[mse_col].agg(['mean', 'min', 'max', 'std'])
+            print(f"\nModel type: {technique} - {mse_col.capitalize()} statistics:")
+            print(stats)
+
+        # Plotting boxplot for testing mses
+        if 'testing mses' in group.columns:
+            group_plot = group[['model type', 'testing mses']].reset_index(drop=True)
+            group_plot = explode_mses(group_plot, 'testing mses')
+            group_plot['testing mses'] = group_plot['testing mses'].astype(float)
+
+            ax = axes[idx]
+            sns.boxplot(x='model type', y='testing mses', data=group_plot, ax=ax)
+            ax.set_title(f'{technique}')
+            ax.set_ylabel('Testing MSEs')
+            ax.set_xlabel('Model type')
+            ax.tick_params(axis='x', rotation=90)
+
+    # Hide any unused subplots
+    for j in range(idx + 1, len(axes)):
+        fig.delaxes(axes[j])
+
+    plt.suptitle('Boxplot of Testing MSEs by Model Type for Each Technique', fontsize=16)
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.show()
+
+
+def explode_mses(df, mse_col):
+    df = df.copy()
+    df[mse_col] = df[mse_col].apply(lambda x: eval(x) if isinstance(x, str) else x)
+    return df.explode(mse_col)

@@ -9,7 +9,7 @@ from datetime import datetime
 
 from ModelTrainer.nnTrainer import train_nn
 from Utils.datasetHandler import create_subsets, load_dataset, create_subsets_with_seeds, load_subset
-from Utils.fileHandler import load_meta_features_dataset, save_meta_features_dataset, load_settings
+from Utils.fileHandler import load_meta_features_dataset, save_data_frame, load_settings
 from Utils.timeFormatter import format_duration
 
 configurations = [
@@ -141,7 +141,7 @@ def recreate_dataset(subset_dataset, dataset_names, indexes, settings_file_path,
                                                  subset_category_columns)
             total_duration += duration
             dataset = pd.concat([dataset, instance], ignore_index=True)
-            save_meta_features_dataset(dataset, output_path)
+            save_data_frame(dataset, output_path)
             predicted_duration = total_duration/counter * (len(dataset_names))
             print(f"{counter} instance created from the {seed["name"]} dataset subset. "
                   f"It took {format_duration(total_duration)}/{format_duration(predicted_duration)}")
@@ -176,7 +176,7 @@ def create_dataset(database_name, output_path, number_of_instances, settings_fil
                                              category_columns)
         total_duration += duration
         dataset = pd.concat([dataset, instance], ignore_index=True)
-        save_meta_features_dataset(dataset, output_path)
+        save_data_frame(dataset, output_path)
         counter+=1
         predicted_duration = total_duration / counter * number_of_instances
         print(f"{counter} instance created. It took {format_duration(total_duration)}/{format_duration(predicted_duration)}")

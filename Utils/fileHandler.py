@@ -25,17 +25,25 @@ def load_dataset_setting_file(path):
         data_settings = json.load(file)
     return data_settings
 
-def save_meta_features_dataset(dataset, file_path):
-    dataset.to_csv(file_path, index=False)
+def save_data_frame(data_frame, file_path):
+    data_frame.to_csv(file_path, index=False)
 
-def load_meta_features_csv():
-    path = input("Enter the path of the meta features dataset file:")
+def load_meta_features_csv(type):
+    path = input(f"Enter the path of the {type} meta features dataset file:")
     if os.path.exists(path) and os.path.isfile(path):
         return pd.read_csv(path, sep=",", quotechar='"')
     else:
         raise FileNotFound(f"This is not a valid path {path}")
 
-def save_settings(settings, dataset_name, path):
+def load_results_csv():
+    file_path = input("What is the path to the result file?")
+    if os.path.exists(file_path) and os.path.isfile(file_path):
+        return pd.read_csv(file_path, sep=",", quotechar='"')
+    else:
+        raise FileNotFound(f"This is not a valid path {file_path}")
+
+
+def save_nn_settings(settings, dataset_name, path):
     if path == "":
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         file_name = f"{dataset_name}_nn_setting_{timestamp}.json"
@@ -49,6 +57,22 @@ def save_settings(settings, dataset_name, path):
         with open(path, "w") as file:
             json.dump(new_settings, file, indent=4, cls=ObjectEncoder)
         return path
+
+def save_meta_learner_settings(settings, module_type):
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    if module_type == "DecisionTrees":
+        file_name = f"Decision_trees_setting_{timestamp}.json"
+    elif module_type == "RandomForest":
+        file_name = f"Random_forest_setting_{timestamp}.json"
+    elif module_type == "KNearestNeighbors":
+        file_name = f"knn_setting_{timestamp}.json"
+    elif module_type == "SupportVectorMachines":
+        file_name = f"svm_setting_{timestamp}.json"
+    else:
+        file_name = f"nn_setting_{timestamp}.json"
+    path = f"Data/Settings/{module_type}/{file_name}"
+    with open(path, "x") as file:
+        json.dump(settings, file, indent=4, cls=ObjectEncoder)
 
 def load_settings(path):
     try:

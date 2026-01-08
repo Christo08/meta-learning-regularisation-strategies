@@ -1,7 +1,7 @@
 import json
 import os
 
-from Utils.fileHandler import save_settings
+from Utils.fileHandler import save_nn_settings
 
 
 def create_generic_nn_setting():
@@ -75,6 +75,6 @@ def create_generic_nn_setting():
             else:
                 generic_nn_settings[key] = round(generic_nn_settings[key] / len(settings),3)
         print(generic_nn_settings)
-        save_settings(generic_nn_settings, "Generic", "")
+        save_nn_settings(generic_nn_settings, "Generic", "")
     else:
         print("Invalid folder path provided.")

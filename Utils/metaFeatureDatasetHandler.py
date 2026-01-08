@@ -6,11 +6,18 @@ import numpy as np
 import pandas as pd
 from scipy.stats import ttest_ind, zscore
 
-from Utils.fileHandler import load_meta_features_csv, save_meta_features_dataset
+from Utils.fileHandler import load_meta_features_csv, save_data_frame
 
-target_columns = ["baseline_testing_loss", "batch_normalisation_testing_loss", "dropout_testing_loss",
-                 "layer_normalisation_testing_loss", "SMOTE_testing_loss", "prune_testing_loss",
-                 "weight_decay_testing_loss", "weight_normalisation_testing_loss", "weight_perturbation_testing_loss"]
+target_columns = [
+    "baseline_testing_loss",
+    "batch_normalisation_testing_loss",
+    "dropout_testing_loss",
+    "layer_normalisation_testing_loss",
+    "SMOTE_testing_loss",
+    "prune_testing_loss",
+    "weight_decay_testing_loss",
+    "weight_normalisation_testing_loss",
+]
 
 def spilt_dataset_and_targets(dataset):
     missing = False
@@ -26,9 +33,9 @@ def spilt_dataset_and_targets(dataset):
         dataset = dataset.drop(target_columns, axis=1)
         return dataset, targets
 
-def load_meta_feature_dataset(need_subsets_info = False):
+def load_meta_feature_dataset(need_subsets_info = False, type =""):
     should_rank_techniques = input("Is the dataset raw? (y/n): ").lower() == "y"
-    dataset = load_meta_features_csv()
+    dataset = load_meta_features_csv(type)
     missing = False
     if not need_subsets_info:
         columns_to_drop = ["dataset_name", "seed", "file_name", "subset_type"]
@@ -51,7 +58,7 @@ def load_meta_feature_dataset(need_subsets_info = False):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         file_name = f"processed_meta_feature_{timestamp}.csv"
         file_path = output_path + "\\" + file_name
-        save_meta_features_dataset(dataset, file_path)
+        save_data_frame(dataset, file_path)
     return dataset
 
 def clean_dataset(dataset):

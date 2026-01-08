@@ -1,6 +1,10 @@
 from Utils.fileHandler import load_dataset_setting_file
 
 
+meta_learn_types = ['All', 'Decision trees', 'K-nearest neighbors', 'Neural networks', 'Random forests',
+                    'Support vector machines', 'Custom', 'Back']
+dataset_types = ["Training", "Testing", "Back"]
+
 def show_menu(prompt, items):
     selection = -1
     while selection > len(items) or selection < 0:
@@ -32,12 +36,27 @@ def show_dataset_menu(data_settings):
     return names
 
 def show_dataset_setting_menu():
-    datasetTypes = ["Training", "Testing", "Back"]
-    datasetType = show_menu("Do you want to use the training datasets or testing datasets?", datasetTypes)
-    if datasetType == datasetTypes[2]:
+    dataset_type = show_menu("Do you want to use the training datasets or testing datasets?", dataset_types)
+    if dataset_type == dataset_types[2]:
         return False
-    elif datasetType == datasetTypes[0]:
-        datasetsSettingFilePath = "Data/Datasets/Input/training_dataset_info.json"
+    elif dataset_type == dataset_types[0]:
+        datasets_setting_file_path = "Data/Datasets/Input/training_dataset_info.json"
     else:
-        datasetsSettingFilePath = "Data/Datasets/Input/testing_dataset_info.json"
-    return load_dataset_setting_file(datasetsSettingFilePath)
+        datasets_setting_file_path = "Data/Datasets/Input/testing_dataset_info.json"
+    return load_dataset_setting_file(datasets_setting_file_path)
+
+def show_meta_leaner_type_menu():
+    selected_meta_learn_types = show_menu("Select the meta-leaner type by entering its number: ", meta_learn_types)
+    if selected_meta_learn_types == meta_learn_types[len(meta_learn_types) - 1]:
+        return []
+    elif selected_meta_learn_types == meta_learn_types[0]:
+        selected_meta_learn_types = meta_learn_types[1:-2]
+    elif selected_meta_learn_types ==  meta_learn_types[len(meta_learn_types) - 2]:
+        print("Enter the meta-learner types' numbers separated by a comma:")
+        selected_meta_learn_type_indexes = input().replace(' ', '').split(",")
+        selected_meta_learn_types = []
+        for selected_meta_learn_type_index in selected_meta_learn_type_indexes:
+            selected_meta_learn_types.append(meta_learn_types[int(selected_meta_learn_type_index) - 1])
+    else:
+        selected_meta_learn_types = [selected_meta_learn_types]
+    return selected_meta_learn_types

@@ -1,4 +1,6 @@
 import torch
+import numpy as np
+from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import KFold
 from torch import optim
 from torch.utils.data import DataLoader
@@ -6,7 +8,12 @@ from torch.utils.data import DataLoader
 from Models.NN.customDataset import CustomDataset
 from Models.NN.network import Network
 from Utils.datasetHandler import apply_smote
+from Utils.fileHandler import load_settings
 from Utils.lossFunctions import CustomCrossEntropyLoss, CustomCrossEntropyRegularisationTermLoss
+
+meta_learning_target_columns = ["baseline_testing_loss", "batch_normalisation_testing_loss", "dropout_testing_loss",
+                                "layer_normalisation_testing_loss", "prune_testing_loss",
+                                "weight_normalisation_testing_loss" ]
 
 
 def train_nn(settings, technique, training_set, testing_set, seed, category_columns, fold=None):
@@ -50,6 +57,28 @@ def train_nn(settings, technique, training_set, testing_set, seed, category_colu
                                                                  all_labels,
                                                                  category_columns)
         return training_loss_values, testing_loss_values
+
+def training_all_neural_networks(settings_file_path, training_set, testing_set, seed, kFold =5):
+    results = []
+    settings = load_settings(settings_file_path)
+    for target_column in meta_learning_target_columns:
+        training_x = np.array(training_set.drop([target_column], axis=1))
+        training_y = training_set[target_column]
+        testing_x = np.array(testing_set.drop([target_column], axis=1))
+        testing_y = testing_set[target_column]
+        result = train_meta_nn(settings[target_column],
+                              (training_x, training_y),
+                              (testing_x, testing_y),
+                              seed,
+                              target_column,
+                              kFold)
+        result = {
+            "model type": "NN",
+            "technique": target_column.replace("_testing_loss","").replace("_"," "),
+            **result
+        }
+        results.append(result)
+    return results
 
 def training_loop(x_training, y_training, testing_set, settings, number_of_inputs, number_of_outputs, technique, seed, all_labels, category_columns):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -176,7 +205,103 @@ def training_loop(x_training, y_training, testing_set, settings, number_of_input
             training_loss_value = loss_function(network(x_training), y_training, network).item()
             testing_loss_value = loss_function(network(x_testing), y_testing, network).item()
         else:
-            training_loss_value = loss_function(network(x_training), y_training).item()
-            testing_loss_value = loss_function(network(x_testing), y_testing).item()
+            try:
+                pr_y = network(x_training)
+                training_loss_value = loss_function(pr_y, y_training).item()
+            except Exception as e:
+                print(x_training.shape)
+                print(pr_y.shape)
+                print(y_training.shape)
+                raise e
+            try:
+                pr_y = network(x_testing)
+                testing_loss_value = loss_function(pr_y, y_testing).item()
+            except Exception as e:
+                print(x_testing.shape)
+                print(pr_y.shape)
+                print(y_testing.shape)
+                raise e
 
     return training_loss_value, testing_loss_value
+
+def train_meta_nn(settings, training_set, testing_set, seed, target_column = 'na',fold=5):
+    number_of_inputs = training_set[0].shape[1]
+    number_of_outputs = training_set[1].shape[1]
+
+    kf = KFold(n_splits=fold, shuffle=True, random_state=seed)
+    training_mses = []
+    testing_mses = []
+    counter = 0
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    for train_idx, _ in kf.split(training_set[0]):
+        counter+=1
+        x_training = training_set[0].iloc[train_idx]
+        y_training = training_set[1].iloc[train_idx]
+
+        # Convert data to tensors
+        x_training = torch.tensor(x_training.values, dtype=torch.float32)
+        y_training = torch.tensor(y_training.values, dtype=torch.float32)
+
+        # Create custom dataset and DataLoader
+        train_dataset = CustomDataset(x_training, y_training)
+        train_loader = DataLoader(train_dataset, batch_size=settings["batch_size"], shuffle=True)
+
+        network = Network(input_size=number_of_inputs,
+                          hidden_sizes=settings["number_of_neurons_in_layers"],
+                          number_of_hidden_layers=settings["number_of_hidden_layers"],
+                          output_size=number_of_outputs)
+        x_testing = torch.tensor(testing_set[0].values, dtype=torch.float32)
+        y_testing = torch.tensor(testing_set[1].values, dtype=torch.float32)
+        # Move network and tensors to GPU if available
+        if torch.cuda.is_available():
+            network = network.to(device)
+            x_training = x_training.to(device)
+            y_training = y_training.to(device)
+            x_testing = x_testing.to(device)
+            y_testing = y_testing.to(device)
+        loss_function = CustomCrossEntropyLoss()
+
+        optimiser = optim.SGD(network.parameters(), lr=settings["learning_rate"], momentum=settings["momentum"])
+
+        # Training loop
+        for epoch in range(settings["number_of_epochs"]):
+            for batch in train_loader:
+                network.train()
+                x_batch = batch["data"]
+                y_batch = batch["label"]
+
+                if torch.cuda.is_available():
+                    x_batch = x_batch.to(device)
+                    y_batch = y_batch.to(device)
+
+                training_outputs = network(x_batch)
+                for index in range(x_batch.shape[0]):
+                    batch = x_batch[index]
+                    output = training_outputs[index]
+                    if torch.isnan(batch).any() or torch.isnan(output).any():
+                        print(f"NaN detected in sample index {index} of the batch, skipping this sample.")
+
+                if torch.isnan(x_batch).any():
+                    print("NaN detected in training batch, skipping this batch.")
+                if torch.isnan(training_outputs).any():
+                    print("NaN detected in training outputs, skipping this batch.")
+                training_loss = loss_function(training_outputs, y_batch)
+
+                optimiser.zero_grad()
+                training_loss.backward()
+                optimiser.step()
+
+            # Final loss computation on training, validation, and testing sets
+        with torch.no_grad():
+            training_mses = mean_squared_error(network(x_training), y_training)
+            testing_mses = mean_squared_error(network(x_testing), y_testing)
+        if target_column != 'na':
+            torch.save(network.state_dict(), f'Data/Datasets/Output/Models/NN/nn_for_{target_column}_fold_{counter}.pkl')
+        counter = counter + 1
+
+    return {
+        "training mses": training_mses,
+        "testing mses": testing_mses
+    }

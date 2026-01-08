@@ -2,9 +2,11 @@ import pandas as pd
 import torch
 
 from InstanceCreator.instanceCreator import create_dataset, recreate_subsets, recreate_dataset
+from ModelTrainer.metaLearnersTrainer import train_meta_learners
+from Optimisers.metaLearnersOptimiser import optimise_meta_learners
 from Optimisers.nnOptimiser import optimise_nn
 from Utils.createAvgNNSetting import create_generic_nn_setting
-from Utils.datasetStatsCalculator import calculate_dataset_stats
+from Utils.datasetStatsCalculator import calculate_dataset_stats, calculate_meta_learners_stats
 from Utils.metaFeatureDatasetHandler import load_meta_feature_dataset
 from Utils.menus import show_dataset_menu, show_menu, show_dataset_setting_menu
 
@@ -16,6 +18,7 @@ process_options = ["Optimise NN",  #0-1
                    "Get Statistics of Meta Learning Dataset",  #5-6
                    "Optimise Meta Learning",  #6-7
                    "Train Meta Learning",  #7-8
+                   "Get Statistics of Meta Learners results",  #8-9
                    "Exit"]
 
 def main():
@@ -106,9 +109,14 @@ def main():
             dataset = load_meta_feature_dataset()
             calculate_dataset_stats(dataset)
         elif process == process_options[6]:
-            pass  # Placeholder for future implementation
+            training_set = load_meta_feature_dataset(type = "training set")
+            optimise_meta_learners(training_set)
         elif process == process_options[7]:
-            pass  # Placeholder for future implementation
+            training_set = load_meta_feature_dataset(type = "training set")
+            testing_set = load_meta_feature_dataset(type = "testing set")
+            train_meta_learners(training_set, testing_set)
+        elif process == process_options[8]:
+            calculate_meta_learners_stats()
         else:
             break
 

@@ -1,17 +1,22 @@
 import random
 
+import numpy as np
+import pandas as pd
 import pyhopper
+from sklearn.model_selection import train_test_split
 
-from Utils.fileHandler import save_settings, load_settings
+from Utils.fileHandler import save_nn_settings, load_settings
 from Utils.menus import show_menu
 from ModelTrainer.nnTrainer import train_nn
-from Utils.datasetHandler import load_optimiser_dataset
+from Utils.datasetHandler import load_optimiser_dataset, apply_one_hot_encode, prepared_meta_feature_dataset
 
 max_number_of_layers = 10
 min_number_of_layers = 5
 max_number_of_epoch = 1000
 
 parameter_groups = ["All", "Basic", "Dropout", "Prune", "Weight decay", "Weight perturbation", "Back"]
+meta_learning_target_columns = ["baseline_testing_loss", "batch_normalisation_testing_loss", "dropout_testing_loss",
+                                "layer_normalisation_testing_loss", "prune_testing_loss", "weight_normalisation_testing_loss" ]
 
 basic_parameters = {
     "batch_size": pyhopper.int(16, 1024, power_of=2),
@@ -60,20 +65,20 @@ def optimise_nn(dataset_name_input, dataset_settings):
     while parameter_group != parameter_groups[len(parameter_groups) - 1]:
         if parameter_group == parameter_groups[0]:
             best_params = setup_optimiser_and_run_it(dataset_name, "Basic", basic_parameters, 300)
-            path = save_settings(best_params, dataset_name, "")
+            path = save_nn_settings(best_params, dataset_name, "")
             basic_settings = load_settings(path)
 
             best_params = setup_optimiser_and_run_it(dataset_name, "Dropout", dropout_parameters, 50)
-            save_settings(best_params, dataset_name, path)
+            save_nn_settings(best_params, dataset_name, path)
 
             best_params = setup_optimiser_and_run_it(dataset_name, "Prune", prune_parameters, 100)
-            save_settings(best_params, dataset_name, path)
+            save_nn_settings(best_params, dataset_name, path)
 
             best_params = setup_optimiser_and_run_it(dataset_name, "Weight_decay", weight_decay_parameters, 50)
-            save_settings(best_params, dataset_name, path)
+            save_nn_settings(best_params, dataset_name, path)
 
             best_params = setup_optimiser_and_run_it(dataset_name, "Weight_perturbation", weight_perturbation_parameters, 100)
-            save_settings(best_params, dataset_name, path)
+            save_nn_settings(best_params, dataset_name, path)
         else:
             if parameter_group == parameter_groups[1]:
                 best_params = setup_optimiser_and_run_it(dataset_name, parameter_group, basic_parameters, 300)
@@ -87,7 +92,7 @@ def optimise_nn(dataset_name_input, dataset_settings):
                     best_params = setup_optimiser_and_run_it(dataset_name, parameter_group, weight_decay_parameters, 50)
                 else:
                     best_params = setup_optimiser_and_run_it(dataset_name, parameter_group, weight_perturbation_parameters, 100)
-            save_settings(best_params, dataset_name, "")
+            save_nn_settings(best_params, dataset_name, "")
         parameter_group = show_menu("Select parameter group by entering a number:", parameter_groups)
     return parameter_group == parameter_groups[len(parameter_groups) - 1]
 
@@ -103,9 +108,47 @@ def setup_optimiser_and_run_it(dataset_name, parameter_group_name, parameter_gro
         # n_jobs="per-gpu"
     )
     test_loss = train_nn_warp(best_params)
-    print(f"Tuned params for {dataset_name} dataset using {parameter_group_name} parameter group resulting in a of loss: {test_loss}")
+    print(f"Tuned params for {dataset_name} dataset using {parameter_group_name} parameter group resulting in a of mse: {test_loss}")
     return best_params
 
+def optimise_meta_leaner_nn(dataset):
+    global training_set, validation_set, category_columns
+
+    settings = {}
+
+    for target_column in meta_learning_target_columns:
+        print(target_column)
+
+        training_set, validation_set = prepared_meta_feature_dataset(dataset, meta_learning_target_columns, target_column)
+        training_y = training_set[1].to_frame()
+        validation_y = validation_set[1].to_frame()
+        training_y = apply_one_hot_encode(training_y, target_column)
+        validation_y = apply_one_hot_encode(validation_y, target_column)
+
+        if training_y.shape[1] > validation_y.shape[1]:
+            difference = training_y.shape[1] - validation_y.shape[1]
+            for i in range(difference):
+                validation_y[f"{target_column}_class_{training_y.shape[1]-difference + i}"] = False
+        if training_y.shape[1] < validation_y.shape[1]:
+            difference = validation_y.shape[1] - training_y.shape[1]
+            for i in range(difference):
+                training_y[f"{target_column}_class_{validation_y.shape[1]-difference + i}"] = False
+
+        search = pyhopper.Search(basic_parameters)
+
+        training_set = (pd.DataFrame(training_set[0]), training_y)
+        validation_set = (pd.DataFrame(validation_set[0]), validation_y)
+        best_params = search.run(
+            train_nn_warp,
+            direction="min",
+            steps=150,
+            # n_jobs="per-gpu"
+        )
+        validation_losses = train_nn_warp(best_params)
+        print(
+        f"Tuned params for random forest for {target_column} resulting in a of mse: {validation_losses}")
+        settings[target_column] = best_params
+    return settings
 
 def train_nn_warp(params):
     global training_set, validation_set, category_columns
