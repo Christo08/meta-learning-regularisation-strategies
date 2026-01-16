@@ -1,0 +1,50 @@
+{
+    "baseline_testing_loss": {
+        "n_neighbors": 9,
+        "weights": "uniform",
+        "algorithm": "ball_tree",
+        "leaf_size": 28,
+        "p": 2,
+        "metric": "manhattan"
+    },
+    "batch_normalisation_testing_loss": {
+        "n_neighbors": 4,
+        "weights": "uniform",
+        "algorithm": "kd_tree",
+        "leaf_size": 74,
+        "p": 5,
+        "metric": "minkowski"
+    },
+    "dropout_testing_loss": {
+        "n_neighbors": 20,
+        "weights": "distance",
+        "algorithm": "auto",
+        "leaf_size": 39,
+        "p": 1,
+        "metric": "minkowski"
+    },
+    "layer_normalisation_testing_loss": {
+        "n_neighbors": 9,
+        "weights": "distance",
+        "algorithm": "ball_tree",
+        "leaf_size": 34,
+        "p": 1,
+        "metric": "minkowski"
+    },
+    "prune_testing_loss": {
+        "n_neighbors": 7,
+        "weights": "uniform",
+        "algorithm": "auto",
+        "leaf_size": 79,
+        "p": 2,
+        "metric": "euclidean"
+    },
+    "weight_normalisation_testing_loss": {
+        "n_neighbors": 6,
+        "weights": "uniform",
+        "algorithm": "kd_tree",
+        "leaf_size": 52,
+        "p": 4,
+        "metric": "minkowski"
+    }
+}

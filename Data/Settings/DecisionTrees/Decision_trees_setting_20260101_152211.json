@@ -1,0 +1,50 @@
+{
+    "baseline_testing_loss": {
+        "criterion": "poisson",
+        "splitter": "random",
+        "max_depth": 185,
+        "min_samples_split": 60,
+        "min_samples_leaf": 53,
+        "ccp_alpha": 0.0
+    },
+    "batch_normalisation_testing_loss": {
+        "criterion": "friedman_mse",
+        "splitter": "random",
+        "max_depth": 28,
+        "min_samples_split": 32,
+        "min_samples_leaf": 14,
+        "ccp_alpha": 0.0
+    },
+    "dropout_testing_loss": {
+        "criterion": "friedman_mse",
+        "splitter": "random",
+        "max_depth": 200,
+        "min_samples_split": 16,
+        "min_samples_leaf": 1,
+        "ccp_alpha": 0.0103
+    },
+    "layer_normalisation_testing_loss": {
+        "criterion": "poisson",
+        "splitter": "best",
+        "max_depth": 168,
+        "min_samples_split": 60,
+        "min_samples_leaf": 1,
+        "ccp_alpha": 0.0
+    },
+    "prune_testing_loss": {
+        "criterion": "squared_error",
+        "splitter": "best",
+        "max_depth": 4,
+        "min_samples_split": 49,
+        "min_samples_leaf": 1,
+        "ccp_alpha": 0.0169
+    },
+    "weight_normalisation_testing_loss": {
+        "criterion": "friedman_mse",
+        "splitter": "random",
+        "max_depth": 200,
+        "min_samples_split": 30,
+        "min_samples_leaf": 1,
+        "ccp_alpha": 0.0
+    }
+}
