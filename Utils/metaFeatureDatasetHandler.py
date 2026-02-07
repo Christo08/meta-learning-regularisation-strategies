@@ -33,7 +33,7 @@ def spilt_dataset_and_targets(dataset):
         dataset = dataset.drop(target_columns, axis=1)
         return dataset, targets
 
-def load_meta_feature_dataset(need_subsets_info = False, type =""):
+def load_meta_feature_dataset(need_subsets_info = False, type ="", should_cover_to_binary = False):
     should_rank_techniques = input("Is the dataset raw? (y/n): ").lower() == "y"
     dataset = load_meta_features_csv(type)
     missing = False
@@ -59,6 +59,10 @@ def load_meta_feature_dataset(need_subsets_info = False, type =""):
         file_name = f"processed_meta_feature_{timestamp}.csv"
         file_path = output_path + "\\" + file_name
         save_data_frame(dataset, file_path)
+    if should_cover_to_binary:
+        for column in target_columns:
+            if column in dataset.columns:
+                dataset[column] = dataset[column].apply(lambda x: 1 if x == 1 else 0)
     return dataset
 
 def clean_dataset(dataset):

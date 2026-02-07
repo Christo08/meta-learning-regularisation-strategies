@@ -11,11 +11,11 @@ number_of_steps = 400
 parameter_group = {
     "kernel": pyhopper.choice(["linear", "poly", "rbf", "sigmoid"]),
     "C": pyhopper.float(0.1, 100.0, "0.4f"),
-    "epsilon": pyhopper.float(0.01, 1.0, "0.4f"),
     "gamma": pyhopper.choice(["scale", "auto"]),
     "degree": pyhopper.int(2, 5),  # Only used for 'poly' kernel
     "coef0": pyhopper.float(0.0, 1.0, "0.4f")  # Used for 'poly' and 'sigmoid'
 }
+
 training_set = {}
 validation_set = {}
 target_columns = ["baseline_testing_loss", "batch_normalisation_testing_loss", "dropout_testing_loss",
@@ -34,7 +34,7 @@ def optimise_support_vector_machine(dataset):
         search = pyhopper.Search(parameter_group)
         best_params = search.run(
             train_support_vector_machine_warp,
-            direction="min",
+            direction="max",
             steps=number_of_steps,
             # n_jobs="per-gpu"
         )
@@ -48,4 +48,4 @@ def train_support_vector_machine_warp(params):
     global training_set, validation_set
     seed = random.randint(0, 4294967295)
     losses = train_support_vector_machines(params, training_set, validation_set, seed)
-    return np.mean(losses["testing mses"])
+    return np.mean(losses["testing accuracies"])

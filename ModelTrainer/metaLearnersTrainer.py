@@ -7,6 +7,7 @@ from ModelTrainer.decisionTreeTrainer import training_all_decision_trees
 from ModelTrainer.knnTrainer import training_all_k_nearest_neighbors
 from ModelTrainer.randomForestTrainer import training_all_random_forests
 from ModelTrainer.svmTrainer import training_all_support_vector_machines
+from ModelTrainer.nnTrainer import training_all_neural_networks
 from Utils.fileHandler import save_data_frame
 from Utils.menus import show_meta_leaner_type_menu
 

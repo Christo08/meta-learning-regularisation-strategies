@@ -9,7 +9,7 @@ from Utils.datasetHandler import prepared_meta_feature_dataset
 
 number_of_steps = 400
 parameter_group = {
-    "criterion": pyhopper.choice(["squared_error", "absolute_error", "friedman_mse", "poisson"]),
+    "criterion": pyhopper.choice(["gini", "entropy", "log_loss"]),
     "splitter": pyhopper.choice(["best", "random"]),
     "max_depth": pyhopper.int(1, 200),
     "min_samples_split": pyhopper.int(2, 60),
@@ -34,7 +34,7 @@ def optimise_decision_tree(dataset):
         search = pyhopper.Search(parameter_group)
         best_params = search.run(
             train_decision_tree_warp,
-            direction="min",
+            direction="max",
             steps=number_of_steps,
             # n_jobs="per-gpu"
         )
@@ -48,4 +48,4 @@ def train_decision_tree_warp(params):
     global training_set, validation_set
     seed = random.randint(0, 4294967295)
     losses = train_decision_tree(params, training_set, validation_set, seed)
-    return np.mean(losses["testing mses"])
+    return np.mean(losses["testing accuracies"])

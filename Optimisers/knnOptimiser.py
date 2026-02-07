@@ -34,7 +34,7 @@ def optimise_k_nearest_neighbors(dataset):
         search = pyhopper.Search(parameter_group)
         best_params = search.run(
             train_k_nearest_neighbors_warp,
-            direction="min",
+            direction="max",
             steps=number_of_steps,
             # n_jobs="per-gpu"
         )
@@ -48,4 +48,4 @@ def train_k_nearest_neighbors_warp(params):
     global training_set, validation_set
     seed = random.randint(0, 4294967295)
     losses = train_k_nearest_neighbors(params, training_set, validation_set, seed)
-    return np.mean(losses["testing mses"])
+    return np.mean(losses["testing accuracies"])

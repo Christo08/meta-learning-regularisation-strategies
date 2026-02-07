@@ -2,7 +2,7 @@ import joblib
 import numpy as np
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import KFold
-from sklearn.svm import SVR
+from sklearn.svm import SVC
 
 from Utils.fileHandler import load_settings
 
@@ -34,7 +34,9 @@ def training_all_support_vector_machines(settings_file_path, training_set, testi
 def train_support_vector_machines(params, training_set, testing_set, seed, target_column = 'na', kFold = 5):
     kf = KFold(n_splits=kFold, shuffle=True, random_state=seed)
     training_mses = []
+    training_accuracy = []
     testing_mses = []
+    testing_accuracy = []
     training_x = training_set[0]
     training_y = training_set[1]
     testing_x = testing_set[0]
@@ -48,16 +50,23 @@ def train_support_vector_machines(params, training_set, testing_set, seed, targe
             del svm_params["degree"]
         if svm_params.get("kernel") not in ["poly", "sigmoid"] and "coef0" in svm_params:
             del svm_params["coef0"]
-        svm = SVR(**svm_params)
+        svm = SVC(**svm_params)
         svm.fit(x_train, y_train)
         y_train_pred = svm.predict(x_train)
         y_test_pred = svm.predict(testing_x)
+
         training_mses.append(mean_squared_error(y_train, y_train_pred))
+        training_accuracy.append(float(np.sum(y_train == y_train_pred)/len(y_train)*100))
+
         testing_mses.append(mean_squared_error(testing_y, y_test_pred))
+        testing_accuracy.append(float(np.sum(testing_y == y_test_pred)/len(y_train)*100))
+
         if target_column != 'na':
             joblib.dump(svm, f'Data/Datasets/Output/Models/SVM/svm_for_{target_column}_fold_{counter}.pkl')
         counter = counter + 1
     return {
         "training mses": training_mses,
-        "testing mses": testing_mses
+        "training accuracies": training_accuracy,
+        "testing mses": testing_mses,
+        "testing accuracies": testing_accuracy
     }

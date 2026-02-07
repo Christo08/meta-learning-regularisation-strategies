@@ -158,27 +158,27 @@ def calculate_meta_learners_stats():
     for idx, technique in enumerate(techniques):
         group = meta_learners_results[meta_learners_results['technique'] == technique]
 
-        for mse_col in ['testing mses', 'training mses']:
-            if mse_col not in group.columns:
+        for accuracy_col in ['testing accuracies', 'training accuracies']:
+            if accuracy_col not in group.columns:
                 continue
-            group_exp = group[['model type', mse_col]].reset_index(drop=True)
-            group_exp = explode_mses(group_exp, mse_col)
-            group_exp[mse_col] = group_exp[mse_col].astype(float)
+            group_exp = group[['model type', accuracy_col]].reset_index(drop=True)
+            group_exp = explode_accuracies(group_exp, accuracy_col)
+            group_exp[accuracy_col] = group_exp[accuracy_col].astype(float)
 
-            stats = group_exp.groupby('model type')[mse_col].agg(['mean', 'min', 'max', 'std'])
-            print(f"\nModel type: {technique} - {mse_col.capitalize()} statistics:")
+            stats = group_exp.groupby('model type')[accuracy_col].agg(['mean', 'min', 'max', 'std'])
+            print(f"\nModel type: {technique} - {accuracy_col.capitalize()} statistics:")
             print(stats)
 
-        # Plotting boxplot for testing mses
-        if 'testing mses' in group.columns:
-            group_plot = group[['model type', 'testing mses']].reset_index(drop=True)
-            group_plot = explode_mses(group_plot, 'testing mses')
-            group_plot['testing mses'] = group_plot['testing mses'].astype(float)
+        # Plotting boxplot for testing accuracies
+        if 'testing accuracies' in group.columns:
+            group_plot = group[['model type', 'testing accuracies']].reset_index(drop=True)
+            group_plot = explode_accuracies(group_plot, 'testing accuracies')
+            group_plot['testing accuracies'] = group_plot['testing accuracies'].astype(float)
 
             ax = axes[idx]
-            sns.boxplot(x='model type', y='testing mses', data=group_plot, ax=ax)
+            sns.boxplot(x='model type', y='testing accuracies', data=group_plot, ax=ax)
             ax.set_title(f'{technique}')
-            ax.set_ylabel('Testing MSEs')
+            ax.set_ylabel('Testing Accuracies')
             ax.set_xlabel('Model type')
             ax.tick_params(axis='x', rotation=90)
 
@@ -186,12 +186,12 @@ def calculate_meta_learners_stats():
     for j in range(idx + 1, len(axes)):
         fig.delaxes(axes[j])
 
-    plt.suptitle('Boxplot of Testing MSEs by Model Type for Each Technique', fontsize=16)
+    plt.suptitle('Boxplot of Testing Accuracies by Model Type for Each Technique', fontsize=16)
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     plt.show()
 
 
-def explode_mses(df, mse_col):
+def explode_accuracies(df, accuracy_col):
     df = df.copy()
-    df[mse_col] = df[mse_col].apply(lambda x: eval(x) if isinstance(x, str) else x)
-    return df.explode(mse_col)
+    df[accuracy_col] = df[accuracy_col].apply(lambda x: eval(x) if isinstance(x, str) else x)
+    return df.explode(accuracy_col)

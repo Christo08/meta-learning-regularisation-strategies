@@ -10,9 +10,9 @@ from Utils.menus import show_menu
 from ModelTrainer.nnTrainer import train_nn
 from Utils.datasetHandler import load_optimiser_dataset, apply_one_hot_encode, prepared_meta_feature_dataset
 
-max_number_of_layers = 10
-min_number_of_layers = 5
-max_number_of_epoch = 1000
+MAX_NUMBER_OF_LAYERS = 10
+MIN_NUMBER_OF_LAYERS = 2
+MAX_NUMBER_OF_EPOCH = 1000
 
 parameter_groups = ["All", "Basic", "Dropout", "Prune", "Weight decay", "Weight perturbation", "Back"]
 meta_learning_target_columns = ["baseline_testing_loss", "batch_normalisation_testing_loss", "dropout_testing_loss",
@@ -22,13 +22,13 @@ basic_parameters = {
     "batch_size": pyhopper.int(16, 1024, power_of=2),
     "learning_rate":  pyhopper.float(0.0001,0.5,"0.4f"),
     "momentum": pyhopper.float(0.0001,0.5,"0.4f"),
-    "number_of_epochs": pyhopper.int(50, max_number_of_epoch, multiple_of=20),
-    "number_of_hidden_layers": pyhopper.int(min_number_of_layers, max_number_of_layers),
-    "number_of_neurons_in_layers": pyhopper.int(5, 1000, multiple_of=5, shape=max_number_of_layers)
+    "number_of_epochs": pyhopper.int(50, MAX_NUMBER_OF_EPOCH, multiple_of=20),
+    "number_of_hidden_layers": pyhopper.int(MIN_NUMBER_OF_LAYERS, MAX_NUMBER_OF_LAYERS),
+    "number_of_neurons_in_layers": pyhopper.int(5, 1000, multiple_of=5, shape=MAX_NUMBER_OF_LAYERS)
 }
 
 dropout_parameters = {
-    "dropout_layers": pyhopper.float(0.01, 0.75, shape=max_number_of_layers)
+    "dropout_layers": pyhopper.float(0.01, 0.75, shape=MAX_NUMBER_OF_LAYERS)
 }
 
 prune_parameters = {
@@ -42,7 +42,7 @@ weight_decay_parameters = {
 
 weight_perturbation_parameters = {
     "weight_perturbation_amount": pyhopper.float(0.01, 1.00, "0.2f"),
-    "weight_perturbation_interval": pyhopper.int(max_number_of_epoch / 250, max_number_of_epoch / 10)
+    "weight_perturbation_interval": pyhopper.int(MAX_NUMBER_OF_EPOCH / 250, MAX_NUMBER_OF_EPOCH / 10)
 }
 
 dataset_name = ""
@@ -117,13 +117,9 @@ def optimise_meta_leaner_nn(dataset):
     settings = {}
 
     for target_column in meta_learning_target_columns:
-        print(target_column)
-
         training_set, validation_set = prepared_meta_feature_dataset(dataset, meta_learning_target_columns, target_column)
-        training_y = training_set[1].to_frame()
-        validation_y = validation_set[1].to_frame()
-        training_y = apply_one_hot_encode(training_y, target_column)
-        validation_y = apply_one_hot_encode(validation_y, target_column)
+        training_y = training_set[1]
+        validation_y = validation_set[1]
 
         if training_y.shape[1] > validation_y.shape[1]:
             difference = training_y.shape[1] - validation_y.shape[1]
@@ -154,15 +150,15 @@ def train_nn_warp(params):
     global training_set, validation_set, category_columns
     if "batch_size" in params:
         settings = params
-        training_losses, validation_losses = train_nn(settings, "", training_set, validation_set, category_columns, seed)
+        training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_nn(settings, "", training_set, validation_set, category_columns, seed)
     else:
         settings = {**basic_settings, **params}
         if "dropout_layers" in params:
-            training_losses, validation_losses = train_nn(settings, "dropout", training_set, validation_set, category_columns, seed)
+            training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_nn(settings, "dropout", training_set, validation_set, category_columns, seed)
         elif "prune_amount" in params:
-            training_losses, validation_losses = train_nn(settings, "prune", training_set, validation_set, category_columns, seed)
+            training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_nn(settings, "prune", training_set, validation_set, category_columns, seed)
         elif "weight_decay" in params:
-            training_losses, validation_losses = train_nn(settings, "weightDecay", training_set, validation_set, category_columns, seed)
+            training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_nn(settings, "weightDecay", training_set, validation_set, category_columns, seed)
         else:
-            training_losses, validation_losses = train_nn(settings, "weightPerturbation", training_set, validation_set, category_columns, seed)
-    return validation_losses
+            training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values= train_nn(settings, "weightPerturbation", training_set, validation_set, category_columns, seed)
+    return testing_loss_values

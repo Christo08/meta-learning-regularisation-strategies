@@ -5,25 +5,26 @@ from Optimisers.randomForsetOptimiser import optimise_random_forest
 from Optimisers.svmOptimiser import optimise_support_vector_machine
 from Utils.fileHandler import save_meta_learner_settings
 from Utils.menus import show_meta_leaner_type_menu
+from Utils.menus import meta_learn_types
 
 
 def optimise_meta_learners(dataset):
     selected_meta_learn_types = show_meta_leaner_type_menu()
     for selected_meta_learn_type in selected_meta_learn_types:
-        if selected_meta_learn_type == 'Decision trees':
+        if selected_meta_learn_type == meta_learn_types[1]:
             setting = optimise_decision_tree(dataset)
             save_meta_learner_settings(setting, "DecisionTrees")
-        elif selected_meta_learn_type == 'Random forests':
-            setting = optimise_random_forest(dataset)
-            save_meta_learner_settings(setting, "RandomForest")
-        elif selected_meta_learn_type == 'K-nearest neighbors':
+        elif selected_meta_learn_type == meta_learn_types[2]:
             setting = optimise_k_nearest_neighbors(dataset)
             save_meta_learner_settings(setting, "KNearestNeighbors")
-        elif selected_meta_learn_type == 'Support vector machines':
-            setting = optimise_support_vector_machine(dataset)
-            save_meta_learner_settings(setting, "SupportVectorMachines")
-        elif selected_meta_learn_type == 'Neural networks':
+        elif selected_meta_learn_type == meta_learn_types[3]:
             setting = optimise_meta_leaner_nn(dataset)
             save_meta_learner_settings(setting, "NeuralNetworks")
+        elif selected_meta_learn_type == meta_learn_types[4]:
+            setting = optimise_random_forest(dataset)
+            save_meta_learner_settings(setting, "RandomForest")
+        elif selected_meta_learn_type == meta_learn_types[5]:
+            setting = optimise_support_vector_machine(dataset)
+            save_meta_learner_settings(setting, "SupportVectorMachines")
         else:
             return

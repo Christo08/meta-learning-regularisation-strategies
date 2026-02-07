@@ -129,7 +129,7 @@ def recreate_dataset(subset_dataset, dataset_names, indexes, settings_file_path,
         counter = 1
         for index in indexes:
             row = seed["rows"][index]
-            training_set, testing_set, subset_category_columns = load_subset(row["file_path"], seed["name"], row["seed"])
+            training_set, testing_set, subset_category_columns = load_subset(row["file_path"], row["seed"], settings)
             meta_feature = meta_features.iloc[row["index"]]
             instance, duration = create_instance(seed["name"],
                                                  settings,
@@ -205,16 +205,18 @@ def create_instance(dataset_name, settings, number_of_folds, training_set, testi
     # Perform training for each configuration
     for config in configurations:
         print(config["param"])
-        training_losses, testing_losses = train_nn(settings,
-                                                   config["param"],
-                                                   training_set,
-                                                   testing_set,
-                                                   seed,
-                                                   category_columns,
-                                                   number_of_folds)
+        training_loss_values, training_accuracies, testing_loss_values, testing_accuracies = train_nn(settings,
+                                                                                                      config["param"],
+                                                                                                      training_set,
+                                                                                                      testing_set,
+                                                                                                      seed,
+                                                                                                      category_columns,
+                                                                                                      number_of_folds)
 
-        instance_json_object[config['fileName']+"_training_loss"] = training_losses
-        instance_json_object[config['fileName']+"_testing_loss"] = testing_losses
+        instance_json_object[config['fileName']+"_training_loss"] = training_loss_values
+        instance_json_object[config['fileName']+"_training_accuracies"] = training_accuracies
+        instance_json_object[config['fileName']+"_testing_loss"] = testing_loss_values
+        instance_json_object[config['fileName']+"_testing_accuracies"] = testing_accuracies
 
         if best_training_loss > np.mean(training_losses):
             best_training_loss = np.mean(training_losses)

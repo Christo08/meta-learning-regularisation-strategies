@@ -25,47 +25,48 @@ def train_nn(settings, technique, training_set, testing_set, seed, category_colu
     if fold is not None and fold >= 3:
         kf = KFold(n_splits=fold, shuffle=True, random_state=seed)
         training_loss_values = []
+        training_accuracies_values = []
         testing_loss_values = []
+        testing_accuracies_values = []
         counter =0
 
         for train_idx, _ in kf.split(training_set[0]):
             counter+=1
             training_set_x = training_set[0].iloc[train_idx]
             training_set_y = training_set[1].iloc[train_idx]
-            training_loss_value, testing_loss_value = training_loop(training_set_x,
-                                                                    training_set_y,
-                                                                    testing_set,
-                                                                    settings,
-                                                                    number_of_inputs,
-                                                                    number_of_outputs,
-                                                                    technique,
-                                                                    seed,
-                                                                    all_labels,
-                                                                    category_columns)
+            training_loss_value, training_accuracy_value, testing_loss_value, testing_accuracy_value = training_loop(training_set_x,
+                                                                                                                     training_set_y,
+                                                                                                                     testing_set,
+                                                                                                                     settings,
+                                                                                                                     number_of_inputs,
+                                                                                                                     number_of_outputs,
+                                                                                                                     technique,
+                                                                                                                     seed,
+                                                                                                                     all_labels,
+                                                                                                                     category_columns)
             training_loss_values.append(training_loss_value)
+            training_accuracies_values.append(training_accuracy_value)
             testing_loss_values.append(testing_loss_value)
-        return training_loss_values, testing_loss_values
+            testing_accuracies_values.append(testing_accuracy_value)
+        return training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values
     else:
-        training_loss_values, testing_loss_values= training_loop(training_set[0],
-                                                                 training_set[1],
-                                                                 testing_set,
-                                                                 settings,
-                                                                 number_of_inputs,
-                                                                 number_of_outputs,
-                                                                 technique,
-                                                                 seed,
-                                                                 all_labels,
-                                                                 category_columns)
-        return training_loss_values, testing_loss_values
+        return training_loop(training_set[0],
+                             training_set[1],
+                             testing_set,
+                             settings,
+                             number_of_inputs,
+                             number_of_outputs,
+                             technique,
+                             seed,
+                             all_labels,
+                             category_columns)
 
 def training_all_neural_networks(settings_file_path, training_set, testing_set, seed, kFold =5):
     results = []
     settings = load_settings(settings_file_path)
     for target_column in meta_learning_target_columns:
-        training_x = np.array(training_set.drop([target_column], axis=1))
-        training_y = training_set[target_column]
-        testing_x = np.array(testing_set.drop([target_column], axis=1))
-        testing_y = testing_set[target_column]
+        training_x, training_y = prepared_meta_feature_dataset(training_set, meta_learning_target_columns, target_column)
+        testing_x, testing_y = prepared_meta_feature_dataset(testing_set, meta_learning_target_columns, target_column)
         result = train_meta_nn(settings[target_column],
                               (training_x, training_y),
                               (testing_x, testing_y),
@@ -201,32 +202,22 @@ def training_loop(x_training, y_training, testing_set, settings, number_of_input
 
     # Final loss computation on training, validation, and testing sets
     with torch.no_grad():
+        y_training_pred = network(x_training)
+        y_testing_pred = network(x_testing)
         if technique == "weightDecay":
-            training_loss_value = loss_function(network(x_training), y_training, network).item()
-            testing_loss_value = loss_function(network(x_testing), y_testing, network).item()
+            training_loss_value = loss_function(y_training_pred, y_training, network).item()
+            testing_loss_value = loss_function(y_testing_pred, y_testing, network).item()
         else:
-            try:
-                pr_y = network(x_training)
-                training_loss_value = loss_function(pr_y, y_training).item()
-            except Exception as e:
-                print(x_training.shape)
-                print(pr_y.shape)
-                print(y_training.shape)
-                raise e
-            try:
-                pr_y = network(x_testing)
-                testing_loss_value = loss_function(pr_y, y_testing).item()
-            except Exception as e:
-                print(x_testing.shape)
-                print(pr_y.shape)
-                print(y_testing.shape)
-                raise e
+            training_loss_value = loss_function(y_training_pred, y_training).item()
+            testing_loss_value = loss_function(y_testing_pred, y_testing).item()
+        training_accuracy = float(np.sum(y_training == y_training_pred)/len(y_train)*100)
+        testing_accuracy = float(np.sum(y_testing == y_testing_pred)/len(y_train)*100)
 
-    return training_loss_value, testing_loss_value
+    return training_loss_value, training_accuracy, testing_loss_value, testing_accuracy
 
 def train_meta_nn(settings, training_set, testing_set, seed, target_column = 'na',fold=5):
     number_of_inputs = training_set[0].shape[1]
-    number_of_outputs = training_set[1].shape[1]
+    number_of_outputs = 1
 
     kf = KFold(n_splits=fold, shuffle=True, random_state=seed)
     training_mses = []
@@ -236,9 +227,9 @@ def train_meta_nn(settings, training_set, testing_set, seed, target_column = 'na
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     for train_idx, _ in kf.split(training_set[0]):
-        counter+=1
-        x_training = training_set[0].iloc[train_idx]
-        y_training = training_set[1].iloc[train_idx]
+        counter += 1
+        x_training = training_set[0][train_idx]
+        y_training = training_set[1][train_idx]
 
         # Convert data to tensors
         x_training = torch.tensor(x_training.values, dtype=torch.float32)
@@ -303,5 +294,7 @@ def train_meta_nn(settings, training_set, testing_set, seed, target_column = 'na
 
     return {
         "training mses": training_mses,
-        "testing mses": testing_mses
+        "training accuracies": training_accuracy,
+        "testing mses": testing_mses,
+        "testing accuracies": testing_accuracy
     }

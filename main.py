@@ -109,11 +109,11 @@ def main():
             dataset = load_meta_feature_dataset()
             calculate_dataset_stats(dataset)
         elif process == process_options[6]:
-            training_set = load_meta_feature_dataset(type = "training set")
+            training_set = load_meta_feature_dataset(type = "training set", should_cover_to_binary = True)
             optimise_meta_learners(training_set)
         elif process == process_options[7]:
-            training_set = load_meta_feature_dataset(type = "training set")
-            testing_set = load_meta_feature_dataset(type = "testing set")
+            training_set = load_meta_feature_dataset(type = "training set", should_cover_to_binary = True)
+            testing_set = load_meta_feature_dataset(type = "testing set", should_cover_to_binary = True)
             train_meta_learners(training_set, testing_set)
         elif process == process_options[8]:
             calculate_meta_learners_stats()
