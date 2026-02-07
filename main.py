@@ -104,7 +104,7 @@ def main():
                     settings_file_path =input("Enter the path of the NN's settings file: ")
                     number_of_folds = int(input("How many folds do you what use per instance? "))
                     index_to_create = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
-                    recreate_dataset(subset_dataset, names, index_to_create, settings_file_path, output_path, number_of_folds)
+                    recreate_dataset(subset_dataset, names, index_to_create, settings_file_path, output_path, number_of_folds, datasets_settings)
         elif process == process_options[5]:
             dataset = load_meta_feature_dataset()
             calculate_dataset_stats(dataset)

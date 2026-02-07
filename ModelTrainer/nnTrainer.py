@@ -210,8 +210,8 @@ def training_loop(x_training, y_training, testing_set, settings, number_of_input
         else:
             training_loss_value = loss_function(y_training_pred, y_training).item()
             testing_loss_value = loss_function(y_testing_pred, y_testing).item()
-        training_accuracy = float(np.sum(y_training == y_training_pred)/len(y_train)*100)
-        testing_accuracy = float(np.sum(y_testing == y_testing_pred)/len(y_train)*100)
+        training_accuracy = float(np.sum(y_training == y_training_pred)/len(y_training)*100)
+        testing_accuracy = float(np.sum(y_testing == y_testing_pred)/len(y_training)*100)
 
     return training_loss_value, training_accuracy, testing_loss_value, testing_accuracy
 
@@ -286,8 +286,12 @@ def train_meta_nn(settings, training_set, testing_set, seed, target_column = 'na
 
             # Final loss computation on training, validation, and testing sets
         with torch.no_grad():
-            training_mses = mean_squared_error(network(x_training), y_training)
-            testing_mses = mean_squared_error(network(x_testing), y_testing)
+            y_training_pred = network(x_training)
+            y_testing_pred = network(x_testing)
+            training_mses = mean_squared_error(y_training_pred, y_training)
+            testing_mses = mean_squared_error(y_testing_pred, y_testing)
+            training_accuracy = float(np.sum(y_training == y_training_pred)/len(y_training)*100)
+            testing_accuracy = float(np.sum(y_testing == y_testing_pred)/len(y_training)*100)
         if target_column != 'na':
             torch.save(network.state_dict(), f'Data/Datasets/Output/Models/NN/nn_for_{target_column}_fold_{counter}.pkl')
         counter = counter + 1

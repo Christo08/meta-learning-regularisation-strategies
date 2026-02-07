@@ -105,14 +105,16 @@ def recreate_subsets(meta_feature_dataset, number_of_instances, datasets_setting
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     pd.DataFrame(meta_feature_dataset).to_csv(f"Data/Datasets/Output/Raw/SubsetMetaFeatures_{timestamp}.csv", index=False)
 
-def recreate_dataset(subset_dataset, dataset_names, indexes, settings_file_path, output_path, number_of_folds):
+def recreate_dataset(subset_dataset, dataset_names, indexes, settings_file_path, output_path, number_of_folds, datasets_settings):
     dataset, output_path = load_meta_features_dataset(output_path)
     settings = load_settings(settings_file_path)
     seeds = []
     for name, group in subset_dataset.groupby('dataset_name'):
         if name in dataset_names:
+            dataset_settings =  next((item for item in datasets_settings if item["name"] == name), None)
             seed = {
                 "name": name,
+                "dataset_settings": dataset_settings,
                 "rows": [],
             }
             for index, row in group.iterrows():
@@ -129,7 +131,7 @@ def recreate_dataset(subset_dataset, dataset_names, indexes, settings_file_path,
         counter = 1
         for index in indexes:
             row = seed["rows"][index]
-            training_set, testing_set, subset_category_columns = load_subset(row["file_path"], row["seed"], settings)
+            training_set, testing_set, subset_category_columns = load_subset(row["file_path"], row["seed"], seed["dataset_settings"])
             meta_feature = meta_features.iloc[row["index"]]
             instance, duration = create_instance(seed["name"],
                                                  settings,
@@ -218,12 +220,12 @@ def create_instance(dataset_name, settings, number_of_folds, training_set, testi
         instance_json_object[config['fileName']+"_testing_loss"] = testing_loss_values
         instance_json_object[config['fileName']+"_testing_accuracies"] = testing_accuracies
 
-        if best_training_loss > np.mean(training_losses):
-            best_training_loss = np.mean(training_losses)
+        if best_training_loss > np.mean(training_loss_values):
+            best_training_loss = np.mean(training_loss_values)
             best_training_technique = config['fileName']
 
-        if best_testing_loss > np.mean(testing_losses):
-            best_testing_loss = np.mean(testing_losses)
+        if best_testing_loss > np.mean(testing_loss_values):
+            best_testing_loss = np.mean(testing_loss_values)
             best_testing_technique = config['fileName']
 
     instance_json_object["best_training_technique"] = best_training_technique
