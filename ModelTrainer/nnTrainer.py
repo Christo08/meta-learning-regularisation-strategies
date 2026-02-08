@@ -4,7 +4,7 @@ from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import KFold
 from torch import optim
 from torch.utils.data import DataLoader
-
+from Utils.datasetHandler import prepared_meta_feature_dataset
 from Models.NN.customDataset import CustomDataset
 from Models.NN.network import Network
 from Utils.datasetHandler import apply_smote
@@ -210,8 +210,14 @@ def training_loop(x_training, y_training, testing_set, settings, number_of_input
         else:
             training_loss_value = loss_function(y_training_pred, y_training).item()
             testing_loss_value = loss_function(y_testing_pred, y_testing).item()
-        training_accuracy = float(np.sum(y_training == y_training_pred)/len(y_training)*100)
-        testing_accuracy = float(np.sum(y_testing == y_testing_pred)/len(y_training)*100)
+        # Classification accuracy: compare predicted class index vs true class index
+        train_pred_cls = torch.argmax(y_training_pred, dim=1)
+        train_true_cls = torch.argmax(y_training, dim=1)
+        training_accuracy = (train_pred_cls == train_true_cls).float().mean().item() * 100.0
+
+        test_pred_cls = torch.argmax(y_testing_pred, dim=1)
+        test_true_cls = torch.argmax(y_testing, dim=1)
+        testing_accuracy = (test_pred_cls == test_true_cls).float().mean().item() * 100.0
 
     return training_loss_value, training_accuracy, testing_loss_value, testing_accuracy
 
