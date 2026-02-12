@@ -1,10 +1,34 @@
 [
   {
+    "name": "Ann thyroid",
+    "type": "pmlb",
+    "pmlbName": "ann_thyroid",
+    "categoryColumns": [],
+    "targetColumn": "target",
+    "dropColumns": []
+  },
+  {
     "name": "Dry Bean",
     "type": "csv",
     "filePath": "Data/Datasets/Input/DryBeanDataset/Dry_Bean_Dataset.csv",
     "categoryColumns": [],
     "targetColumn": "Class",
+    "dropColumns": []
+  },
+  {
+    "name": "Car evaluation",
+    "type": "pmlb",
+    "pmlbName": "car_evaluation",
+    "categoryColumns": [],
+    "targetColumn": "target",
+    "dropColumns": []
+  },
+  {
+    "name": "Led24",
+    "type": "pmlb",
+    "pmlbName": "led24",
+    "categoryColumns": [],
+    "targetColumn": "target",
     "dropColumns": []
   },
   {
@@ -37,6 +61,14 @@
     "filePath": "Data/Datasets/Input/OnlineDataset/online_shoppers_intention.csv",
     "categoryColumns": ["Month","VisitorType", "Weekend"],
     "targetColumn": "Revenue",
+    "dropColumns": []
+  },
+  {
+    "name": "Parity5",
+    "type": "pmlb",
+    "pmlbName": "parity5+5",
+    "categoryColumns": [],
+    "targetColumn": "target",
     "dropColumns": []
   },
   {
