@@ -63,8 +63,8 @@ def train_random_forest(params, training_set, testing_set, seed, target_column =
             joblib.dump(forest, f'Data/Datasets/Output/Models/RandomForest/random_forest_for_{target_column}_fold_{counter}.pkl')
         counter = counter + 1
     return {
-        "training mses": training_mses,
+        "training loses": training_mses,
         "training accuracies": training_accuracy,
-        "testing mses": testing_mses,
+        "testing loses": testing_mses,
         "testing accuracies": testing_accuracy
     }

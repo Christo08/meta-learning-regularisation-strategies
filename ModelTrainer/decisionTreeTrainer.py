@@ -60,8 +60,8 @@ def train_decision_tree(params, training_set, testing_set, seed, target_column =
             joblib.dump(tree, f'Data/Datasets/Output/Models/DecisionTrees/decision_tree_for_{target_column}_fold_{counter}.pkl')
         counter = counter + 1
     return {
-        "training mses": training_mses,
+        "training loses": training_mses,
         "training accuracies": training_accuracy,
-        "testing mses": testing_mses,
+        "testing loses": testing_mses,
         "testing accuracies": testing_accuracy
     }

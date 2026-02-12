@@ -65,8 +65,8 @@ def train_support_vector_machines(params, training_set, testing_set, seed, targe
             joblib.dump(svm, f'Data/Datasets/Output/Models/SVM/svm_for_{target_column}_fold_{counter}.pkl')
         counter = counter + 1
     return {
-        "training mses": training_mses,
+        "training loses": training_mses,
         "training accuracies": training_accuracy,
-        "testing mses": testing_mses,
+        "testing loses": testing_mses,
         "testing accuracies": testing_accuracy
     }

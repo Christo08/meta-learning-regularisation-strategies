@@ -15,7 +15,7 @@ from Utils.menus import show_meta_leaner_type_menu
 def train_meta_learners(training_dataset, testing_dataset):
     selected_meta_learn_types = show_meta_leaner_type_menu()
     number_of_folds = int(input("How many folds do you want to use per instance? "))
-    results = pd.DataFrame(columns=["model type", "technique",  "training mses", "testing mses"])
+    results = pd.DataFrame(columns=["model type", "technique",  "training loses", "testing loses"])
     for selected_meta_learn_type in selected_meta_learn_types:
         settings_file_path = input(f"Enter the path of the {selected_meta_learn_type}' settings file: ")
         seed = random.randint(0, 4294967295)
