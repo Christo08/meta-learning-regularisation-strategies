@@ -103,12 +103,12 @@ def training_loop(x_training, y_training, testing_set, settings, number_of_input
     if technique == "SMOTE":
         number_of_neighbors = number_of_outputs - 1
         if number_of_neighbors < 3 or x_training.shape[1] - len(category_columns) < 2:
-            return float('inf'), float('inf')
+            return float('inf'), float(0), float('inf'), float(0)
         try:
             x_training, y_training = apply_smote(x_training, y_training, seed, number_of_neighbors, category_columns)
         except Exception as e:
             if "Cannot apply smote." in str(e):
-                return float('inf'), float('inf')
+                return float('inf'), float(0), float('inf'), float(0)
             else:
                 raise e
 
