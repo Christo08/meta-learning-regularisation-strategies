@@ -17,6 +17,7 @@ target_columns = [
     "prune_testing_loss",
     "weight_decay_testing_loss",
     "weight_normalisation_testing_loss",
+    "weight_perturbation_testing_loss"
 ]
 
 def spilt_dataset_and_targets(dataset):
@@ -73,7 +74,14 @@ def clean_dataset(dataset):
         "SMOTE_validation_loss", "prune_training_loss", "prune_validation_loss", "weight_decay_training_loss",
         "weight_decay_validation_loss", "weight_normalisation_training_loss", "weight_normalisation_validation_loss",
         "weight_perturbation_training_loss", "weight_perturbation_validation_loss", "best_training_technique",
-        "best_validation_technique", "best_testing_technique"
+        "best_validation_technique", "best_testing_technique","baseline_training_accuracies","baseline_testing_accuracies",
+        "batch_normalisation_training_accuracies",
+        "batch_normalisation_testing_accuracies","dropout_training_accuracies","dropout_testing_accuracies",
+        "layer_normalisation_training_accuracies","layer_normalisation_testing_accuracies","SMOTE_training_accuracies",
+        "SMOTE_testing_accuracies","prune_training_accuracies","prune_testing_accuracies",
+        "weight_decay_training_accuracies","weight_decay_testing_accuracies","weight_normalisation_training_accuracies",
+        "weight_normalisation_testing_accuracies","weight_perturbation_training_accuracies",
+        "weight_perturbation_testing_accuracies"
     ]
     should_apply_z_scoring = input("Apply Z scoring? (y/n): ").lower() == "y"
 
