@@ -9,6 +9,7 @@ from pmlb import fetch_data
 from scipy.stats import zscore
 from sklearn.model_selection import train_test_split
 
+from Utils.fileHandler import save_subset
 from Utils.metaFeatureCalculator import calculate_meta_features
 
 dataset = pd.DataFrame()
@@ -41,6 +42,7 @@ def create_subsets_with_seeds(database_name, number_of_subsets_need, class_seeds
 
     return_subsets = []
     meta_features = []
+    subset_file_paths = []
     subsets_category_columns = []
     for subset, seed in zip(subsets, seeds):
         subset, subset_category_columns = encode_categories_features(subset, dataset_settings['categoryColumns'])
@@ -50,11 +52,13 @@ def create_subsets_with_seeds(database_name, number_of_subsets_need, class_seeds
 
         subset = normalise(subset, subset_category_columns,["target"])
 
+        subset_file_paths.append(save_subset(subset, seed["seed"], database_name))
+
         subset.reset_index(drop=True, inplace=True)
         return_subsets.append(subset)
         subsets_category_columns.append(subset_category_columns)
 
-    return return_subsets, meta_features, seeds, subsets_category_columns
+    return return_subsets, meta_features, seeds, subsets_category_columns, subset_file_paths
 
 def load_subset(file_path, seed, dataset_settings):
     subset = pd.read_csv(file_path)
@@ -92,6 +96,7 @@ def create_subsets(database_name, number_of_subsets_need, dataset_settings, need
     testing_sets = []
     meta_features = []
     subsets_category_columns = []
+    subset_file_paths = []
     for subset, seed in zip(subsets, seeds):
         subset, subset_category_columns = encode_categories_features(subset, dataset_settings['categoryColumns'])
         subset = remap_targets(subset)
@@ -101,6 +106,9 @@ def create_subsets(database_name, number_of_subsets_need, dataset_settings, need
         subset = normalise(subset, subset_category_columns,["target"])
 
         subset.reset_index(drop=True, inplace=True)
+
+        subset_file_paths.append(save_subset(subset, seed["seed"], database_name))
+
         if need_split:
             training_set, testing_set = splitSet(subset, seed["seed"])
 
@@ -111,9 +119,9 @@ def create_subsets(database_name, number_of_subsets_need, dataset_settings, need
         subsets_category_columns.append(subset_category_columns)
 
     if need_split:
-        return training_sets, testing_sets, meta_features, seeds, subsets_category_columns
+        return training_sets, testing_sets, meta_features, seeds, subsets_category_columns, subset_file_paths
     else:
-        return return_subsets, meta_features, seeds, subsets_category_columns
+        return return_subsets, meta_features, seeds, subsets_category_columns, subset_file_paths
 
 def load_dataset(dataset_settings):
     dataset = load_raw_dataset(dataset_settings)

@@ -85,6 +85,20 @@ def load_settings(path):
         print(f"Error: Invalid JSON format - {e}")
         raise
 
+def save_subset(subset, seed, dataset_name):
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    file_name = f"{seed}_{timestamp}.csv"
+    folder_path = f"Data/Datasets/Input/Subsets/{dataset_name}"
+    file_path = f"{folder_path}/{file_name}"
+
+    os.makedirs(folder_path, exist_ok=True)
+    try:
+        subset.to_csv(file_path, index=False)
+    except (OSError, IOError, PermissionError) as e:
+        print(f"Error saving subset to CSV at '{file_path}': {e}")
+        raise
+    return file_path
+
 class ObjectEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime):

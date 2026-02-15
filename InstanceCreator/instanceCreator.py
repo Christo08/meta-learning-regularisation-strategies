@@ -9,7 +9,7 @@ from datetime import datetime
 
 from ModelTrainer.nnTrainer import train_nn
 from Utils.datasetHandler import create_subsets, load_dataset, create_subsets_with_seeds, load_subset
-from Utils.fileHandler import load_meta_features_dataset, save_data_frame, load_settings
+from Utils.fileHandler import load_meta_features_dataset, save_data_frame, load_settings, save_subset
 from Utils.timeFormatter import format_duration
 
 configurations = [
@@ -71,35 +71,27 @@ def recreate_subsets(meta_feature_dataset, number_of_instances, datasets_setting
     meta_feature_dataset = []
     for seed in seeds:
         if seed["isComplete"]:
-            subsets, meta_features, return_seeds, subset_category_columns = create_subsets_with_seeds(seed["name"],
-                                                                                                      number_of_instances,
-                                                                                                      seed["classSeeds"],
-                                                                                                      seed["featuresSeeds"],
-                                                                                                      seed["instancesSeeds"],
-                                                                                                      seed["datasetSettings"])
+            subsets, meta_features, return_seeds, subset_category_columns, subset_file_paths = create_subsets_with_seeds(seed["name"],
+                                                                                                                         number_of_instances,
+                                                                                                                         seed["classSeeds"],
+                                                                                                                         seed["featuresSeeds"],
+                                                                                                                         seed["instancesSeeds"],
+                                                                                                                         seed["datasetSettings"])
         else:
-            subsets, meta_features, return_seeds, subset_category_columns = create_subsets(seed["name"],
-                                                                                           number_of_instances,
-                                                                                           seed["datasetSettings"],
-                                                                                           False)
-        for subset, meta_feature, return_seed, category_columns in zip(subsets,
-                                                                       meta_features,
-                                                                       return_seeds,
-                                                                       subset_category_columns):
-
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            file_name = f"{return_seed['seed']}_{timestamp}.csv"
-            folder_path = f"Data/Datasets/Input/Subsets/{seed['name']}"
-            file_path = f"{folder_path}/{file_name}"
-
-            os.makedirs(folder_path, exist_ok=True)
-            subset.to_csv(file_path, index=False)
-
+            subsets, meta_features, return_seeds, subset_category_columns, subset_file_paths = create_subsets(seed["name"],
+                                                                                                              number_of_instances,
+                                                                                                              seed["datasetSettings"],
+                                                                                                              False)
+        for subset, meta_feature, return_seed, category_columns, subset_file_path in zip(subsets,
+                                                                                         meta_features,
+                                                                                         return_seeds,
+                                                                                         subset_category_columns,
+                                                                                         subset_file_paths):
             meta_feature_dataset.append({
                 "dataset_name": seed["name"],
                 "seed": return_seed["seed"],
                 "subset_type": return_seed["subsetType"],
-                "file_name": file_path,
+                "file_name": subset_file_path,
                 **meta_feature
             })
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -155,19 +147,20 @@ def create_dataset(database_name, output_path, number_of_instances, settings_fil
     total_duration = 0
 
     if number_of_instances > 1:
-        training_sets, testing_sets, meta_features, seeds, subset_category_columns = create_subsets(database_name,
+        training_sets, testing_sets, meta_features, seeds, subset_category_columns, subset_file_paths = create_subsets(database_name,
                                                                                                     number_of_instances,
                                                                                                     dataset_settings)
     else:
-        training_sets, testing_sets, meta_features, seeds, subset_category_columns = load_dataset(dataset_settings)
+        training_sets, testing_sets, meta_features, seeds, subset_category_columns, subset_file_paths = load_dataset(dataset_settings)
 
     counter = 0
 
-    for training_set, testing_set, meta_feature, seed, category_columns in zip(training_sets,
-                                                                               testing_sets,
-                                                                               meta_features,
-                                                                               seeds,
-                                                                               subset_category_columns):
+    for training_set, testing_set, meta_feature, seed, category_columns, subset_file_path in zip(training_sets,
+                                                                                                 testing_sets,
+                                                                                                 meta_features,
+                                                                                                 seeds,
+                                                                                                 subset_category_columns,
+                                                                                                 subset_file_paths):
         instance, duration = create_instance(database_name,
                                              settings,
                                              number_of_folds,
@@ -175,7 +168,8 @@ def create_dataset(database_name, output_path, number_of_instances, settings_fil
                                              testing_set,
                                              meta_feature,
                                              seed,
-                                             category_columns)
+                                             category_columns,
+                                             subset_file_path)
         total_duration += duration
         dataset = pd.concat([dataset, instance], ignore_index=True)
         save_data_frame(dataset, output_path)
@@ -184,7 +178,7 @@ def create_dataset(database_name, output_path, number_of_instances, settings_fil
         print(f"{counter} instance created. It took {format_duration(total_duration)}/{format_duration(predicted_duration)}")
     return output_path
 
-def create_instance(dataset_name, settings, number_of_folds, training_set, testing_set, meta_feature, seed, category_columns):
+def create_instance(dataset_name, settings, number_of_folds, training_set, testing_set, meta_feature, seed, category_columns, subset_file_path):
     start_time = time.time()
     print("")
     print("Dataset name: " + dataset_name)
@@ -193,7 +187,8 @@ def create_instance(dataset_name, settings, number_of_folds, training_set, testi
     instance_json_object= {
         "dataset_name": dataset_name,
         "seed": seed["seed"],
-        "subset_type": seed["subsetType"]
+        "subset_type": seed["subsetType"],
+        "file_name": subset_file_path
     }
     instance_json_object = {**instance_json_object, **meta_feature}
     best_training_loss = float('inf')

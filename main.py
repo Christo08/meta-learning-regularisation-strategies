@@ -72,7 +72,7 @@ def main():
                 if input("Do you have a meta-feature file? (y/n): ").lower() == "y":
                     dataset = load_meta_feature_dataset(True)
                     names =[]
-                    number_of_instances = int(input("How many Subsets do you what to create per dataset? "))
+                    number_of_instances = int(input("How many Subsets do you want to create per dataset? "))
                     recreate_subsets(dataset, number_of_instances, datasets_settings, names)
                 else:
                     dataset = pd.DataFrame(columns=["dataset_name","seed","number_of_features","proportion_of_numeric_features",
@@ -92,7 +92,7 @@ def main():
                                                     "subset_type"])
                     names = show_dataset_menu(datasets_settings)
                     if names:
-                        number_of_instances = int(input("How many Subsets do you what to create per dataset? "))
+                        number_of_instances = int(input("How many Subsets do you want to create per dataset? "))
                         recreate_subsets(dataset, number_of_instances, datasets_settings, names)
         elif process == process_options[4]:
             datasets_settings = show_dataset_setting_menu()
@@ -102,8 +102,8 @@ def main():
                     subset_dataset = load_meta_feature_dataset(True)
                     output_path = input("Enter the path of the Output dataset file or folder: ")
                     settings_file_path =input("Enter the path of the NN's settings file: ")
-                    number_of_folds = int(input("How many folds do you what use per instance? "))
-                    index_to_create = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
+                    number_of_folds = int(input("How many folds do you want to use per instance? "))
+                    index_to_create = [8,9,10,11,12,13,14]
                     recreate_dataset(subset_dataset, names, index_to_create, settings_file_path, output_path, number_of_folds, datasets_settings)
         elif process == process_options[5]:
             dataset = load_meta_feature_dataset()
