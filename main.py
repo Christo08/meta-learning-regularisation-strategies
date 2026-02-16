@@ -7,6 +7,7 @@ from Optimisers.metaLearnersOptimiser import optimise_meta_learners
 from Optimisers.nnOptimiser import optimise_nn
 from Utils.createAvgNNSetting import create_generic_nn_setting
 from Utils.datasetStatsCalculator import calculate_dataset_stats, calculate_meta_learners_stats
+from Utils.fileHandler import load_dataset_setting_file
 from Utils.metaFeatureDatasetHandler import load_meta_feature_dataset
 from Utils.menus import show_dataset_menu, show_menu, show_dataset_setting_menu
 
@@ -33,7 +34,7 @@ def main():
         process = show_menu("Select process by entering a number: ", process_options)
         if process == process_options[0]:
             while True:
-                datasets_settings = show_dataset_setting_menu()
+                datasets_settings = load_dataset_setting_file("Data/Datasets/Input/all_dataset_info.json")
                 if not datasets_settings:
                     break
                 names = show_dataset_menu(datasets_settings)
@@ -48,7 +49,7 @@ def main():
             create_generic_nn_setting()
         elif process == process_options[2]:
             while True:
-                datasets_settings = show_dataset_setting_menu()
+                datasets_settings = load_dataset_setting_file("Data/Datasets/Input/all_dataset_info.json")
                 if not datasets_settings:
                     break
                 names = show_dataset_menu(datasets_settings)

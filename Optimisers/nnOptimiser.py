@@ -10,39 +10,59 @@ from Utils.menus import show_menu
 from ModelTrainer.nnTrainer import train_nn
 from Utils.datasetHandler import load_optimiser_dataset, apply_one_hot_encode, prepared_meta_feature_dataset
 
-MAX_NUMBER_OF_LAYERS = 10
+MAX_NUMBER_OF_LAYERS = 6
 MIN_NUMBER_OF_LAYERS = 2
-MAX_NUMBER_OF_EPOCH = 1000
+MAX_NUMBER_OF_EPOCH = 300
 
 parameter_groups = ["All", "Basic", "Dropout", "Prune", "Weight decay", "Weight perturbation", "Back"]
 meta_learning_target_columns = ["baseline_testing_loss", "batch_normalisation_testing_loss", "dropout_testing_loss",
                                 "layer_normalisation_testing_loss", "prune_testing_loss", "weight_normalisation_testing_loss" ]
 
 basic_parameters = {
-    "batch_size": pyhopper.int(16, 1024, power_of=2),
-    "learning_rate":  pyhopper.float(0.0001,0.5,"0.4f"),
-    "momentum": pyhopper.float(0.0001,0.5,"0.4f"),
-    "number_of_epochs": pyhopper.int(50, MAX_NUMBER_OF_EPOCH, multiple_of=20),
-    "number_of_hidden_layers": pyhopper.int(MIN_NUMBER_OF_LAYERS, MAX_NUMBER_OF_LAYERS),
-    "number_of_neurons_in_layers": pyhopper.int(5, 1000, multiple_of=5, shape=MAX_NUMBER_OF_LAYERS)
+    "batch_size": pyhopper.int(16, 256, power_of=2),
+
+    # Stable practical LR range
+    "learning_rate": pyhopper.float(0.0005, 0.05, "0.4f"),
+
+    # Momentum usually works best in high range
+    "momentum": pyhopper.float(0.7, 0.99, "0.4f"),
+
+    # Avoid wasting compute
+    "number_of_epochs": pyhopper.int(60, 300, multiple_of=20),
+
+    # Simpler architectures converge more reliably
+    "number_of_hidden_layers": pyhopper.int(2, 6),
+
+    # Prevent huge overparameterized models
+    "number_of_neurons_in_layers": pyhopper.int(
+        16, 256, multiple_of=16, shape=MAX_NUMBER_OF_LAYERS
+    ),
 }
 
 dropout_parameters = {
-    "dropout_layers": pyhopper.float(0.01, 0.75, shape=MAX_NUMBER_OF_LAYERS)
+    # Above 0.5 often hurts unless extreme overfitting
+    "dropout_layers": pyhopper.float(0.05, 0.5, shape=MAX_NUMBER_OF_LAYERS)
 }
 
 prune_parameters = {
-    "prune_amount": pyhopper.float(0.01, 0.75, "0.2f"),
-    "prune_epoch_interval": pyhopper.int(4, 20)
+    # Large prune amounts destabilize training
+    "prune_amount": pyhopper.float(0.05, 0.3, "0.2f"),
+
+    # Less frequent pruning is safer
+    "prune_epoch_interval": pyhopper.int(5, 15)
 }
 
 weight_decay_parameters = {
-    "weight_decay": pyhopper.float(0.01, 0.5, "0.2f")
+    # Typical L2 ranges
+    "weight_decay": pyhopper.float(1e-5, 0.01, "0.5f")
 }
 
 weight_perturbation_parameters = {
-    "weight_perturbation_amount": pyhopper.float(0.01, 1.00, "0.2f"),
-    "weight_perturbation_interval": pyhopper.int(MAX_NUMBER_OF_EPOCH / 250, MAX_NUMBER_OF_EPOCH / 10)
+    # Smaller perturbations are usually safer
+    "weight_perturbation_amount": pyhopper.float(0.01, 0.2, "0.2f"),
+
+    # Use integer-safe bounds
+    "weight_perturbation_interval": pyhopper.int(5, 30)
 }
 
 dataset_name = ""
@@ -64,7 +84,7 @@ def optimise_nn(dataset_name_input, dataset_settings):
     validation_set = sets[1]
     while parameter_group != parameter_groups[len(parameter_groups) - 1]:
         if parameter_group == parameter_groups[0]:
-            best_params = setup_optimiser_and_run_it(dataset_name, "Basic", basic_parameters, 300)
+            best_params = setup_optimiser_and_run_it(dataset_name, "Basic", basic_parameters, 200)
             path = save_nn_settings(best_params, dataset_name, "")
             basic_settings = load_settings(path)
 
@@ -81,7 +101,7 @@ def optimise_nn(dataset_name_input, dataset_settings):
             save_nn_settings(best_params, dataset_name, path)
         else:
             if parameter_group == parameter_groups[1]:
-                best_params = setup_optimiser_and_run_it(dataset_name, parameter_group, basic_parameters, 300)
+                best_params = setup_optimiser_and_run_it(dataset_name, parameter_group, basic_parameters, 200)
             else:
                 basic_settings = load_settings(input("Enter the path to the basic settings file of the NN:"))
                 if parameter_group == parameter_groups[2]:
