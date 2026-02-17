@@ -167,12 +167,12 @@ def training_loop(x_training, y_training, testing_set, settings, number_of_input
 
 
     # Loss function and optimizer
+    loss_function = CustomCrossEntropyLoss()
     if technique == "weightDecay":
-        loss_function = CustomCrossEntropyRegularisationTermLoss(settings["weight_decay"])
+        optimiser = optim.Adam(network.parameters(), lr=settings["learning_rate"], weight_decay=settings["weight_decay"])
     else:
-        loss_function = CustomCrossEntropyLoss()
+        optimiser = optim.Adam(network.parameters(), lr=settings["learning_rate"])
 
-    optimiser = optim.SGD(network.parameters(), lr=settings["learning_rate"], momentum=settings["momentum"])
 
     # Training loop
     for epoch in range(settings["number_of_epochs"]):
@@ -201,10 +201,7 @@ def training_loop(x_training, y_training, testing_set, settings, number_of_input
             if torch.isnan(training_outputs).any():
                 print("NaN detected in training outputs, skipping this batch.")
 
-            if technique == "weightDecay":
-                training_loss = loss_function(training_outputs, y_batch, network)
-            else:
-                training_loss = loss_function(training_outputs, y_batch)
+            training_loss = loss_function(training_outputs, y_batch)
 
             optimiser.zero_grad()
             training_loss.backward()
@@ -220,12 +217,8 @@ def training_loop(x_training, y_training, testing_set, settings, number_of_input
     with torch.no_grad():
         y_training_pred = network(x_training)
         y_testing_pred = network(x_testing)
-        if technique == "weightDecay":
-            training_loss_value = loss_function(y_training_pred, y_training, network).item()
-            testing_loss_value = loss_function(y_testing_pred, y_testing, network).item()
-        else:
-            training_loss_value = loss_function(y_training_pred, y_training).item()
-            testing_loss_value = loss_function(y_testing_pred, y_testing).item()
+        training_loss_value = loss_function(y_training_pred, y_training).item()
+        testing_loss_value = loss_function(y_testing_pred, y_testing).item()
         # Classification accuracy: compare predicted class index vs true class index
         train_pred_cls = torch.argmax(y_training_pred, dim=1)
         train_true_cls = torch.argmax(y_training, dim=1)
@@ -243,6 +236,9 @@ def train_meta_nn(settings, training_set, testing_set, seed, target_column = 'na
     # Convert data to tensors
     x_training = torch.tensor(training_set[0], dtype=torch.float32)
     y_training = torch.tensor(training_set[1], dtype=torch.float32)
+
+    number_of_inputs = training_set[0].shape[1]
+    number_of_outputs = training_set[1].shape[1]
 
     # Create custom dataset and DataLoader
     train_dataset = CustomDataset(x_training, y_training)

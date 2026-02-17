@@ -54,12 +54,12 @@ prune_parameters = {
 
 weight_decay_parameters = {
     # Typical L2 ranges
-    "weight_decay": pyhopper.float(1e-5, 0.01, "0.5f")
+    "weight_decay": pyhopper.float(0.00001, 0.15, "0.4f")
 }
 
 weight_perturbation_parameters = {
     # Smaller perturbations are usually safer
-    "weight_perturbation_amount": pyhopper.float(0.01, 0.2, "0.2f"),
+    "weight_perturbation_amount": pyhopper.float(0.0001, 0.15, "0.f"),
 
     # Use integer-safe bounds
     "weight_perturbation_interval": pyhopper.int(5, 30)
