@@ -23,9 +23,9 @@ basic_parameters = {
 
     # Stable practical LR range
     "learning_rate": pyhopper.float(0.0005, 0.05, "0.4f"),
-
-    # Momentum usually works best in high range
-    "momentum": pyhopper.float(0.7, 0.99, "0.4f"),
+    #
+    # # Momentum usually works best in high range
+    # "momentum": pyhopper.float(0.7, 0.99, "0.4f"),
 
     # Avoid wasting compute
     "number_of_epochs": pyhopper.int(60, 300, multiple_of=20),
