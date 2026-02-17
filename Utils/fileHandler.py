@@ -47,7 +47,7 @@ def save_nn_settings(settings, dataset_name, path):
     if path == "":
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         file_name = f"{dataset_name}_nn_setting_{timestamp}.json"
-        new_path = f"Data/Settings/NNSettings/{file_name}"
+        new_path = f"Data/Settings/BasicNN/{file_name}"
         with open(new_path, "x") as file:
             json.dump(settings, file, indent=4, cls=ObjectEncoder)
         return new_path
