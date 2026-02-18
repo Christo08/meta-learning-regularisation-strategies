@@ -6,10 +6,10 @@ from ModelTrainer.metaLearnersTrainer import train_meta_learners
 from Optimisers.metaLearnersOptimiser import optimise_meta_learners
 from Optimisers.nnOptimiser import optimise_nn
 from Utils.createAvgNNSetting import create_generic_nn_setting
-from Utils.datasetStatsCalculator import calculate_dataset_stats, calculate_meta_learners_stats
+from Utils.datasetStatsCalculator import calculate_meta_learners_stats
 from Utils.fileHandler import load_dataset_setting_file
-from Utils.metaFeatureDatasetHandler import load_meta_feature_dataset
 from Utils.menus import show_dataset_menu, show_menu, show_dataset_setting_menu
+from Utils.metaFeatureDatasetHandler import load_meta_feature_dataset
 
 process_options = ["Optimise NN",  #0-1
                    "Create Avg NN Settings",  #1-2
@@ -21,6 +21,7 @@ process_options = ["Optimise NN",  #0-1
                    "Train Meta Learning",  #7-8
                    "Get Statistics of Meta Learners results",  #8-9
                    "Exit"]
+parameter_groups = ["All", "Basic", "Dropout", "Prune", "Weight decay", "Weight perturbation", "Back"]
 
 def main():
     print(f"PyTorch version: {torch.__version__}")  # Ensure it's a CUDA-compatible version
@@ -40,9 +41,10 @@ def main():
                 names = show_dataset_menu(datasets_settings)
                 if not names:
                     break
+                parameter_group = show_menu("Select parameter group by entering a number:", parameter_groups)
                 for name in names:
                     dataset_settings = next((item for item in datasets_settings if item["name"] == name), None)
-                    quited = optimise_nn(name, dataset_settings)
+                    quited = optimise_nn(name, dataset_settings,parameter_group)
                     if quited:
                          break
         elif process == process_options[1]:
@@ -108,7 +110,7 @@ def main():
                     recreate_dataset(subset_dataset, names, index_to_create, settings_file_path, output_path, number_of_folds, datasets_settings)
         elif process == process_options[5]:
             dataset = load_meta_feature_dataset()
-            calculate_dataset_stats(dataset)
+            calculate_stats(dataset)
         elif process == process_options[6]:
             training_set = load_meta_feature_dataset(type = "training set", should_cover_to_binary = True)
             optimise_meta_learners(training_set)

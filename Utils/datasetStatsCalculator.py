@@ -5,10 +5,54 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
+from sklearn.manifold import TSNE
+from sklearn.decomposition import PCA
+import umap
+
 from Utils.fileHandler import load_results_csv
 from Utils.metaFeatureDatasetHandler import target_columns, spilt_dataset_and_targets
+from Utils.menus import show_menu
 
 wr.filterwarnings('ignore')
+process_options = ["Basic", "Cluster analysis", "Back"]
+dimensional_reduction_options = ["TSNE", "UMAP", "Back"]
+
+def calculate_stats(full_dataset):
+    process = show_menu("Select stats type: ", process_options)
+    if process == process_options[0]:
+        calculate_dataset_stats(full_dataset)
+    elif process == process_options[1]:
+        perform_cluster_analysis(full_dataset)
+    else:
+        return
+
+def perform_cluster_analysis(full_dataset):
+    option = show_menu("Select dimensional reduction technique: ", dimensional_reduction_options)
+    if option in dimensional_reduction_options[2]:
+        return
+    best_instances_for_techniques = get_best_instances_for_techniques(full_dataset)
+    for key, instances in best_instances_for_techniques.items():
+        X_pca = PCA(n_components=10).fit_transform(instances)
+        if option == dimensional_reduction_options[0]:
+            tsne = TSNE(
+                n_components=2,
+                perplexity=30,
+                learning_rate=200,
+                init='pca',
+                random_state=42
+            )
+
+            X_embedded = tsne.fit_transform(X_pca)
+        else:
+            umap_model = umap.UMAP(
+                n_neighbors=15,
+                min_dist=0.05,
+                n_components=2,
+                metric='euclidean',
+                random_state=42
+            )
+
+            X_umap = umap_model.fit_transform(X_pca)
 
 def calculate_dataset_stats(full_dataset):
     dataset, targets = spilt_dataset_and_targets(full_dataset)
@@ -190,8 +234,14 @@ def calculate_meta_learners_stats():
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     plt.show()
 
-
 def explode_accuracies(df, accuracy_col):
     df = df.copy()
     df[accuracy_col] = df[accuracy_col].apply(lambda x: eval(x) if isinstance(x, str) else x)
     return df.explode(accuracy_col)
+
+def get_best_instances_for_techniques(full_dataset):
+    best_instances = {}
+    for technique in target_columns:
+        other_techniques = [t for t in target_columns if t != technique]
+        best_instances[technique] = full_dataset[full_dataset[technique] == 1].drop(columns=other_techniques)
+    return best_instances

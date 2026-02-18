@@ -13,11 +13,8 @@ target_columns = [
     "batch_normalisation_testing_loss",
     "dropout_testing_loss",
     "layer_normalisation_testing_loss",
-    "SMOTE_testing_loss",
     "prune_testing_loss",
-    "weight_decay_testing_loss",
-    "weight_normalisation_testing_loss",
-    "weight_perturbation_testing_loss"
+    "weight_normalisation_testing_loss"
 ]
 
 def spilt_dataset_and_targets(dataset):

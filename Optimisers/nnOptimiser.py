@@ -73,9 +73,9 @@ category_columns = []
 seed = random.randint(0, 4294967295)
 
 
-def optimise_nn(dataset_name_input, dataset_settings):
+def optimise_nn(dataset_name_input, dataset_settings, parameter_group):
     global dataset_name, basic_settings, training_set, validation_set, category_columns
-    parameter_group = show_menu("Select parameter group by entering a number:", parameter_groups)
+
     if parameter_group == parameter_groups[len(parameter_groups) - 1]:
         return True
     dataset_name = dataset_name_input
