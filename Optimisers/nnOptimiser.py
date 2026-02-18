@@ -113,7 +113,7 @@ def optimise_nn(dataset_name_input, dataset_settings, parameter_group):
                 else:
                     best_params = setup_optimiser_and_run_it(dataset_name, parameter_group, weight_perturbation_parameters, 100)
             save_nn_settings(best_params, dataset_name, "")
-        parameter_group = show_menu("Select parameter group by entering a number:", parameter_groups)
+            parameter_group = show_menu("Select parameter group by entering a number:", parameter_groups)
     return parameter_group == parameter_groups[len(parameter_groups) - 1]
 
 
