@@ -7,7 +7,7 @@ from Optimisers.metaLearnersOptimiser import optimise_meta_learners
 from Optimisers.nnOptimiser import optimise_nn
 from Utils.createAvgNNSetting import create_generic_nn_setting
 from Utils.datasetStatsCalculator import calculate_meta_learners_stats
-from Utils.fileHandler import load_dataset_setting_file
+from Utils.fileHandler import load_dataset_setting_file, load_settings
 from Utils.menus import show_dataset_menu, show_menu, show_dataset_setting_menu
 from Utils.metaFeatureDatasetHandler import load_meta_feature_dataset
 
@@ -42,9 +42,12 @@ def main():
                 if not names:
                     break
                 parameter_group = show_menu("Select parameter group by entering a number:", parameter_groups)
+                basic_settings = None
+                if not(parameter_group == parameter_groups[0] or parameter_group == parameter_groups[1]):
+                    basic_settings = load_settings(input("Enter the path to the basic settings file of the NN:"))
                 for name in names:
                     dataset_settings = next((item for item in datasets_settings if item["name"] == name), None)
-                    quited = optimise_nn(name, dataset_settings,parameter_group)
+                    quited = optimise_nn(name, dataset_settings,parameter_group, basic_settings)
                     if quited:
                          break
         elif process == process_options[1]:

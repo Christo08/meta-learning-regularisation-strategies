@@ -73,7 +73,7 @@ category_columns = []
 seed = random.randint(0, 4294967295)
 
 
-def optimise_nn(dataset_name_input, dataset_settings, parameter_group):
+def optimise_nn(dataset_name_input, dataset_settings, parameter_group, basic_settings_parm = None):
     global dataset_name, basic_settings, training_set, validation_set, category_columns
 
     if parameter_group == parameter_groups[len(parameter_groups) - 1]:
@@ -82,38 +82,36 @@ def optimise_nn(dataset_name_input, dataset_settings, parameter_group):
     sets, category_columns = load_optimiser_dataset(seed, dataset_settings)
     training_set = sets[0]
     validation_set = sets[1]
-    while parameter_group != parameter_groups[len(parameter_groups) - 1]:
-        if parameter_group == parameter_groups[0]:
-            best_params = setup_optimiser_and_run_it(dataset_name, "Basic", basic_parameters, 200)
-            path = save_nn_settings(best_params, dataset_name, "")
-            basic_settings = load_settings(path)
+    if parameter_group == parameter_groups[0]:
+        best_params = setup_optimiser_and_run_it(dataset_name, "Basic", basic_parameters, 200)
+        path = save_nn_settings(best_params, dataset_name, "")
+        basic_settings = load_settings(path)
 
-            best_params = setup_optimiser_and_run_it(dataset_name, "Dropout", dropout_parameters, 50)
-            save_nn_settings(best_params, dataset_name, path)
+        best_params = setup_optimiser_and_run_it(dataset_name, "Dropout", dropout_parameters, 50)
+        save_nn_settings(best_params, dataset_name, path)
 
-            best_params = setup_optimiser_and_run_it(dataset_name, "Prune", prune_parameters, 100)
-            save_nn_settings(best_params, dataset_name, path)
+        best_params = setup_optimiser_and_run_it(dataset_name, "Prune", prune_parameters, 100)
+        save_nn_settings(best_params, dataset_name, path)
 
-            best_params = setup_optimiser_and_run_it(dataset_name, "Weight_decay", weight_decay_parameters, 50)
-            save_nn_settings(best_params, dataset_name, path)
+        best_params = setup_optimiser_and_run_it(dataset_name, "Weight_decay", weight_decay_parameters, 50)
+        save_nn_settings(best_params, dataset_name, path)
 
-            best_params = setup_optimiser_and_run_it(dataset_name, "Weight_perturbation", weight_perturbation_parameters, 100)
-            save_nn_settings(best_params, dataset_name, path)
+        best_params = setup_optimiser_and_run_it(dataset_name, "Weight_perturbation", weight_perturbation_parameters, 100)
+        save_nn_settings(best_params, dataset_name, path)
+    else:
+        if parameter_group == parameter_groups[1]:
+            best_params = setup_optimiser_and_run_it(dataset_name, parameter_group, basic_parameters, 200)
         else:
-            if parameter_group == parameter_groups[1]:
-                best_params = setup_optimiser_and_run_it(dataset_name, parameter_group, basic_parameters, 200)
+            basic_settings = basic_settings_parm
+            if parameter_group == parameter_groups[2]:
+                best_params = setup_optimiser_and_run_it(dataset_name, parameter_group, dropout_parameters, 50)
+            elif parameter_group == parameter_groups[3]:
+                best_params = setup_optimiser_and_run_it(dataset_name, parameter_group, prune_parameters, 100)
+            elif parameter_group == parameter_groups[4]:
+                best_params = setup_optimiser_and_run_it(dataset_name, parameter_group, weight_decay_parameters, 50)
             else:
-                basic_settings = load_settings(input("Enter the path to the basic settings file of the NN:"))
-                if parameter_group == parameter_groups[2]:
-                    best_params = setup_optimiser_and_run_it(dataset_name, parameter_group, dropout_parameters, 50)
-                elif parameter_group == parameter_groups[3]:
-                    best_params = setup_optimiser_and_run_it(dataset_name, parameter_group, prune_parameters, 100)
-                elif parameter_group == parameter_groups[4]:
-                    best_params = setup_optimiser_and_run_it(dataset_name, parameter_group, weight_decay_parameters, 50)
-                else:
-                    best_params = setup_optimiser_and_run_it(dataset_name, parameter_group, weight_perturbation_parameters, 100)
-            save_nn_settings(best_params, dataset_name, "")
-            parameter_group = show_menu("Select parameter group by entering a number:", parameter_groups)
+                best_params = setup_optimiser_and_run_it(dataset_name, parameter_group, weight_perturbation_parameters, 100)
+        save_nn_settings(best_params, dataset_name, "")
     return parameter_group == parameter_groups[len(parameter_groups) - 1]
 
 
