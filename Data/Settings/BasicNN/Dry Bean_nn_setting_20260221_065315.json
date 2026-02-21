@@ -1,0 +1,22 @@
+{
+    "batch_size": 64,
+    "learning_rate": 0.0013,
+    "number_of_epochs": 100,
+    "number_of_hidden_layers": 2,
+    "number_of_neurons_in_layers": [
+        96,
+        208,
+        112,
+        128,
+        112,
+        112
+    ],
+    "dropout_layers": [
+        0.05,
+        0.43214120077685647,
+        0.05,
+        0.2619994452880172,
+        0.22533181990137796,
+        0.05
+    ]
+}
