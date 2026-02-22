@@ -16,6 +16,14 @@
     "dropColumns": []
   },
   {
+    "name": "Car evaluation",
+    "type": "pmlb",
+    "pmlbName": "car_evaluation",
+    "categoryColumns": [],
+    "targetColumn": "target",
+    "dropColumns": []
+  },
+  {
     "name": "Churn",
     "type": "pmlb",
     "pmlbName": "churn",
@@ -29,14 +37,6 @@
     "filePath": "Data/Datasets/Input/DryBeanDataset/Dry_Bean_Dataset.csv",
     "categoryColumns": [],
     "targetColumn": "Class",
-    "dropColumns": []
-  },
-  {
-    "name": "Car evaluation",
-    "type": "pmlb",
-    "pmlbName": "car_evaluation",
-    "categoryColumns": [],
-    "targetColumn": "target",
     "dropColumns": []
   },
   {
