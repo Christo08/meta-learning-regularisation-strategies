@@ -151,8 +151,9 @@ def load_optimiser_dataset(seed, dataset_settings):
 
     target_columns = [col for col in dataset.columns if 'target' in col]
     dataset = normalise(dataset, dataset_settings['categoryColumns'], target_columns)
+    dataset, category_columns  = encode_categories_features(dataset, dataset_settings['categoryColumns'])
 
-    return splitSet(dataset, seed), dataset_settings['categoryColumns']
+    return splitSet(dataset, seed), category_columns
 
 def apply_smote(x, y, seed, number_of_neighbors, category_columns):
     if isinstance(y, pd.DataFrame):

@@ -119,6 +119,7 @@ def training_loop(x_training, y_training, testing_set, settings, number_of_input
         y_training = y_training[all_labels]
 
     # Convert data to tensors
+
     x_training = torch.tensor(x_training.values, dtype=torch.float32)
     y_training = torch.tensor(y_training.values, dtype=torch.float32)
 
