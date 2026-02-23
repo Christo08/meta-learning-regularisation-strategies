@@ -1,0 +1,27 @@
+{
+    "batch_size": 16,
+    "learning_rate": 0.0005,
+    "number_of_epochs": 220,
+    "number_of_hidden_layers": 5,
+    "number_of_neurons_in_layers": [
+        192,
+        240,
+        176,
+        80,
+        176,
+        176
+    ],
+    "dropout_layers": [
+        0.4410207250457526,
+        0.2766676121843137,
+        0.15023806008334845,
+        0.27965588295356764,
+        0.42028543614395,
+        0.05
+    ],
+    "prune_amount": 0.05,
+    "prune_epoch_interval": 9,
+    "weight_decay": 0.0017,
+    "weight_perturbation_amount": 0.0001,
+    "weight_perturbation_interval": 17
+}
