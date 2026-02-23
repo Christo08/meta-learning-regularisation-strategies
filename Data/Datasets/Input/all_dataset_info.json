@@ -192,6 +192,14 @@
     "dropColumns": ["region-pixel-count"]
   },
   {
+    "name": "Smartphone battery",
+    "type": "csv",
+    "filePath": "Data/Datasets/Input/SmartphoneBattery/smartphone_battery_features.csv",
+    "categoryColumns": ["background_app_usage_level","signal_strength_avg"],
+    "targetColumn": "recommended_action",
+    "dropColumns": ["Device_ID"]
+  },
+  {
     "name": "Students Performance",
     "type": "csv",
     "filePath": "Data/Datasets/Input/StudentPerformance/students_performance.csv",
@@ -206,14 +214,6 @@
     "categoryColumns": ["gender","academic_level","part_time_job","upcoming_deadline","internet_quality"],
     "targetColumn": "mental_health_score",
     "dropColumns": ["student_id"]
-  },
-  {
-    "name": "Smartphone battery",
-    "type": "csv",
-    "filePath": "Data/Datasets/Input/SmartphoneBattery/smartphone_battery_features.csv",
-    "categoryColumns": ["background_app_usage_level","signal_strength_avg"],
-    "targetColumn": "recommended_action",
-    "dropColumns": ["Device_ID"]
   },
   {
     "name": "Twonorm",
