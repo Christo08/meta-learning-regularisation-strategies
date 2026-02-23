@@ -31,7 +31,7 @@ basic_parameters = {
     "number_of_epochs": pyhopper.int(60, 300, multiple_of=20),
 
     # Simpler architectures converge more reliably
-    "number_of_hidden_layers": pyhopper.int(2, 6),
+    "number_of_hidden_layers": pyhopper.int(MIN_NUMBER_OF_LAYERS, MAX_NUMBER_OF_LAYERS),
 
     # Prevent huge overparameterized models
     "number_of_neurons_in_layers": pyhopper.int(
