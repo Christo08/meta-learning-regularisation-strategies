@@ -6,7 +6,7 @@ from ModelTrainer.metaLearnersTrainer import train_meta_learners
 from Optimisers.metaLearnersOptimiser import optimise_meta_learners
 from Optimisers.nnOptimiser import optimise_nn
 from Utils.createAvgNNSetting import create_generic_nn_setting
-from Utils.datasetStatsCalculator import calculate_meta_learners_stats
+from Utils.datasetStatsCalculator import calculate_meta_learners_stats, calculate_stats
 from Utils.fileHandler import load_dataset_setting_file, load_settings
 from Utils.menus import show_dataset_menu, show_menu, show_dataset_setting_menu
 from Utils.metaFeatureDatasetHandler import load_meta_feature_dataset
@@ -22,6 +22,7 @@ process_options = ["Optimise NN",  #0-1
                    "Get Statistics of Meta Learners results",  #8-9
                    "Exit"]
 parameter_groups = ["All", "Basic", "Dropout", "Prune", "Weight decay", "Weight perturbation", "Back"]
+DATASETS_INFO_PATH = "Data/Datasets/Input/all_dataset_info.json"
 
 def main():
     print(f"PyTorch version: {torch.__version__}")  # Ensure it's a CUDA-compatible version
@@ -31,11 +32,11 @@ def main():
     else:
         print(f"Device: CPU")
     print(f"")
+    datasets_settings = load_dataset_setting_file(DATASETS_INFO_PATH)
     while True:
         process = show_menu("Select process by entering a number: ", process_options)
         if process == process_options[0]:
             while True:
-                datasets_settings = load_dataset_setting_file("Data/Datasets/Input/all_dataset_info.json")
                 if not datasets_settings:
                     break
                 names = show_dataset_menu(datasets_settings)
@@ -54,14 +55,12 @@ def main():
             create_generic_nn_setting()
         elif process == process_options[2]:
             while True:
-                datasets_settings = load_dataset_setting_file("Data/Datasets/Input/all_dataset_info.json")
                 if not datasets_settings:
                     break
                 names = show_dataset_menu(datasets_settings)
                 if not names:
                     break
                 output_path = input("Enter the path of the Output dataset file or folder: ")
-                settings_file_path = input("Enter the path of the NN's settings file: ")
                 number_of_instances = int(input("How many Subsets do you want to create per dataset? "))
                 number_of_folds = int(input("How many folds do you want to use per instance? "))
                 for name in names:
@@ -69,7 +68,6 @@ def main():
                     output_path = create_dataset(name,
                                                  output_path,
                                                  number_of_instances,
-                                                 settings_file_path,
                                                  number_of_folds,
                                                  dataset_settings)
         elif process == process_options[3]:
@@ -107,10 +105,9 @@ def main():
                 if names:
                     subset_dataset = load_meta_feature_dataset(True)
                     output_path = input("Enter the path of the Output dataset file or folder: ")
-                    settings_file_path =input("Enter the path of the NN's settings file: ")
                     number_of_folds = int(input("How many folds do you want to use per instance? "))
                     index_to_create = [8,9,10,11,12,13,14]
-                    recreate_dataset(subset_dataset, names, index_to_create, settings_file_path, output_path, number_of_folds, datasets_settings)
+                    recreate_dataset(subset_dataset, names, index_to_create, output_path, number_of_folds, datasets_settings)
         elif process == process_options[5]:
             dataset = load_meta_feature_dataset()
             calculate_stats(dataset)

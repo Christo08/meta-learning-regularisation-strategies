@@ -1,15 +1,13 @@
-import os
 import random
 import time
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
 
-from datetime import datetime
-
 from ModelTrainer.nnTrainer import train_nn
 from Utils.datasetHandler import create_subsets, load_dataset, create_subsets_with_seeds, load_subset
-from Utils.fileHandler import load_meta_features_dataset, save_data_frame, load_settings, save_subset
+from Utils.fileHandler import load_meta_features_dataset, save_data_frame, get_latest_settings
 from Utils.timeFormatter import format_duration
 
 configurations = [
@@ -23,6 +21,8 @@ configurations = [
     {"name": "weightNormalisation", "param": "weightNormalisation", "fileName": "weight_normalisation"},
     {"name": "weightPerturbation", "param": "weightPerturbation", "fileName": "weight_perturbation"}
 ]
+
+OUTPUT_PATH = "Data/Datasets/Output/Raw"
 
 def recreate_subsets(meta_feature_dataset, number_of_instances, datasets_settings, names=None):
     if names is None:
@@ -95,14 +95,14 @@ def recreate_subsets(meta_feature_dataset, number_of_instances, datasets_setting
                 **meta_feature
             })
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    pd.DataFrame(meta_feature_dataset).to_csv(f"Data/Datasets/Output/Raw/SubsetMetaFeatures_{timestamp}.csv", index=False)
+    pd.DataFrame(meta_feature_dataset).to_csv(f"{OUTPUT_PATH}/SubsetMetaFeatures_{timestamp}.csv", index=False)
 
-def recreate_dataset(subset_dataset, dataset_names, indexes, settings_file_path, output_path, number_of_folds, datasets_settings):
+def recreate_dataset(subset_dataset, dataset_names, indexes, output_path, number_of_folds, datasets_settings):
     dataset, output_path = load_meta_features_dataset(output_path)
-    settings = load_settings(settings_file_path)
     seeds = []
     for name, group in subset_dataset.groupby('dataset_name'):
         if name in dataset_names:
+            settings = get_latest_settings(name)
             dataset_settings =  next((item for item in datasets_settings if item["name"] == name), None)
             seed = {
                 "name": name,
@@ -141,9 +141,9 @@ def recreate_dataset(subset_dataset, dataset_names, indexes, settings_file_path,
                   f"It took {format_duration(total_duration)}/{format_duration(predicted_duration)}")
             counter+=1
 
-def create_dataset(database_name, output_path, number_of_instances, settings_file_path, number_of_folds, dataset_settings):
+def create_dataset(database_name, output_path, number_of_instances, number_of_folds, dataset_settings):
     dataset, output_path = load_meta_features_dataset(output_path)
-    settings = load_settings(settings_file_path)
+    settings = get_latest_settings(database_name)
     total_duration = 0
 
     if number_of_instances > 1:

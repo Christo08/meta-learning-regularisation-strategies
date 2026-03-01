@@ -1,5 +1,6 @@
 import json
 import os
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -8,6 +9,9 @@ from datetime import datetime
 from Models.NN.Errors.fileNotFound import FileNotFound
 
 current_settings_file_path = ""
+BASIC_NN_SETTINGS_PATH = "Data/Settings/BasicNN"
+META_LEARNER_SETTINGS_PATH = "Data/Settings/MetaLearners"
+SUBSET_PATH = "Data/Datasets/Input/Subsets"
 
 def load_meta_features_dataset(path):
     if os.path.exists(path) and os.path.isfile(path):
@@ -47,7 +51,7 @@ def save_nn_settings(settings, dataset_name, path):
     if path == "":
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         file_name = f"{dataset_name.replace(" ","_")}_nn_setting_{timestamp}.json"
-        new_path = f"Data/Settings/BasicNN/{file_name}"
+        new_path = f"{BASIC_NN_SETTINGS_PATH}/{file_name}"
         with open(new_path, "x") as file:
             json.dump(settings, file, indent=4, cls=ObjectEncoder)
         return new_path
@@ -70,7 +74,7 @@ def save_meta_learner_settings(settings, module_type):
         file_name = f"svm_setting_{timestamp}.json"
     else:
         file_name = f"nn_setting_{timestamp}.json"
-    path = f"Data/Settings/{module_type}/{file_name}"
+    path = f"{META_LEARNER_SETTINGS_PATH}/{module_type}/{file_name}"
     with open(path, "x") as file:
         json.dump(settings, file, indent=4, cls=ObjectEncoder)
 
@@ -85,10 +89,35 @@ def load_settings(path):
         print(f"Error: Invalid JSON format - {e}")
         raise
 
+def get_latest_settings(name):
+    directory = Path(BASIC_NN_SETTINGS_PATH)
+    normalized_prefix = name.strip().replace(" ", "_")
+
+    matching_files = [
+        file
+        for file in directory.glob(f"{normalized_prefix}_nn_setting_*.json")
+    ]
+
+    if not matching_files:
+        return None
+
+    file_name = max(
+        matching_files,
+        key=lambda f: extract_timestamp(f.name),
+    )
+
+    return load_settings(BASIC_NN_SETTINGS_PATH+"/"+file_name.name)
+
+def extract_timestamp(filename):
+    try:
+        return filename.split("_nn_setting_")[1].replace(".json", "")
+    except IndexError as exc:
+        raise ValueError(f"Invalid filename format: {filename}") from exc
+
 def save_subset(subset, seed, dataset_name):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     file_name = f"{seed}_{timestamp}.csv"
-    folder_path = f"Data/Datasets/Input/Subsets/{dataset_name}"
+    folder_path = f"{SUBSET_PATH}/{dataset_name}"
     file_path = f"{folder_path}/{file_name}"
 
     os.makedirs(folder_path, exist_ok=True)
