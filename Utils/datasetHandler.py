@@ -98,16 +98,23 @@ def create_subsets(database_name, number_of_subsets_need, dataset_settings, need
     subsets_category_columns = []
     subset_file_paths = []
     for subset, seed in zip(subsets, seeds):
+        check_subsets(subset)
         subset, subset_category_columns = encode_categories_features(subset, dataset_settings['categoryColumns'])
+        check_subsets(subset)
         subset = remap_targets(subset)
+        check_subsets(subset)
 
         meta_features.append(calculate_meta_features(subset, dataset_settings['categoryColumns']))
+        check_subsets( normalise(subset, subset_category_columns,["target"]))
 
         subset = normalise(subset, subset_category_columns,["target"])
+        check_subsets(subset)
 
         subset.reset_index(drop=True, inplace=True)
+        check_subsets(subset)
 
         subset_file_paths.append(save_subset(subset, seed["seed"], database_name))
+        check_subsets(subset)
 
         if need_split:
             training_set, testing_set = splitSet(subset, seed["seed"])
@@ -122,6 +129,15 @@ def create_subsets(database_name, number_of_subsets_need, dataset_settings, need
         return training_sets, testing_sets, meta_features, seeds, subsets_category_columns, subset_file_paths
     else:
         return return_subsets, meta_features, seeds, subsets_category_columns, subset_file_paths
+
+def check_subsets(subset):
+    cols_with_na = subset.columns[subset.isna().any()].tolist()
+    if cols_with_na:
+        print(f"Warning: The following columns contain NaN values: {cols_with_na}")
+    cols_with_null = subset.columns[subset.isnull().any()].tolist()
+    if cols_with_null:
+        print(f"Warning: The following columns contain null values: {cols_with_null}")
+
 
 def load_dataset(dataset_settings):
     dataset = load_raw_dataset(dataset_settings)
@@ -193,7 +209,7 @@ def make_classes_subsets(dataset, number_of_subsets_need, seeds=None):
     if number_of_classes <= MIN_CLASSES_REQUIRED:
         return subsets, seeds
 
-    number_of_class_subset = number_of_subsets_need // 3
+    number_of_class_subset = number_of_subsets_need // 3 if number_of_subsets_need >= 3 else number_of_subsets_need
     number_of_unique_classes_combos = sum(math.comb(number_of_classes, k) for k in range(1, number_of_classes - MIN_CLASSES_REQUIRED)) - 1
     counter = 0
     used_class_combos = set()
@@ -326,11 +342,12 @@ def clean_dataset(dataset):
     return dataset.drop_duplicates()
 
 def normalise(subset, category_columns, columns_to_ignore):
-    for column in subset.columns:
-        if not column in category_columns and (column not in columns_to_ignore):
-            subset[column] = zscore(subset[column])
+    copy_subset = subset.copy()
+    for column in copy_subset.columns:
+        if not column in category_columns and (column not in columns_to_ignore) and copy_subset[column].nunique(dropna=True) != 1:
+            copy_subset[column] = zscore(copy_subset[column])
 
-    return subset
+    return copy_subset
 
 def encode_categories_features(subset, category_columns):
     subset_category_columns = []

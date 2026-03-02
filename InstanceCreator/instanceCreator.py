@@ -107,6 +107,7 @@ def recreate_dataset(subset_dataset, dataset_names, indexes, output_path, number
             seed = {
                 "name": name,
                 "dataset_settings": dataset_settings,
+                "nn_settings": settings,
                 "rows": [],
             }
             for index, row in group.iterrows():
@@ -125,14 +126,15 @@ def recreate_dataset(subset_dataset, dataset_names, indexes, output_path, number
             row = seed["rows"][index]
             training_set, testing_set, subset_category_columns = load_subset(row["file_path"], row["seed"], seed["dataset_settings"])
             meta_feature = meta_features.iloc[row["index"]]
-            instance, duration = create_instance(seed["name"],
-                                                 settings,
-                                                 number_of_folds,
-                                                 training_set,
-                                                 testing_set,
-                                                 meta_feature,
-                                                 row,
-                                                 subset_category_columns)
+            instance, duration = create_instance(seed["name"], seed["nn_settings"], number_of_folds, training_set, testing_set, meta_feature, row, subset_category_columns, row["file_path"])
+                # create_instance(seed["name"],
+                #                                  settings,
+                #                                  number_of_folds,
+                #                                  training_set,
+                #                                  testing_set,
+                #                                  meta_feature,
+                #                                  row,
+                #                                  subset_category_columns)
             total_duration += duration
             dataset = pd.concat([dataset, instance], ignore_index=True)
             save_data_frame(dataset, output_path)

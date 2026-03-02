@@ -33,12 +33,12 @@ def main():
         print(f"Device: CPU")
     print(f"")
     datasets_settings = load_dataset_setting_file(DATASETS_INFO_PATH)
+    if not datasets_settings:
+        return
     while True:
         process = show_menu("Select process by entering a number: ", process_options)
         if process == process_options[0]:
             while True:
-                if not datasets_settings:
-                    break
                 names = show_dataset_menu(datasets_settings)
                 if not names:
                     break
@@ -55,8 +55,6 @@ def main():
             create_generic_nn_setting()
         elif process == process_options[2]:
             while True:
-                if not datasets_settings:
-                    break
                 names = show_dataset_menu(datasets_settings)
                 if not names:
                     break
@@ -71,43 +69,39 @@ def main():
                                                  number_of_folds,
                                                  dataset_settings)
         elif process == process_options[3]:
-            datasets_settings = show_dataset_setting_menu()
-            if datasets_settings:
-                if input("Do you have a meta-feature file? (y/n): ").lower() == "y":
-                    dataset = load_meta_feature_dataset(True)
-                    names =[]
-                    number_of_instances = int(input("How many Subsets do you want to create per dataset? "))
-                    recreate_subsets(dataset, number_of_instances, datasets_settings, names)
-                else:
-                    dataset = pd.DataFrame(columns=["dataset_name","seed","number_of_features","proportion_of_numeric_features",
-                                                    "number_of_instances","number_of_classes","ratio_of_instances_to_features",
-                                                    "ratio_of_classes_to_features","ratio_of_instances_to_classes",
-                                                    "ratio_of_min_to_max_instances_per_class","proportion_of_features_with_outliers",
-                                                    "average_mutual_information","minimum_mutual_information",
-                                                    "maximum_mutual_information","equivalent_number_of_features",
-                                                    "noise_to_signal_ratio_of_features","baseline_training_loss",
-                                                    "baseline_testing_loss","batch_normalisation_training_loss",
-                                                    "batch_normalisation_testing_loss","dropout_training_loss","dropout_testing_loss",
-                                                    "layer_normalisation_training_loss","layer_normalisation_testing_loss",
-                                                    "SMOTE_training_loss","SMOTE_testing_loss","prune_training_loss","prune_testing_loss",
-                                                    "weight_decay_training_loss","weight_decay_testing_loss","weight_normalisation_training_loss",
-                                                    "weight_normalisation_testing_loss","weight_perturbation_training_loss",
-                                                    "weight_perturbation_testing_loss","best_training_technique","best_testing_technique",
-                                                    "subset_type"])
-                    names = show_dataset_menu(datasets_settings)
-                    if names:
-                        number_of_instances = int(input("How many Subsets do you want to create per dataset? "))
-                        recreate_subsets(dataset, number_of_instances, datasets_settings, names)
-        elif process == process_options[4]:
-            datasets_settings = show_dataset_setting_menu()
-            if datasets_settings:
+            if input("Do you have a meta-feature file? (y/n): ").lower() == "y":
+                dataset = load_meta_feature_dataset(True)
+                names =[]
+                number_of_instances = int(input("How many Subsets do you want to create per dataset? "))
+                recreate_subsets(dataset, number_of_instances, datasets_settings, names)
+            else:
+                dataset = pd.DataFrame(columns=["dataset_name","seed","number_of_features","proportion_of_numeric_features",
+                                                "number_of_instances","number_of_classes","ratio_of_instances_to_features",
+                                                "ratio_of_classes_to_features","ratio_of_instances_to_classes",
+                                                "ratio_of_min_to_max_instances_per_class","proportion_of_features_with_outliers",
+                                                "average_mutual_information","minimum_mutual_information",
+                                                "maximum_mutual_information","equivalent_number_of_features",
+                                                "noise_to_signal_ratio_of_features","baseline_training_loss",
+                                                "baseline_testing_loss","batch_normalisation_training_loss",
+                                                "batch_normalisation_testing_loss","dropout_training_loss","dropout_testing_loss",
+                                                "layer_normalisation_training_loss","layer_normalisation_testing_loss",
+                                                "SMOTE_training_loss","SMOTE_testing_loss","prune_training_loss","prune_testing_loss",
+                                                "weight_decay_training_loss","weight_decay_testing_loss","weight_normalisation_training_loss",
+                                                "weight_normalisation_testing_loss","weight_perturbation_training_loss",
+                                                "weight_perturbation_testing_loss","best_training_technique","best_testing_technique",
+                                                "subset_type"])
                 names = show_dataset_menu(datasets_settings)
                 if names:
-                    subset_dataset = load_meta_feature_dataset(True)
-                    output_path = input("Enter the path of the Output dataset file or folder: ")
-                    number_of_folds = int(input("How many folds do you want to use per instance? "))
-                    index_to_create = [8,9,10,11,12,13,14]
-                    recreate_dataset(subset_dataset, names, index_to_create, output_path, number_of_folds, datasets_settings)
+                    number_of_instances = int(input("How many Subsets do you want to create per dataset? "))
+                    recreate_subsets(dataset, number_of_instances, datasets_settings, names)
+        elif process == process_options[4]:
+            names = show_dataset_menu(datasets_settings)
+            if names:
+                subset_dataset = load_meta_feature_dataset(True)
+                output_path = input("Enter the path of the Output dataset file or folder: ")
+                number_of_folds = int(input("How many folds do you want to use per instance? "))
+                index_to_create = [1]
+                recreate_dataset(subset_dataset, names, index_to_create, output_path, number_of_folds, datasets_settings)
         elif process == process_options[5]:
             dataset = load_meta_feature_dataset()
             calculate_stats(dataset)
