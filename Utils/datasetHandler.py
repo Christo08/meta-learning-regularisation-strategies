@@ -45,10 +45,10 @@ def create_subsets_with_seeds(database_name, number_of_subsets_need, class_seeds
     subset_file_paths = []
     subsets_category_columns = []
     for subset, seed in zip(subsets, seeds):
-        subset, subset_category_columns = encode_categories_features(subset, dataset_settings['categoryColumns'])
+        subset, subset_category_columns = encode_categories_features(subset, dataset_settings['category_columns'])
         subset = remap_targets(subset)
 
-        meta_features.append(calculate_meta_features(subset, dataset_settings['categoryColumns']))
+        meta_features.append(calculate_meta_features(subset, dataset_settings['category_columns']))
 
         subset = normalise(subset, subset_category_columns,["target"])
 
@@ -63,7 +63,7 @@ def create_subsets_with_seeds(database_name, number_of_subsets_need, class_seeds
 def load_subset(file_path, seed, dataset_settings):
     subset = pd.read_csv(file_path)
     training_set, testing_set = splitSet(subset, seed)
-    full_category_columns = dataset_settings['categoryColumns']
+    full_category_columns = dataset_settings['category_columns']
     category_columns = []
     for categoryColumn in full_category_columns:
         if categoryColumn in subset.columns:
@@ -99,12 +99,12 @@ def create_subsets(database_name, number_of_subsets_need, dataset_settings, need
     subset_file_paths = []
     for subset, seed in zip(subsets, seeds):
         check_subsets(subset)
-        subset, subset_category_columns = encode_categories_features(subset, dataset_settings['categoryColumns'])
+        subset, subset_category_columns = encode_categories_features(subset, dataset_settings['category_columns'])
         check_subsets(subset)
         subset = remap_targets(subset)
         check_subsets(subset)
 
-        meta_features.append(calculate_meta_features(subset, dataset_settings['categoryColumns']))
+        meta_features.append(calculate_meta_features(subset, dataset_settings['category_columns']))
         check_subsets( normalise(subset, subset_category_columns,["target"]))
 
         subset = normalise(subset, subset_category_columns,["target"])
@@ -148,8 +148,8 @@ def load_dataset(dataset_settings):
     seed = random.randint(1, 100000)
     random.seed(seed)
 
-    dataset, dataset_category_columns = encode_categories_features(dataset, dataset_settings['categoryColumns'])
-    meta_features = calculate_meta_features(dataset, dataset_settings['categoryColumns'])
+    dataset, dataset_category_columns = encode_categories_features(dataset, dataset_settings['category_columns'])
+    meta_features = calculate_meta_features(dataset, dataset_settings['category_columns'])
 
     dataset = normalise(dataset, dataset_category_columns, ["target"])
 
@@ -166,8 +166,8 @@ def load_optimiser_dataset(seed, dataset_settings):
     dataset = clean_dataset(dataset)
 
     target_columns = [col for col in dataset.columns if 'target' in col]
-    dataset = normalise(dataset, dataset_settings['categoryColumns'], target_columns)
-    dataset, category_columns  = encode_categories_features(dataset, dataset_settings['categoryColumns'])
+    dataset = normalise(dataset, dataset_settings['category_columns'], target_columns)
+    dataset, category_columns  = encode_categories_features(dataset, dataset_settings['category_columns'])
 
     return splitSet(dataset, seed), category_columns
 
@@ -321,15 +321,15 @@ def make_instances_subsets(dataset, number_of_instances_subsets_needed, seeds=No
 
 def load_raw_dataset(dataset_settings):
     if dataset_settings["type"] == "csv":
-        dataset = pd.read_csv(dataset_settings["filePath"])
+        dataset = pd.read_csv(dataset_settings["file_path"])
     else:
-        dataset = fetch_data(dataset_settings["pmlbName"])
+        dataset = fetch_data(dataset_settings["pmlb_name"])
 
-    if not(dataset_settings["targetColumn"] == "target"):
-        dataset.rename(columns={dataset_settings["targetColumn"]: "target"}, inplace=True)
+    if not(dataset_settings["target_column"] == "target"):
+        dataset.rename(columns={dataset_settings["target_column"]: "target"}, inplace=True)
 
-    if not(len(dataset_settings["dropColumns"]) == 0):
-        dataset = dataset.drop(columns=dataset_settings["dropColumns"])
+    if not(len(dataset_settings["drop_columns"]) == 0):
+        dataset = dataset.drop(columns=dataset_settings["drop_columns"])
 
     dataset['target'] = dataset['target'].astype('category')
     dataset['target'] = dataset['target'].cat.codes

@@ -2,273 +2,273 @@
   {
     "name": "Agaricus Lepiota",
     "type": "pmlb",
-    "pmlbName": "agaricus_lepiota",
-    "categoryColumns": ["cap-surface", "stalk-surface-above-ring", "ring-number", "stalk-surface-below-ring", "veil-color", "gill-attachment", "bruises?", "stalk-shape", "gill-size"],
-    "targetColumn": "target",
-    "dropColumns": ["veil-type"]
+    "pmlb_name": "agaricus_lepiota",
+    "category_columns": ["cap-surface", "stalk-surface-above-ring", "ring-number", "stalk-surface-below-ring", "veil-color", "gill-attachment", "bruises?", "stalk-shape", "gill-size"],
+    "target_column": "target",
+    "drop_columns": ["veil-type"]
   },
   {
     "name": "Ann thyroid",
     "type": "pmlb",
-    "pmlbName": "ann_thyroid",
-    "categoryColumns": [],
-    "targetColumn": "target",
-    "dropColumns": []
+    "pmlb_name": "ann_thyroid",
+    "category_columns": [],
+    "target_column": "target",
+    "drop_columns": []
   },
   {
     "name": "Car evaluation",
     "type": "pmlb",
-    "pmlbName": "car_evaluation",
-    "categoryColumns": [],
-    "targetColumn": "target",
-    "dropColumns": []
+    "pmlb_name": "car_evaluation",
+    "category_columns": [],
+    "target_column": "target",
+    "drop_columns": []
   },
   {
     "name": "Churn",
     "type": "pmlb",
-    "pmlbName": "churn",
-    "categoryColumns": ["voice mail plan", "international plan", "area code"],
-    "targetColumn": "target",
-    "dropColumns": []
+    "pmlb_name": "churn",
+    "category_columns": ["voice mail plan", "international plan", "area code"],
+    "target_column": "target",
+    "drop_columns": []
   },
   {
     "name": "Dry Bean",
     "type": "csv",
-    "filePath": "Data/Datasets/Input/DryBeanDataset/Dry_Bean_Dataset.csv",
-    "categoryColumns": [],
-    "targetColumn": "Class",
-    "dropColumns": []
+    "file_path": "Data/Datasets/Input/DryBeanDataset/Dry_Bean_Dataset.csv",
+    "category_columns": [],
+    "target_column": "Class",
+    "drop_columns": []
   },
   {
     "name": "Indian Engineering Student Placement",
     "type": "csv",
-    "filePath": "Data/Datasets/Input/Indian/indian_engineering_student_placement.csv",
-    "categoryColumns": ["gender","branch","part_time_job","family_income_level","city_tier","internet_access","extracurricular_involvement"],
-    "targetColumn": "placement_status",
-    "dropColumns": ["Student_ID"]
+    "file_path": "Data/Datasets/Input/Indian/indian_engineering_student_placement.csv",
+    "category_columns": ["gender","branch","part_time_job","family_income_level","city_tier","internet_access","extracurricular_involvement"],
+    "target_column": "placement_status",
+    "drop_columns": ["Student_ID"]
   },
   {
     "name": "Led24",
     "type": "pmlb",
-    "pmlbName": "led24",
-    "categoryColumns": [],
-    "targetColumn": "target",
-    "dropColumns": []
+    "pmlb_name": "led24",
+    "category_columns": [],
+    "target_column": "target",
+    "drop_columns": []
   },
   {
     "name": "Led7",
     "type": "pmlb",
-    "pmlbName": "led7",
-    "categoryColumns": [],
-    "targetColumn": "target",
-    "dropColumns": []
+    "pmlb_name": "led7",
+    "category_columns": [],
+    "target_column": "target",
+    "drop_columns": []
   },
   {
     "name": "Liver Cirrhosis",
     "type": "csv",
-    "filePath": "Data/Datasets/Input/LiverCirrhosis/cirrhosis.csv",
-    "categoryColumns": ["Status", "Drug", "Sex", "Ascites", "Hepatomegaly", "Spiders", "Edema"],
-    "targetColumn": "Stage",
-    "dropColumns": ["ID"]
+    "file_path": "Data/Datasets/Input/LiverCirrhosis/cirrhosis.csv",
+    "category_columns": ["Status", "Drug", "Sex", "Ascites", "Hepatomegaly", "Spiders", "Edema"],
+    "target_column": "Stage",
+    "drop_columns": ["ID"]
   },
   {
     "name": "Magic",
     "type": "pmlb",
-    "pmlbName": "magic",
-    "categoryColumns": [],
-    "targetColumn": "target",
-    "dropColumns": []
+    "pmlb_name": "magic",
+    "category_columns": [],
+    "target_column": "target",
+    "drop_columns": []
   },
   {
     "name": "Mobile Price Classification",
     "type": "csv",
-    "filePath": "Data/Datasets/Input/MobilePriceClassification/mobile_price_classification.csv",
-    "categoryColumns": ["blue", "dual_sim", "four_g", "three_g", "touch_screen", "wifi"],
-    "targetColumn": "n_cores",
-    "dropColumns": ["id","price_range"]
+    "file_path": "Data/Datasets/Input/MobilePriceClassification/mobile_price_classification.csv",
+    "category_columns": ["blue", "dual_sim", "four_g", "three_g", "touch_screen", "wifi"],
+    "target_column": "n_cores",
+    "drop_columns": ["id","price_range"]
   },
   {
     "name": "Mofn_3_7_10",
     "type": "pmlb",
-    "pmlbName": "mofn_3_7_10",
-    "categoryColumns": [],
-    "targetColumn": "target",
-    "dropColumns": []
+    "pmlb_name": "mofn_3_7_10",
+    "category_columns": [],
+    "target_column": "target",
+    "drop_columns": []
   },
   {
     "name": "Mushroom",
     "type": "csv",
-    "filePath": "Data/Datasets/Input/Mushrooms/mushrooms.csv",
-    "categoryColumns": ["cap-shape", "cap-surface", "cap-color", "bruises", "gill-attachment", "gill-spacing", "gill-size", "gill-color", "stalk-shape", "stalk-root", "stalk-surface-above-ring", "stalk-surface-below-ring", "stalk-color-above-ring", "stalk-color-below-ring", "veil-type", "veil-color", "ring-number", "ring-type", "spore-print-color", "population", "habitat", "class"],
-    "targetColumn": "odor",
-    "dropColumns": []
+    "file_path": "Data/Datasets/Input/Mushrooms/mushrooms.csv",
+    "category_columns": ["cap-shape", "cap-surface", "cap-color", "bruises", "gill-attachment", "gill-spacing", "gill-size", "gill-color", "stalk-shape", "stalk-root", "stalk-surface-above-ring", "stalk-surface-below-ring", "stalk-color-above-ring", "stalk-color-below-ring", "veil-type", "veil-color", "ring-number", "ring-type", "spore-print-color", "population", "habitat", "class"],
+    "target_column": "odor",
+    "drop_columns": []
   },
   {
     "name": "Nursery",
     "type": "pmlb",
-    "pmlbName": "nursery",
-    "categoryColumns": ["parents", "form", "children", "housing", "finance", "social", "health"],
-    "targetColumn": "target",
-    "dropColumns": []
+    "pmlb_name": "nursery",
+    "category_columns": ["parents", "form", "children", "housing", "finance", "social", "health"],
+    "target_column": "target",
+    "drop_columns": []
   },
   {
     "name": "Obesity Levels",
     "type": "csv",
-    "filePath": "Data/Datasets/Input/ObesityDataset/ObesityDataSet_raw_and_data_sinthetic.csv",
-    "categoryColumns": ["Gender", "family_history_with_overweight","FAVC","CAEC","SMOKE","SCC","CALC","MTRANS"],
-    "targetColumn": "NObeyesdad",
-    "dropColumns": []
+    "file_path": "Data/Datasets/Input/ObesityDataset/ObesityDataSet_raw_and_data_sinthetic.csv",
+    "category_columns": ["Gender", "family_history_with_overweight","FAVC","CAEC","SMOKE","SCC","CALC","MTRANS"],
+    "target_column": "NObeyesdad",
+    "drop_columns": []
   },
   {
     "name": "Online shopper",
     "type": "csv",
-    "filePath": "Data/Datasets/Input/OnlineDataset/online_shoppers_intention.csv",
-    "categoryColumns": ["Month","VisitorType", "Weekend"],
-    "targetColumn": "Revenue",
-    "dropColumns": []
+    "file_path": "Data/Datasets/Input/OnlineDataset/online_shoppers_intention.csv",
+    "category_columns": ["Month","VisitorType", "Weekend"],
+    "target_column": "Revenue",
+    "drop_columns": []
   },
   {
     "name": "Page Blocks",
     "type": "pmlb",
-    "pmlbName": "page_blocks",
-    "categoryColumns": [],
-    "targetColumn": "target",
-    "dropColumns": []
+    "pmlb_name": "page_blocks",
+    "category_columns": [],
+    "target_column": "target",
+    "drop_columns": []
   },
   {
     "name": "Parity5",
     "type": "pmlb",
-    "pmlbName": "parity5+5",
-    "categoryColumns": [],
-    "targetColumn": "target",
-    "dropColumns": []
+    "pmlb_name": "parity5+5",
+    "category_columns": [],
+    "target_column": "target",
+    "drop_columns": []
   },
   {
     "name": "Pendigits",
     "type": "pmlb",
-    "pmlbName": "pendigits",
-    "categoryColumns": [],
-    "targetColumn": "target",
-    "dropColumns": []
+    "pmlb_name": "pendigits",
+    "category_columns": [],
+    "target_column": "target",
+    "drop_columns": []
   },
   {
     "name": "Pima Indians Diabetes",
     "type": "csv",
-    "filePath": "Data/Datasets/Input/PimaIndiansDiabetes/diabetes.csv",
-    "categoryColumns": [],
-    "targetColumn": "Outcome",
-    "dropColumns": []
+    "file_path": "Data/Datasets/Input/PimaIndiansDiabetes/diabetes.csv",
+    "category_columns": [],
+    "target_column": "Outcome",
+    "drop_columns": []
   },
   {
     "name": "Ring",
     "type": "pmlb",
-    "pmlbName": "ring",
-    "categoryColumns": [],
-    "targetColumn": "target",
-    "dropColumns": []
+    "pmlb_name": "ring",
+    "category_columns": [],
+    "target_column": "target",
+    "drop_columns": []
   },
   {
     "name": "Salaries 2023",
     "type": "csv",
-    "filePath": "Data/Datasets/Input/Salaries2023/ds_salaries.csv",
-    "categoryColumns": ["employment_type", "job_title", "salary_currency", "salary_in_usd", "employee_residence", "company_location", "company_size"],
-    "targetColumn": "experience_level",
-    "dropColumns": []
+    "file_path": "Data/Datasets/Input/Salaries2023/ds_salaries.csv",
+    "category_columns": ["employment_type", "job_title", "salary_currency", "salary_in_usd", "employee_residence", "company_location", "company_size"],
+    "target_column": "experience_level",
+    "drop_columns": []
   },
   {
     "name": "Schizo",
     "type": "pmlb",
-    "pmlbName": "schizo",
-    "categoryColumns": [],
-    "targetColumn": "target",
-    "dropColumns": ["ID","target.1"]
+    "pmlb_name": "schizo",
+    "category_columns": [],
+    "target_column": "target",
+    "drop_columns": ["ID","target.1"]
   },
   {
     "name": "Segmentation",
     "type": "pmlb",
-    "pmlbName": "segmentation",
-    "categoryColumns": ["short-line-density-2", "short-line-density-5"],
-    "targetColumn": "target",
-    "dropColumns": ["region-pixel-count"]
+    "pmlb_name": "segmentation",
+    "category_columns": ["short-line-density-2", "short-line-density-5"],
+    "target_column": "target",
+    "drop_columns": ["region-pixel-count"]
   },
   {
     "name": "Smartphone battery",
     "type": "csv",
-    "filePath": "Data/Datasets/Input/SmartphoneBattery/smartphone_battery_features.csv",
-    "categoryColumns": ["background_app_usage_level","signal_strength_avg"],
-    "targetColumn": "recommended_action",
-    "dropColumns": ["Device_ID"]
+    "file_path": "Data/Datasets/Input/SmartphoneBattery/smartphone_battery_features.csv",
+    "category_columns": ["background_app_usage_level","signal_strength_avg"],
+    "target_column": "recommended_action",
+    "drop_columns": ["Device_ID"]
   },
   {
     "name": "Students Performance",
     "type": "csv",
-    "filePath": "Data/Datasets/Input/StudentPerformance/students_performance.csv",
-    "categoryColumns": ["Ethnicity", "ParentalEducation", "Tutoring", "ParentalSupport", "Extracurricular", "Sports", "Music", "Volunteering"],
-    "targetColumn": "GradeClass",
-    "dropColumns": ["StudentID"]
+    "file_path": "Data/Datasets/Input/StudentPerformance/students_performance.csv",
+    "category_columns": ["Ethnicity", "ParentalEducation", "Tutoring", "ParentalSupport", "Extracurricular", "Sports", "Music", "Volunteering"],
+    "target_column": "GradeClass",
+    "drop_columns": ["StudentID"]
   },
   {
     "name": "Students Performance Burnout",
     "type": "csv",
-    "filePath": "Data/Datasets/Input/StudentPerformanceBurnout/ultimate_student_productivity_dataset_5000.csv",
-    "categoryColumns": ["gender","academic_level","part_time_job","upcoming_deadline","internet_quality"],
-    "targetColumn": "mental_health_score",
-    "dropColumns": ["student_id"]
+    "file_path": "Data/Datasets/Input/StudentPerformanceBurnout/ultimate_student_productivity_dataset_5000.csv",
+    "category_columns": ["gender","academic_level","part_time_job","upcoming_deadline","internet_quality"],
+    "target_column": "mental_health_score",
+    "drop_columns": ["student_id"]
   },
   {
     "name": "Twonorm",
     "type": "pmlb",
-    "pmlbName": "twonorm",
-    "categoryColumns": [],
-    "targetColumn": "target",
-    "dropColumns": []
+    "pmlb_name": "twonorm",
+    "category_columns": [],
+    "target_column": "target",
+    "drop_columns": []
   },
   {
     "name": "Vehicle",
     "type": "pmlb",
-    "pmlbName": "vehicle",
-    "categoryColumns": [],
-    "targetColumn": "target",
-    "dropColumns": []
+    "pmlb_name": "vehicle",
+    "category_columns": [],
+    "target_column": "target",
+    "drop_columns": []
   },
   {
     "name": "Vowel",
     "type": "pmlb",
-    "pmlbName": "vowel",
-    "categoryColumns": [],
-    "targetColumn": "target",
-    "dropColumns": ["Train or Test"]
+    "pmlb_name": "vowel",
+    "category_columns": [],
+    "target_column": "target",
+    "drop_columns": ["Train or Test"]
   },
   {
     "name": "Waveform_21",
     "type": "pmlb",
-    "pmlbName": "waveform_21",
-    "categoryColumns": [],
-    "targetColumn": "target",
-    "dropColumns": []
+    "pmlb_name": "waveform_21",
+    "category_columns": [],
+    "target_column": "target",
+    "drop_columns": []
   },
   {
     "name": "White Wine Quality",
     "type": "pmlb",
-    "pmlbName": "wine_quality_white",
-    "categoryColumns": [],
-    "targetColumn": "target",
-    "dropColumns": []
+    "pmlb_name": "wine_quality_white",
+    "category_columns": [],
+    "target_column": "target",
+    "drop_columns": []
   },
   {
     "name": "Wine Quality Red",
     "type": "pmlb",
-    "pmlbName": "wine_quality_red",
-    "categoryColumns": [],
-    "targetColumn": "target",
-    "dropColumns": []
+    "pmlb_name": "wine_quality_red",
+    "category_columns": [],
+    "target_column": "target",
+    "drop_columns": []
   },
   {
     "name": "Yeast",
     "type": "csv",
-    "filePath": "Data/Datasets/Input/Yeast/yeast.csv",
-    "categoryColumns": ["localization_site"],
-    "targetColumn": "localization_site",
-    "dropColumns": ["SequenceName"]
+    "file_path": "Data/Datasets/Input/Yeast/yeast.csv",
+    "category_columns": ["localization_site"],
+    "target_column": "localization_site",
+    "drop_columns": ["SequenceName"]
   }
 ]

@@ -19,8 +19,8 @@ target_columns = [
 
 def spilt_dataset_and_targets(dataset):
     missing = False
-    for targetColumn in target_columns:
-        if targetColumn not in dataset.columns:
+    for target_column in target_columns:
+        if target_column not in dataset.columns:
             missing = True
             break
     if missing:
