@@ -12,14 +12,13 @@ from Utils.menus import show_dataset_menu, show_menu, show_dataset_setting_menu
 from Utils.metaFeatureDatasetHandler import load_meta_feature_dataset
 
 process_options = ["Optimise NN",  #0-1
-                   "Create Avg NN Settings",  #1-2
-                   "Create Subsets and instances",  #2-3
-                   "Recreate Subsets",  #3-4
-                   "Recreate instances",  #4-5
-                   "Get Statistics of Meta Learning Dataset",  #5-6
-                   "Optimise Meta Learning",  #6-7
-                   "Train Meta Learning",  #7-8
-                   "Get Statistics of Meta Learners results",  #8-9
+                   "Create Subsets and instances",  #1-2
+                   "Recreate Subsets",  #2-3
+                   "Recreate instances",  #3-4
+                   "Get Statistics of Meta Learning Dataset",  #4-5
+                   "Optimise Meta Learning",  #5-6
+                   "Train Meta Learning",  #6-7
+                   "Get Statistics of Meta Learners results",  #7-8
                    "Exit"]
 parameter_groups = ["All", "Basic", "Dropout", "Prune", "Weight decay", "Weight perturbation", "Back"]
 DATASETS_INFO_PATH = "Data/Datasets/Input/all_dataset_info.json"
@@ -52,8 +51,6 @@ def main():
                     if quited:
                          break
         elif process == process_options[1]:
-            create_generic_nn_setting()
-        elif process == process_options[2]:
             while True:
                 names = show_dataset_menu(datasets_settings)
                 if not names:
@@ -68,7 +65,7 @@ def main():
                                                  number_of_instances,
                                                  number_of_folds,
                                                  dataset_settings)
-        elif process == process_options[3]:
+        elif process == process_options[2]:
             if input("Do you have a meta-feature file? (y/n): ").lower() == "y":
                 dataset = load_meta_feature_dataset(True)
                 names =[]
@@ -94,7 +91,7 @@ def main():
                 if names:
                     number_of_instances = int(input("How many Subsets do you want to create per dataset? "))
                     recreate_subsets(dataset, number_of_instances, datasets_settings, names)
-        elif process == process_options[4]:
+        elif process == process_options[3]:
             names = show_dataset_menu(datasets_settings)
             if names:
                 subset_dataset = load_meta_feature_dataset(True)
@@ -102,17 +99,17 @@ def main():
                 number_of_folds = int(input("How many folds do you want to use per instance? "))
                 index_to_create = [1]
                 recreate_dataset(subset_dataset, names, index_to_create, output_path, number_of_folds, datasets_settings)
-        elif process == process_options[5]:
+        elif process == process_options[4]:
             dataset = load_meta_feature_dataset()
             calculate_stats(dataset)
-        elif process == process_options[6]:
+        elif process == process_options[5]:
             training_set = load_meta_feature_dataset(type = "training set", should_cover_to_binary = True)
             optimise_meta_learners(training_set)
-        elif process == process_options[7]:
+        elif process == process_options[6]:
             training_set = load_meta_feature_dataset(type = "training set", should_cover_to_binary = True)
             testing_set = load_meta_feature_dataset(type = "testing set", should_cover_to_binary = True)
             train_meta_learners(training_set, testing_set)
-        elif process == process_options[8]:
+        elif process == process_options[7]:
             calculate_meta_learners_stats()
         else:
             break
