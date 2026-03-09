@@ -1,20 +1,16 @@
-import torch
-import numpy as np
 import pandas as pd
-from sklearn.metrics import mean_squared_error
+import torch
 from sklearn.model_selection import KFold
 from torch import optim
 from torch.utils.data import DataLoader
-from Utils.datasetHandler import prepared_meta_feature_dataset
+
 from Models.NN.customDataset import CustomDataset
 from Models.NN.network import Network
+from Utils.constants import META_LEANER_TARGET_COLUMNS
 from Utils.datasetHandler import apply_smote
+from Utils.datasetHandler import prepared_meta_feature_dataset
 from Utils.fileHandler import load_settings
-from Utils.lossFunctions import CustomCrossEntropyLoss, CustomCrossEntropyRegularisationTermLoss
-
-meta_learning_target_columns = ["baseline_testing_loss", "batch_normalisation_testing_loss", "dropout_testing_loss",
-                                "layer_normalisation_testing_loss", "prune_testing_loss",
-                                "weight_normalisation_testing_loss" ]
+from Utils.lossFunctions import CustomCrossEntropyLoss
 
 
 def train_nn(settings, technique, training_set, testing_set, seed, category_columns, fold=None):
@@ -65,10 +61,10 @@ def train_nn(settings, technique, training_set, testing_set, seed, category_colu
 def training_all_neural_networks(settings_file_path, raw_training_set, raw_testing_set, seed, kFold =5):
     results = []
     settings = load_settings(settings_file_path)
-    for target_column in meta_learning_target_columns:
+    for target_column in META_LEANER_TARGET_COLUMNS:
         print(f"Training neural network for { target_column.replace("_testing_loss","").replace("_"," ")}...")
-        training_set = prepared_meta_feature_dataset(raw_training_set, meta_learning_target_columns, target_column, False)
-        testing_set = prepared_meta_feature_dataset(raw_testing_set, meta_learning_target_columns, target_column, False)
+        training_set = prepared_meta_feature_dataset(raw_training_set, META_LEANER_TARGET_COLUMNS, target_column, False)
+        testing_set = prepared_meta_feature_dataset(raw_testing_set, META_LEANER_TARGET_COLUMNS, target_column, False)
 
         training_y = training_set[1]
         testing_y = testing_set[1]

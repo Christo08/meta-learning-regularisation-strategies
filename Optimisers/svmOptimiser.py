@@ -5,6 +5,7 @@ import pyhopper
 from sklearn.model_selection import train_test_split
 
 from ModelTrainer.svmTrainer import train_support_vector_machines
+from Utils.constants import META_LEANER_TARGET_COLUMNS
 from Utils.datasetHandler import prepared_meta_feature_dataset
 
 number_of_steps = 400
@@ -18,8 +19,6 @@ parameter_group = {
 
 training_set = {}
 validation_set = {}
-target_columns = ["baseline_testing_loss", "batch_normalisation_testing_loss", "dropout_testing_loss",
-                 "layer_normalisation_testing_loss", "prune_testing_loss", "weight_normalisation_testing_loss" ]
 
 
 def optimise_support_vector_machine(dataset):
@@ -27,9 +26,9 @@ def optimise_support_vector_machine(dataset):
 
     settings = {}
 
-    for target_column in target_columns:
+    for target_column in META_LEANER_TARGET_COLUMNS:
         print(target_column)
-        training_set, validation_set = prepared_meta_feature_dataset(dataset, target_columns, target_column)
+        training_set, validation_set = prepared_meta_feature_dataset(dataset, META_LEANER_TARGET_COLUMNS, target_column)
 
         search = pyhopper.Search(parameter_group)
         best_params = search.run(

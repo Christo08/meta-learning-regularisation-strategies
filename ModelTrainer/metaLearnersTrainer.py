@@ -8,6 +8,7 @@ from ModelTrainer.knnTrainer import training_all_k_nearest_neighbors
 from ModelTrainer.randomForestTrainer import training_all_random_forests
 from ModelTrainer.svmTrainer import training_all_support_vector_machines
 from ModelTrainer.nnTrainer import training_all_neural_networks
+from Utils.constants import META_LEARN_TYPES
 from Utils.fileHandler import save_data_frame
 from Utils.menus import show_meta_leaner_type_menu
 
@@ -19,16 +20,18 @@ def train_meta_learners(training_dataset, testing_dataset):
     for selected_meta_learn_type in selected_meta_learn_types:
         settings_file_path = input(f"Enter the path of the {selected_meta_learn_type}' settings file: ")
         seed = random.randint(0, 4294967295)
-        if selected_meta_learn_type == 'Decision trees':
+        if selected_meta_learn_type == META_LEARN_TYPES[1]:
             result = training_all_decision_trees(settings_file_path , training_dataset, testing_dataset, seed, number_of_folds)
-        elif selected_meta_learn_type == 'Random forests':
+        elif selected_meta_learn_type == META_LEARN_TYPES[4]:
             result = training_all_random_forests(settings_file_path , training_dataset, testing_dataset, seed, number_of_folds)
-        elif selected_meta_learn_type == 'K-nearest neighbors':
+        elif selected_meta_learn_type == META_LEARN_TYPES[2]:
             result = training_all_k_nearest_neighbors(settings_file_path , training_dataset, testing_dataset, seed, number_of_folds)
-        elif selected_meta_learn_type == 'Neural networks':
+        elif selected_meta_learn_type == META_LEARN_TYPES[3]:
             result = training_all_neural_networks(settings_file_path , training_dataset, testing_dataset, seed, number_of_folds)
-        else:
+        elif selected_meta_learn_type == META_LEARN_TYPES[5]:
             result = training_all_support_vector_machines(settings_file_path , training_dataset, testing_dataset, seed,number_of_folds)
+        else:
+            return
         results = pd.concat([results, pd.DataFrame(result)], ignore_index=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     fileName = f"Data/Datasets/Results/meta_learners_results_{timestamp}.csv"

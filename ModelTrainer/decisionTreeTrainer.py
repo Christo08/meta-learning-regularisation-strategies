@@ -4,16 +4,14 @@ from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import KFold
 from sklearn.tree import DecisionTreeClassifier
 
-from Utils.constants import MODULE_PATH
+from Utils.constants import *
 from Utils.fileHandler import load_settings
 
-target_columns = ["baseline_testing_loss", "batch_normalisation_testing_loss", "dropout_testing_loss",
-                 "layer_normalisation_testing_loss", "prune_testing_loss", "weight_normalisation_testing_loss" ]
 
 def training_all_decision_trees(settings_file_path, training_set, testing_set, seed, kFold =5):
     results = []
     settings = load_settings(settings_file_path)
-    for target_column in target_columns:
+    for target_column in META_LEANER_TARGET_COLUMNS:
         training_x = np.array(training_set.drop([target_column], axis=1))
         training_y = training_set[target_column]
         testing_x = np.array(testing_set.drop([target_column], axis=1))

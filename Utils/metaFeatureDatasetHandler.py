@@ -6,20 +6,13 @@ import numpy as np
 import pandas as pd
 from scipy.stats import ttest_ind, zscore
 
+from Utils.constants import META_LEANER_TARGET_COLUMNS
 from Utils.fileHandler import load_meta_features_csv, save_data_frame
 
-target_columns = [
-    "baseline_testing_loss",
-    "batch_normalisation_testing_loss",
-    "dropout_testing_loss",
-    "layer_normalisation_testing_loss",
-    "prune_testing_loss",
-    "weight_normalisation_testing_loss"
-]
 
 def spilt_dataset_and_targets(dataset):
     missing = False
-    for target_column in target_columns:
+    for target_column in META_LEANER_TARGET_COLUMNS:
         if target_column not in dataset.columns:
             missing = True
             break
@@ -27,8 +20,8 @@ def spilt_dataset_and_targets(dataset):
         targets = pd.DataFrame()
         return dataset, targets
     else:
-        targets = dataset[target_columns]
-        dataset = dataset.drop(target_columns, axis=1)
+        targets = dataset[META_LEANER_TARGET_COLUMNS]
+        dataset = dataset.drop(META_LEANER_TARGET_COLUMNS, axis=1)
         return dataset, targets
 
 def load_meta_feature_dataset(need_subsets_info = False, type ="", should_cover_to_binary = False):
@@ -38,15 +31,15 @@ def load_meta_feature_dataset(need_subsets_info = False, type ="", should_cover_
     if not need_subsets_info:
         columns_to_drop = ["dataset_name", "seed", "file_name", "subset_type"]
         dataset.drop(columns=columns_to_drop, errors="ignore", inplace=True)
-    for target_column in target_columns:
+    for target_column in META_LEANER_TARGET_COLUMNS:
         if target_column not in dataset.columns:
             missing = True
             break
     if should_rank_techniques and not(missing):
         dataset = clean_dataset(dataset)
 
-        targets = dataset[target_columns]
-        dataset = dataset.drop(target_columns, axis=1)
+        targets = dataset[META_LEANER_TARGET_COLUMNS]
+        dataset = dataset.drop(META_LEANER_TARGET_COLUMNS, axis=1)
 
         targets = rank_techniques(targets)
 
@@ -58,7 +51,7 @@ def load_meta_feature_dataset(need_subsets_info = False, type ="", should_cover_
         file_path = output_path + "\\" + file_name
         save_data_frame(dataset, file_path)
     if should_cover_to_binary:
-        for column in target_columns:
+        for column in META_LEANER_TARGET_COLUMNS:
             if column in dataset.columns:
                 dataset[column] = dataset[column].apply(lambda x: 1 if x == 1 else 0)
     return dataset
@@ -86,7 +79,7 @@ def clean_dataset(dataset):
     max_float = np.finfo(np.float32).max
 
     for column in dataset.columns:
-        if not(column in target_columns):
+        if not(column in META_LEANER_TARGET_COLUMNS):
             column_data = dataset[column].values.astype(np.float64)
             if should_apply_z_scoring:
                 finite_mask = np.isfinite(column_data)

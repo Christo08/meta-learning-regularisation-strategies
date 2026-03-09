@@ -6,21 +6,11 @@ import numpy as np
 import pandas as pd
 
 from ModelTrainer.nnTrainer import train_nn
+from Utils.constants import *
 from Utils.datasetHandler import create_subsets, load_dataset, create_subsets_with_seeds, load_subset
 from Utils.fileHandler import load_meta_features_dataset, save_data_frame, get_latest_settings
 from Utils.timeFormatter import format_duration
 
-configurations = [
-    {"name": "baseline", "param": "baseline", "fileName": "baseline"},
-    {"name": "batchNormalisation", "param": "batchNormalisation", "fileName": "batch_normalisation"},
-    {"name": "dropout", "param": "dropout", "fileName": "dropout"},
-    {"name": "layerNormalisation", "param": "layerNormalisation", "fileName": "layer_normalisation"},
-    {"name": "SMOTE", "param": "SMOTE", "fileName": "SMOTE"},
-    {"name": "prune", "param": "prune", "fileName": "prune"},
-    {"name": "weightDecay", "param": "weightDecay", "fileName": "weight_decay"},
-    {"name": "weightNormalisation", "param": "weightNormalisation", "fileName": "weight_normalisation"},
-    {"name": "weightPerturbation", "param": "weightPerturbation", "fileName": "weight_perturbation"}
-]
 
 def recreate_subsets(meta_feature_dataset, number_of_instances, datasets_settings, names=None):
     if names is None:
@@ -200,7 +190,7 @@ def create_instance(dataset_name, settings, number_of_folds, training_set, testi
     random.seed(seed)
 
     # Perform training for each configuration
-    for config in configurations:
+    for config in REGULARISATION_TECHNIQUES:
         print(config["param"])
         training_loss_values, training_accuracies, testing_loss_values, testing_accuracies = train_nn(settings,
                                                                                                       config["param"],

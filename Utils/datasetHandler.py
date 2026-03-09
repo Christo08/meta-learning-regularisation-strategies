@@ -9,6 +9,7 @@ from pmlb import fetch_data
 from scipy.stats import zscore
 from sklearn.model_selection import train_test_split
 
+from Utils.constants import *
 from Utils.fileHandler import save_subset
 from Utils.metaFeatureCalculator import calculate_meta_features
 
@@ -16,11 +17,6 @@ dataset = pd.DataFrame()
 dataset_name = ""
 category_columns = []
 
-# Constants
-MIN_CLASSES_REQUIRED = 2
-MIN_INSTANCES_PER_SUBSET = 100
-MIN_FEATURE_FRACTION = 0.5
-OFFSET_RANGE_START = 1
 
 def create_subsets_with_seeds(database_name, number_of_subsets_need, class_seeds, features_seeds, instances_seeds, dataset_settings):
     print("Recreating " + str(number_of_subsets_need) + " Subsets for the " + database_name + " dataset")

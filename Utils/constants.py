@@ -5,3 +5,56 @@ META_LEARNER_SETTINGS_PATH = "Data/Settings/MetaLearners"
 MODULE_PATH ="Data/Datasets/Output/Models/"
 SUBSET_PATH = "Data/Datasets/Input/Subsets"
 OUTPUT_PATH = "Data/Datasets/Output/Raw"
+
+#Menu items
+PROCESS_OPTIONS = ["Optimise NN",  #0-1
+                   "Create Subsets and instances",  #1-2
+                   "Recreate Subsets",  #2-3
+                   "Recreate instances",  #3-4
+                   "Get Statistics of Meta Learning Dataset",  #4-5
+                   "Optimise Meta Learning",  #5-6
+                   "Train Meta Learning",  #6-7
+                   "Get Statistics of Meta Learners results",  #7-8
+                   "Exit"]
+PARAMETER_GROUPS = ["All",
+                    "Basic",
+                    "Dropout",
+                    "Prune",
+                    "Weight decay",
+                    "Weight perturbation",
+                    "Back"]
+DATASET_TYPES = ["Training",
+                 "Testing",
+                 "Back"]
+META_LEARN_TYPES = ['All',
+                    'Decision trees',
+                    'K-nearest neighbors',
+                    'Neural networks',
+                    'Random forests',
+                    'Support vector machines',
+                    'Custom',
+                    'Back']
+#SUBSET CREATION
+MIN_CLASSES_REQUIRED = 2
+MIN_INSTANCES_PER_SUBSET = 100
+MIN_FEATURE_FRACTION = 0.5
+OFFSET_RANGE_START = 1
+
+#Other
+REGULARISATION_TECHNIQUES = [
+    {"name": "baseline", "param": "baseline", "fileName": "baseline"},
+    {"name": "batchNormalisation", "param": "batchNormalisation", "fileName": "batch_normalisation"},
+    {"name": "dropout", "param": "dropout", "fileName": "dropout"},
+    {"name": "layerNormalisation", "param": "layerNormalisation", "fileName": "layer_normalisation"},
+    {"name": "SMOTE", "param": "SMOTE", "fileName": "SMOTE"},
+    {"name": "prune", "param": "prune", "fileName": "prune"},
+    {"name": "weightDecay", "param": "weightDecay", "fileName": "weight_decay"},
+    {"name": "weightNormalisation", "param": "weightNormalisation", "fileName": "weight_normalisation"},
+    {"name": "weightPerturbation", "param": "weightPerturbation", "fileName": "weight_perturbation"}
+]
+META_LEANER_TARGET_COLUMNS = ["baseline_testing_loss",
+                              "batch_normalisation_testing_loss",
+                              "dropout_testing_loss",
+                              "layer_normalisation_testing_loss",
+                              "prune_testing_loss",
+                              "weight_normalisation_testing_loss"]

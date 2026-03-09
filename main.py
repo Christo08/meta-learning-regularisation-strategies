@@ -5,23 +5,12 @@ from InstanceCreator.instanceCreator import create_dataset, recreate_subsets, re
 from ModelTrainer.metaLearnersTrainer import train_meta_learners
 from Optimisers.metaLearnersOptimiser import optimise_meta_learners
 from Optimisers.nnOptimiser import optimise_nn
-from Utils.constants import DATASETS_INFO_PATH
-from Utils.createAvgNNSetting import create_generic_nn_setting
-from Utils.datasetStatsCalculator import calculate_meta_learners_stats, calculate_stats
+from Utils.constants import *
+from Utils.datasetStatsCalculator import calculate_meta_learners_stats, calculate_dataset_stats
 from Utils.fileHandler import load_dataset_setting_file, load_settings
-from Utils.menus import show_dataset_menu, show_menu, show_dataset_setting_menu
+from Utils.menus import show_dataset_menu, show_menu
 from Utils.metaFeatureDatasetHandler import load_meta_feature_dataset
 
-process_options = ["Optimise NN",  #0-1
-                   "Create Subsets and instances",  #1-2
-                   "Recreate Subsets",  #2-3
-                   "Recreate instances",  #3-4
-                   "Get Statistics of Meta Learning Dataset",  #4-5
-                   "Optimise Meta Learning",  #5-6
-                   "Train Meta Learning",  #6-7
-                   "Get Statistics of Meta Learners results",  #7-8
-                   "Exit"]
-parameter_groups = ["All", "Basic", "Dropout", "Prune", "Weight decay", "Weight perturbation", "Back"]
 
 def main():
     print(f"PyTorch version: {torch.__version__}")  # Ensure it's a CUDA-compatible version
@@ -35,22 +24,22 @@ def main():
     if not datasets_settings:
         return
     while True:
-        process = show_menu("Select process by entering a number: ", process_options)
-        if process == process_options[0]:
+        process = show_menu("Select process by entering a number: ", PROCESS_OPTIONS)
+        if process == PROCESS_OPTIONS[0]:
             while True:
                 names = show_dataset_menu(datasets_settings)
                 if not names:
                     break
-                parameter_group = show_menu("Select parameter group by entering a number:", parameter_groups)
+                parameter_group = show_menu("Select parameter group by entering a number:", PARAMETER_GROUPS)
                 basic_settings = None
-                if not(parameter_group == parameter_groups[0] or parameter_group == parameter_groups[1]):
+                if not(parameter_group == PARAMETER_GROUPS[0] or parameter_group == PARAMETER_GROUPS[1]):
                     basic_settings = load_settings(input("Enter the path to the basic settings file of the NN:"))
                 for name in names:
                     dataset_settings = next((item for item in datasets_settings if item["name"] == name), None)
                     quited = optimise_nn(name, dataset_settings,parameter_group, basic_settings)
                     if quited:
                          break
-        elif process == process_options[1]:
+        elif process == PROCESS_OPTIONS[1]:
             while True:
                 names = show_dataset_menu(datasets_settings)
                 if not names:
@@ -65,7 +54,7 @@ def main():
                                                  number_of_instances,
                                                  number_of_folds,
                                                  dataset_settings)
-        elif process == process_options[2]:
+        elif process == PROCESS_OPTIONS[2]:
             if input("Do you have a meta-feature file? (y/n): ").lower() == "y":
                 dataset = load_meta_feature_dataset(True)
                 names =[]
@@ -91,7 +80,7 @@ def main():
                 if names:
                     number_of_instances = int(input("How many Subsets do you want to create per dataset? "))
                     recreate_subsets(dataset, number_of_instances, datasets_settings, names)
-        elif process == process_options[3]:
+        elif process == PROCESS_OPTIONS[3]:
             names = show_dataset_menu(datasets_settings)
             if names:
                 subset_dataset = load_meta_feature_dataset(True)
@@ -99,17 +88,17 @@ def main():
                 number_of_folds = int(input("How many folds do you want to use per instance? "))
                 index_to_create = [1]
                 recreate_dataset(subset_dataset, names, index_to_create, output_path, number_of_folds, datasets_settings)
-        elif process == process_options[4]:
+        elif process == PROCESS_OPTIONS[4]:
             dataset = load_meta_feature_dataset()
-            calculate_stats(dataset)
-        elif process == process_options[5]:
+            calculate_dataset_stats(dataset)
+        elif process == PROCESS_OPTIONS[5]:
             training_set = load_meta_feature_dataset(type = "training set", should_cover_to_binary = True)
             optimise_meta_learners(training_set)
-        elif process == process_options[6]:
+        elif process == PROCESS_OPTIONS[6]:
             training_set = load_meta_feature_dataset(type = "training set", should_cover_to_binary = True)
             testing_set = load_meta_feature_dataset(type = "testing set", should_cover_to_binary = True)
             train_meta_learners(training_set, testing_set)
-        elif process == process_options[7]:
+        elif process == PROCESS_OPTIONS[7]:
             calculate_meta_learners_stats()
         else:
             break

@@ -5,6 +5,7 @@ import pandas as pd
 import pyhopper
 from sklearn.model_selection import train_test_split
 
+from Utils.constants import PARAMETER_GROUPS, META_LEANER_TARGET_COLUMNS
 from Utils.fileHandler import save_nn_settings, load_settings
 from Utils.menus import show_menu
 from ModelTrainer.nnTrainer import train_nn
@@ -13,10 +14,6 @@ from Utils.datasetHandler import load_optimiser_dataset, apply_one_hot_encode, p
 MAX_NUMBER_OF_LAYERS = 6
 MIN_NUMBER_OF_LAYERS = 2
 MAX_NUMBER_OF_EPOCH = 300
-
-parameter_groups = ["All", "Basic", "Dropout", "Prune", "Weight decay", "Weight perturbation", "Back"]
-meta_learning_target_columns = ["baseline_testing_loss", "batch_normalisation_testing_loss", "dropout_testing_loss",
-                                "layer_normalisation_testing_loss", "prune_testing_loss", "weight_normalisation_testing_loss" ]
 
 basic_parameters = {
     "batch_size": pyhopper.int(16, 256, power_of=2),
@@ -76,13 +73,13 @@ seed = random.randint(0, 4294967295)
 def optimise_nn(dataset_name_input, dataset_settings, parameter_group, basic_settings_parm = None):
     global dataset_name, basic_settings, training_set, validation_set, category_columns
 
-    if parameter_group == parameter_groups[len(parameter_groups) - 1]:
+    if parameter_group == PARAMETER_GROUPS[len(PARAMETER_GROUPS) - 1]:
         return True
     dataset_name = dataset_name_input
     sets, category_columns = load_optimiser_dataset(seed, dataset_settings)
     training_set = sets[0]
     validation_set = sets[1]
-    if parameter_group == parameter_groups[0]:
+    if parameter_group == PARAMETER_GROUPS[0]:
         best_params = setup_optimiser_and_run_it(dataset_name, "Basic", basic_parameters, 200)
         path = save_nn_settings(best_params, dataset_name, "")
         basic_settings = load_settings(path)
@@ -99,20 +96,20 @@ def optimise_nn(dataset_name_input, dataset_settings, parameter_group, basic_set
         best_params = setup_optimiser_and_run_it(dataset_name, "Weight_perturbation", weight_perturbation_parameters, 100)
         save_nn_settings(best_params, dataset_name, path)
     else:
-        if parameter_group == parameter_groups[1]:
+        if parameter_group == PARAMETER_GROUPS[1]:
             best_params = setup_optimiser_and_run_it(dataset_name, parameter_group, basic_parameters, 200)
         else:
             basic_settings = basic_settings_parm
-            if parameter_group == parameter_groups[2]:
+            if parameter_group == PARAMETER_GROUPS[2]:
                 best_params = setup_optimiser_and_run_it(dataset_name, parameter_group, dropout_parameters, 50)
-            elif parameter_group == parameter_groups[3]:
+            elif parameter_group == PARAMETER_GROUPS[3]:
                 best_params = setup_optimiser_and_run_it(dataset_name, parameter_group, prune_parameters, 100)
-            elif parameter_group == parameter_groups[4]:
+            elif parameter_group == PARAMETER_GROUPS[4]:
                 best_params = setup_optimiser_and_run_it(dataset_name, parameter_group, weight_decay_parameters, 50)
             else:
                 best_params = setup_optimiser_and_run_it(dataset_name, parameter_group, weight_perturbation_parameters, 100)
         save_nn_settings(best_params, dataset_name, "")
-    return parameter_group == parameter_groups[len(parameter_groups) - 1]
+    return parameter_group == PARAMETER_GROUPS[len(PARAMETER_GROUPS) - 1]
 
 
 def setup_optimiser_and_run_it(dataset_name, parameter_group_name, parameter_group, number_of_steps):
@@ -134,8 +131,8 @@ def optimise_meta_leaner_nn(dataset):
 
     settings = {}
 
-    for target_column in meta_learning_target_columns:
-        training_set, validation_set = prepared_meta_feature_dataset(dataset, meta_learning_target_columns, target_column)
+    for target_column in META_LEANER_TARGET_COLUMNS:
+        training_set, validation_set = prepared_meta_feature_dataset(dataset, META_LEANER_TARGET_COLUMNS, target_column)
         training_y = training_set[1]
         validation_y = validation_set[1]
 
