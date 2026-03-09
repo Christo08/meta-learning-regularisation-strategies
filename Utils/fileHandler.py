@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from datetime import datetime
-from Models.NN.Errors.fileNotFound import FileNotFound
+from Utils.Errors.fileNotFound import FileNotFound
 from Utils.constants import *
 
 current_settings_file_path = ""

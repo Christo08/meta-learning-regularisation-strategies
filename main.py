@@ -1,7 +1,7 @@
 import pandas as pd
 import torch
 
-from InstanceCreator.instanceCreator import create_dataset, recreate_subsets, recreate_dataset
+from Utils.instanceCreator import create_dataset, recreate_subsets, recreate_dataset
 from ModelTrainer.metaLearnersTrainer import train_meta_learners
 from Optimisers.metaLearnersOptimiser import optimise_meta_learners
 from Optimisers.nnOptimiser import optimise_nn

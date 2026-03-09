@@ -10,7 +10,7 @@ from Utils.constants import META_LEANER_TARGET_COLUMNS
 from Utils.datasetHandler import apply_smote
 from Utils.datasetHandler import prepared_meta_feature_dataset
 from Utils.fileHandler import load_settings
-from Utils.lossFunctions import CustomCrossEntropyLoss
+from Models.NN.lossFunctions import CustomCrossEntropyLoss
 
 
 def train_nn(settings, technique, training_set, testing_set, seed, category_columns, fold=None):
