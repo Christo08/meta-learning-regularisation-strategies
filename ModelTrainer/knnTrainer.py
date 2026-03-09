@@ -4,6 +4,7 @@ from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import KFold
 from sklearn.neighbors import KNeighborsClassifier
 
+from Utils.constants import MODULE_PATH
 from Utils.fileHandler import load_settings
 
 target_columns = ["baseline_testing_loss", "batch_normalisation_testing_loss", "dropout_testing_loss",
@@ -57,7 +58,7 @@ def train_k_nearest_neighbors(params, training_set, testing_set, seed, target_co
         testing_accuracy.append(float(np.sum(testing_y == y_test_pred)/len(y_train)*100))
 
         if target_column != 'na':
-            joblib.dump(knn,f'Data/Datasets/Output/Models/KNN/knn_for_{target_column}_fold_{counter}.pkl')
+            joblib.dump(knn,f'{MODULE_PATH}KNN/knn_for_{target_column}_fold_{counter}.pkl')
         counter = counter + 1
     return {
         "training loses": training_mses,

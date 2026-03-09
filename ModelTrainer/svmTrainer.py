@@ -4,6 +4,7 @@ from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import KFold
 from sklearn.svm import SVC
 
+from Utils.constants import MODULE_PATH
 from Utils.fileHandler import load_settings
 
 target_columns = ["baseline_testing_loss", "batch_normalisation_testing_loss", "dropout_testing_loss",
@@ -62,7 +63,7 @@ def train_support_vector_machines(params, training_set, testing_set, seed, targe
         testing_accuracy.append(float(np.sum(testing_y == y_test_pred)/len(y_train)*100))
 
         if target_column != 'na':
-            joblib.dump(svm, f'Data/Datasets/Output/Models/SVM/svm_for_{target_column}_fold_{counter}.pkl')
+            joblib.dump(svm, f'{MODULE_PATH}SVM/svm_for_{target_column}_fold_{counter}.pkl')
         counter = counter + 1
     return {
         "training loses": training_mses,

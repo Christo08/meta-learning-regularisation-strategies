@@ -22,8 +22,6 @@ configurations = [
     {"name": "weightPerturbation", "param": "weightPerturbation", "fileName": "weight_perturbation"}
 ]
 
-OUTPUT_PATH = "Data/Datasets/Output/Raw"
-
 def recreate_subsets(meta_feature_dataset, number_of_instances, datasets_settings, names=None):
     if names is None:
         names = []

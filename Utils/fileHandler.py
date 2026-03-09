@@ -7,11 +7,9 @@ import pandas as pd
 
 from datetime import datetime
 from Models.NN.Errors.fileNotFound import FileNotFound
+from Utils.constants import *
 
 current_settings_file_path = ""
-BASIC_NN_SETTINGS_PATH = "Data/Settings/BasicNN"
-META_LEARNER_SETTINGS_PATH = "Data/Settings/MetaLearners"
-SUBSET_PATH = "Data/Datasets/Input/Subsets"
 
 def load_meta_features_dataset(path):
     if os.path.exists(path) and os.path.isfile(path):

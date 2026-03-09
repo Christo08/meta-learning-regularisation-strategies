@@ -5,6 +5,7 @@ from InstanceCreator.instanceCreator import create_dataset, recreate_subsets, re
 from ModelTrainer.metaLearnersTrainer import train_meta_learners
 from Optimisers.metaLearnersOptimiser import optimise_meta_learners
 from Optimisers.nnOptimiser import optimise_nn
+from Utils.constants import DATASETS_INFO_PATH
 from Utils.createAvgNNSetting import create_generic_nn_setting
 from Utils.datasetStatsCalculator import calculate_meta_learners_stats, calculate_stats
 from Utils.fileHandler import load_dataset_setting_file, load_settings
@@ -21,7 +22,6 @@ process_options = ["Optimise NN",  #0-1
                    "Get Statistics of Meta Learners results",  #7-8
                    "Exit"]
 parameter_groups = ["All", "Basic", "Dropout", "Prune", "Weight decay", "Weight perturbation", "Back"]
-DATASETS_INFO_PATH = "Data/Datasets/Input/all_dataset_info.json"
 
 def main():
     print(f"PyTorch version: {torch.__version__}")  # Ensure it's a CUDA-compatible version
