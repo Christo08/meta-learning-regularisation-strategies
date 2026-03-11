@@ -10,7 +10,8 @@ from sklearn.decomposition import PCA
 import umap
 
 from Utils.fileHandler import load_results_csv
-from Utils.metaFeatureDatasetHandler import target_columns, spilt_dataset_and_targets
+from Utils.constants import META_LEANER_TARGET_COLUMNS
+from Utils.metaFeatureDatasetHandler import spilt_dataset_and_targets
 from Utils.menus import show_menu
 
 wr.filterwarnings('ignore')
@@ -74,7 +75,7 @@ def calculate_dataset_stats(full_dataset):
     print("")
 
     if has_target:
-        for column in target_columns:
+        for column in META_LEANER_TARGET_COLUMNS:
             print(targets[column].describe())
 
         print("")
@@ -99,12 +100,12 @@ def calculate_dataset_stats(full_dataset):
         print("Making technique count bar chart")
 
         num_cols = 3
-        num_rows = int(np.ceil(len(target_columns) / num_cols))
+        num_rows = int(np.ceil(len(META_LEANER_TARGET_COLUMNS) / num_cols))
 
         plt.figure(figsize=(12, num_rows * 3))
         plt.title('Bar chart of technique rankings')
 
-        for idx, column in enumerate(target_columns, start=1):
+        for idx, column in enumerate(META_LEANER_TARGET_COLUMNS, start=1):
             ranking_counts = targets[column].value_counts()
             # Ensure the index is numeric, then sort
             ranking_counts.index = ranking_counts.index.astype(int)
@@ -146,9 +147,9 @@ def calculate_dataset_stats(full_dataset):
         sns.set_style("darkgrid")
 
         numerical_columns_base = full_dataset.select_dtypes(include=["int64", "float64", "int8"]).columns
-        numerical_columns = [col for col in numerical_columns_base if col not in target_columns]
+        numerical_columns = [col for col in numerical_columns_base if col not in META_LEANER_TARGET_COLUMNS]
 
-        for technique in target_columns:
+        for technique in META_LEANER_TARGET_COLUMNS:
             plt.figure(figsize=(15, num_rows * 3))
             plt.suptitle('Box charts of meta features vs ' + technique)
 
@@ -241,7 +242,7 @@ def explode_accuracies(df, accuracy_col):
 
 def get_best_instances_for_techniques(full_dataset):
     best_instances = {}
-    for technique in target_columns:
-        other_techniques = [t for t in target_columns if t != technique]
+    for technique in META_LEANER_TARGET_COLUMNS:
+        other_techniques = [t for t in META_LEANER_TARGET_COLUMNS if t != technique]
         best_instances[technique] = full_dataset[full_dataset[technique] == 1].drop(columns=other_techniques)
     return best_instances
