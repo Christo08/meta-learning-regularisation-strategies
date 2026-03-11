@@ -86,7 +86,8 @@ def main():
                 subset_dataset = load_meta_feature_dataset(True)
                 output_path = input("Enter the path of the Output dataset file or folder: ")
                 number_of_folds = int(input("How many folds do you want to use per instance? "))
-                index_to_create = [1]
+                index_to_create = input("Enter the indexes to recreate (separated by commas): ").replace(' ', '').split(",")
+                index_to_create = [int(index) for index in index_to_create]
                 recreate_dataset(subset_dataset, names, index_to_create, output_path, number_of_folds, datasets_settings)
         elif process == PROCESS_OPTIONS[4]:
             dataset = load_meta_feature_dataset()
