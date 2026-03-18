@@ -29,13 +29,13 @@ def load_meta_feature_dataset(need_subsets_info = False, type ="", should_cover_
     dataset = load_meta_features_csv(type)
     missing = False
     if not need_subsets_info:
-        columns_to_drop = ["dataset_name", "seed", "file_name", "subset_type"]
+        columns_to_drop = ["seed", "file_name", "subset_type"]
         dataset.drop(columns=columns_to_drop, errors="ignore", inplace=True)
     for target_column in META_LEANER_TARGET_COLUMNS:
         if target_column not in dataset.columns:
             missing = True
             break
-    if should_rank_techniques and not(missing):
+    if should_rank_techniques and not missing:
         dataset = clean_dataset(dataset, should_ask_for_apply_z_scoring)
 
         targets = dataset[META_LEANER_TARGET_COLUMNS]
@@ -51,6 +51,8 @@ def load_meta_feature_dataset(need_subsets_info = False, type ="", should_cover_
         file_path = output_path + "\\" + file_name
         save_data_frame(dataset, file_path)
     if should_cover_to_binary:
+        if not need_subsets_info:
+            dataset.drop(columns=["dataset_name"], errors="ignore", inplace=True)
         for column in META_LEANER_TARGET_COLUMNS:
             if column in dataset.columns:
                 dataset[column] = dataset[column].apply(lambda x: 1 if x == 1 else 0)
@@ -79,7 +81,7 @@ def clean_dataset(dataset, should_ask_for_apply_z_scoring):
     max_float = np.finfo(np.float32).max
 
     for column in dataset.columns:
-        if not(column in META_LEANER_TARGET_COLUMNS):
+        if not(column in META_LEANER_TARGET_COLUMNS) and column != "dataset_name":
             column_data = dataset[column].values.astype(np.float64)
             if should_apply_z_scoring:
                 finite_mask = np.isfinite(column_data)

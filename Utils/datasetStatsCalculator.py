@@ -57,20 +57,21 @@ def perform_cluster_analysis(full_dataset):
             X_umap = umap_model.fit_transform(X_pca)
 
 def calculate_dataset_stats(full_dataset):
-    dataset, targets = spilt_dataset_and_targets(full_dataset)
+    dataset_without_datasets_names = full_dataset.drop(columns=["dataset_name"], errors="ignore")
+    features, targets = spilt_dataset_and_targets(dataset_without_datasets_names)
     has_target = not targets.empty
     output_path = input("Enter the path of the Output stats folder: ")
     prompt ="Select the stats to calculate by entering the numbers "+ "" if has_target else "(Options 1,2 and 3 are not available)"
     processes_option = show_menu(prompt, STATS_OPTIONS)
     selected_processes = []
-    if processes_option == processes_option[0]:
-        selected_processes =  processes_option[1:-2]
-    elif processes_option == processes_option[len(processes_option) - 2]:
+    if processes_option == STATS_OPTIONS[0]:
+        selected_processes =  STATS_OPTIONS[1:-2]
+    elif processes_option == STATS_OPTIONS[len(processes_option) - 2]:
         print("Enter the datasets' numbers separated by a comma:")
         select_dataset_indexes = input().replace(' ', '').split(",")
         for select_dataset_index in select_dataset_indexes:
             selected_processes.append(processes_option[int(select_dataset_index) - 1])
-    elif processes_option == processes_option[len(processes_option) - 1]:
+    elif processes_option == STATS_OPTIONS[len(processes_option) - 1]:
         return
     else:
         selected_processes = [processes_option]
@@ -80,7 +81,7 @@ def calculate_dataset_stats(full_dataset):
 
     if STATS_OPTIONS[5] in selected_processes:
         print(f"Features Description:")
-        inf_removed = dataset.replace([np.inf, -np.inf], np.nan).dropna(axis=0, how='any')
+        inf_removed = features.replace([np.inf, -np.inf], np.nan).dropna(axis=0, how='any')
         stats_df = inf_removed.describe().T
         stats_df = stats_df.reset_index().rename(columns={'index': 'column name'})
         stats_df = stats_df[['column name', 'count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max']]
@@ -112,32 +113,19 @@ def calculate_dataset_stats(full_dataset):
 
         print("Technique rankings summary:")
         print(summary)
-        save_data_frame(summary, f"{output_path}/rankings_stats_{timestamp}.csv")
-
-
     #Make Technique count bar chart
     if STATS_OPTIONS[1] in selected_processes and has_target:
         print("Making technique count bar chart")
+        save_data_frame(summary, f"{output_path}/rankings_stats_{timestamp}.csv")
+        selected_columns = ['dataset_name'] + META_LEANER_TARGET_COLUMNS
+        subset = full_dataset[selected_columns]
+        rankings_per_dataset = subset.groupby('dataset_name')[META_LEANER_TARGET_COLUMNS].apply(lambda x: (x == 1).sum()).reset_index()
+        save_data_frame(rankings_per_dataset, f"{output_path}/rankings_per_dataset_{timestamp}.csv")
 
-        num_cols = 3
-        num_rows = int(np.ceil(len(META_LEANER_TARGET_COLUMNS) / num_cols))
 
-        plt.figure(figsize=(12, num_rows * 3))
-        plt.title('Bar chart of technique rankings')
-
-        for idx, column in enumerate(META_LEANER_TARGET_COLUMNS, start=1):
-            ranking_counts = targets[column].value_counts()
-            # Ensure the index is numeric, then sort
-            ranking_counts.index = ranking_counts.index.astype(int)
-            ranking_counts = ranking_counts.sort_index()
-
-            plt.subplot(num_rows, num_cols, idx)
-            plt.bar(ranking_counts.index.astype(str), ranking_counts.values)
-            plt.title('Count ranking of ' + column)
-            plt.xlabel(column)
-            plt.xticks(ticks=range(1, 10))  # explicitly set 1 to 9
-
-        plt.tight_layout()
+        plt.figure(figsize=(25,20))
+        rankings_per_dataset.plot(x="dataset_name", kind='bar', stacked=True)
+        plt.title('Stack bar chart of technique rankings')
         plt.savefig(f"{output_path}/rankings_bar_chart_{timestamp}.png")
         plt.show()
 
@@ -146,7 +134,7 @@ def calculate_dataset_stats(full_dataset):
         print("Making density plot")
         sns.set_style("darkgrid")
 
-        numerical_columns = dataset.select_dtypes(include=["int64", "float64", "int8"]).columns
+        numerical_columns = features.select_dtypes(include=["int64", "float64", "int8"]).columns
 
         num_cols = 3
         num_rows = int(np.ceil(len(numerical_columns) / num_cols))
@@ -156,9 +144,9 @@ def calculate_dataset_stats(full_dataset):
 
         for idx, feature in enumerate(numerical_columns, 1):
             plt.subplot(num_rows, num_cols, idx)
-            clean_data = dataset[feature].replace([np.inf, -np.inf], np.nan).dropna()
+            clean_data = features[feature].replace([np.inf, -np.inf], np.nan).dropna()
             sns.histplot(clean_data, kde=True)
-            plt.title(f"{feature}\nSkewness: {round(dataset[feature].skew(), 2)}")
+            plt.title(f"{feature}\nSkewness: {round(features[feature].skew(), 2)}")
 
         plt.tight_layout()
         plt.savefig(f"{output_path}/features_density_plots_{timestamp}.png")
@@ -188,14 +176,14 @@ def calculate_dataset_stats(full_dataset):
     #Bivariate Analysis
     if STATS_OPTIONS[7] in selected_processes:
         if has_target:
-            dataset = pd.concat([dataset, targets], axis=1)
+            features = pd.concat([features, targets], axis=1)
 
         print("Making pair plot")
         sns.set_palette("Pastel1")
 
         plt.figure(figsize=(10, 6))
 
-        sns.pairplot(dataset)
+        sns.pairplot(features)
 
         plt.suptitle('Pair Plot of Meta Features vs Techniques')
         plt.show()
@@ -205,7 +193,7 @@ def calculate_dataset_stats(full_dataset):
         print("Making correlation heatmap")
         plt.figure(figsize=(25, 20))
 
-        sns.heatmap(dataset.corr(), annot=True, fmt='.2f', cmap='Greys', linewidths=2)
+        sns.heatmap(features.corr(), annot=True, fmt='.2f', cmap='Greys', linewidths=2)
 
         plt.title('Correlation Heatmap')
         plt.savefig(f"{output_path}/correlation_heatmap_{timestamp}.png")
