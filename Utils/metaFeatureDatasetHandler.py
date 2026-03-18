@@ -24,8 +24,8 @@ def spilt_dataset_and_targets(dataset):
         dataset = dataset.drop(META_LEANER_TARGET_COLUMNS, axis=1)
         return dataset, targets
 
-def load_meta_feature_dataset(need_subsets_info = False, type ="", should_cover_to_binary = False):
-    should_rank_techniques = input("Is the dataset raw? (y/n): ").lower() == "y"
+def load_meta_feature_dataset(need_subsets_info = False, type ="", should_cover_to_binary = False, should_ask_for_apply_z_scoring = True, should_ask_rank_techniques = True):
+    should_rank_techniques = input("Is the dataset raw? (y/n): ").lower() == "y" if should_ask_rank_techniques else False
     dataset = load_meta_features_csv(type)
     missing = False
     if not need_subsets_info:
@@ -36,7 +36,7 @@ def load_meta_feature_dataset(need_subsets_info = False, type ="", should_cover_
             missing = True
             break
     if should_rank_techniques and not(missing):
-        dataset = clean_dataset(dataset)
+        dataset = clean_dataset(dataset, should_ask_for_apply_z_scoring)
 
         targets = dataset[META_LEANER_TARGET_COLUMNS]
         dataset = dataset.drop(META_LEANER_TARGET_COLUMNS, axis=1)
@@ -56,7 +56,7 @@ def load_meta_feature_dataset(need_subsets_info = False, type ="", should_cover_
                 dataset[column] = dataset[column].apply(lambda x: 1 if x == 1 else 0)
     return dataset
 
-def clean_dataset(dataset):
+def clean_dataset(dataset, should_ask_for_apply_z_scoring):
     columns_to_drop = [
         "baseline_training_loss", "baseline_validation_loss", "batch_normalisation_training_loss",
         "batch_normalisation_validation_loss", "dropout_training_loss", "dropout_validation_loss",
@@ -73,7 +73,7 @@ def clean_dataset(dataset):
         "weight_normalisation_testing_accuracies","weight_perturbation_training_accuracies",
         "weight_perturbation_testing_accuracies"
     ]
-    should_apply_z_scoring = input("Apply Z scoring? (y/n): ").lower() == "y"
+    should_apply_z_scoring = input("Apply Z scoring? (y/n): ").lower() == "y" if should_ask_for_apply_z_scoring else False
 
     dataset.drop(columns=columns_to_drop, errors="ignore", inplace=True)
     max_float = np.finfo(np.float32).max

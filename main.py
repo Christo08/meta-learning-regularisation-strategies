@@ -56,7 +56,7 @@ def main():
                                                  dataset_settings)
         elif process == PROCESS_OPTIONS[2]:
             if input("Do you have a meta-feature file? (y/n): ").lower() == "y":
-                dataset = load_meta_feature_dataset(True)
+                dataset = load_meta_feature_dataset(need_subsets_info = True, should_ask_for_apply_z_scoring = False, should_ask_rank_techniques = False)
                 names =[]
                 number_of_instances = int(input("How many Subsets do you want to create per dataset? "))
                 recreate_subsets(dataset, number_of_instances, datasets_settings, names)
@@ -83,14 +83,14 @@ def main():
         elif process == PROCESS_OPTIONS[3]:
             names = show_dataset_menu(datasets_settings)
             if names:
-                subset_dataset = load_meta_feature_dataset(True)
+                subset_dataset = load_meta_feature_dataset(need_subsets_info=True, should_ask_for_apply_z_scoring = False, should_ask_rank_techniques = False)
                 output_path = input("Enter the path of the Output dataset file or folder: ")
                 number_of_folds = int(input("How many folds do you want to use per instance? "))
                 index_to_create = input("Enter the indexes to recreate (separated by commas): ").replace(' ', '').split(",")
                 index_to_create = [int(index) for index in index_to_create]
                 recreate_dataset(subset_dataset, names, index_to_create, output_path, number_of_folds, datasets_settings)
         elif process == PROCESS_OPTIONS[4]:
-            dataset = load_meta_feature_dataset()
+            dataset = load_meta_feature_dataset(should_ask_for_apply_z_scoring = False)
             calculate_dataset_stats(dataset)
         elif process == PROCESS_OPTIONS[5]:
             training_set = load_meta_feature_dataset(type = "training set", should_cover_to_binary = True)
