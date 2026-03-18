@@ -1,4 +1,5 @@
 import warnings as wr
+from datetime import datetime
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,8 +10,8 @@ from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
 import umap
 
-from Utils.fileHandler import load_results_csv
-from Utils.constants import META_LEANER_TARGET_COLUMNS
+from Utils.fileHandler import load_results_csv, save_data_frame
+from Utils.constants import META_LEANER_TARGET_COLUMNS, STATS_OPTIONS
 from Utils.metaFeatureDatasetHandler import spilt_dataset_and_targets
 from Utils.menus import show_menu
 
@@ -58,45 +59,64 @@ def perform_cluster_analysis(full_dataset):
 def calculate_dataset_stats(full_dataset):
     dataset, targets = spilt_dataset_and_targets(full_dataset)
     has_target = not targets.empty
+    output_path = input("Enter the path of the Output stats folder: ")
+    prompt ="Select the stats to calculate by entering the numbers "+ "" if has_target else "(Options 1,2 and 3 are not available)"
+    processes_option = show_menu(prompt, STATS_OPTIONS)
+    selected_processes = []
+    if processes_option == processes_option[0]:
+        selected_processes =  processes_option[1:-2]
+    elif processes_option == processes_option[len(processes_option) - 2]:
+        print("Enter the datasets' numbers separated by a comma:")
+        select_dataset_indexes = input().replace(' ', '').split(",")
+        for select_dataset_index in select_dataset_indexes:
+            selected_processes.append(processes_option[int(select_dataset_index) - 1])
+    elif processes_option == processes_option[len(processes_option) - 1]:
+        return
+    else:
+        selected_processes = [processes_option]
 
     pd.set_option("display.max_columns", None)
-    print(f"Shape: {dataset.shape}")
-    print("")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-    print(f"Columns:")
-    print(dataset.info())
-    print("")
-
-    print(f"Description:")
-    inf_removed = dataset.replace([np.inf, -np.inf], np.nan).dropna(axis=0, how='any')
-    description = inf_removed.describe()
-    for column in description.columns.tolist():
-        print(inf_removed.describe()[column])
-    print("")
-
-    if has_target:
-        for column in META_LEANER_TARGET_COLUMNS:
-            print(targets[column].describe())
-
+    if STATS_OPTIONS[5] in selected_processes:
+        print(f"Features Description:")
+        inf_removed = dataset.replace([np.inf, -np.inf], np.nan).dropna(axis=0, how='any')
+        stats_df = inf_removed.describe().T
+        stats_df = stats_df.reset_index().rename(columns={'index': 'column name'})
+        stats_df = stats_df[['column name', 'count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max']]
+        save_data_frame(stats_df, f"{output_path}/features_stats_{timestamp}.csv")
+        print(stats_df)
         print("")
 
-    #Make Technique rankings summary
-    if has_target:
+    if STATS_OPTIONS[6] in selected_processes and has_target:
+        print(f"Technique Description:")
+
+        for column in META_LEANER_TARGET_COLUMNS:
+            print(targets[column].describe())
+        print("")
+
+        #Make Technique rankings summary
         worst_counts = targets.idxmax(axis=1).value_counts().reindex(targets.columns, fill_value=0)
+        can_not_be_applied = (targets == -1).sum()
 
         summary = pd.DataFrame({
             'average_rank': targets.mean(),
             'best_count': (targets == 1).sum(),
-            'best_count_percent': ((targets == 1).sum()/targets.shape[0]*100),
+            'best_count_percent': ((targets == 1).sum()/(targets.shape[0]-can_not_be_applied)*100),
             'worst_count': worst_counts,
-            'worst_count_percent': (worst_counts/targets.shape[0]*100)
+            'worst_count_percent': (worst_counts/(targets.shape[0]-can_not_be_applied)*100),
+            'can_not_be_used_count': can_not_be_applied,
+            'can_not_be_used_percent': (can_not_be_applied/targets.shape[0]*100)
         })
+        summary = summary.reset_index().rename(columns={'index': 'technique'})
 
         print("Technique rankings summary:")
         print(summary)
+        save_data_frame(summary, f"{output_path}/rankings_stats_{timestamp}.csv")
+
 
     #Make Technique count bar chart
-    if has_target:
+    if STATS_OPTIONS[1] in selected_processes and has_target:
         print("Making technique count bar chart")
 
         num_cols = 3
@@ -118,31 +138,34 @@ def calculate_dataset_stats(full_dataset):
             plt.xticks(ticks=range(1, 10))  # explicitly set 1 to 9
 
         plt.tight_layout()
+        plt.savefig(f"{output_path}/rankings_bar_chart_{timestamp}.png")
         plt.show()
 
     #Density plot of columns
-    print("Making density plot")
-    sns.set_style("darkgrid")
+    if STATS_OPTIONS[4] in selected_processes:
+        print("Making density plot")
+        sns.set_style("darkgrid")
 
-    numerical_columns = dataset.select_dtypes(include=["int64", "float64", "int8"]).columns
+        numerical_columns = dataset.select_dtypes(include=["int64", "float64", "int8"]).columns
 
-    num_cols = 3
-    num_rows = int(np.ceil(len(numerical_columns) / num_cols))
+        num_cols = 3
+        num_rows = int(np.ceil(len(numerical_columns) / num_cols))
 
-    plt.figure(figsize=(12, num_rows * 3))
-    plt.title('Density plot of meta features')
+        plt.figure(figsize=(12, num_rows * 3))
+        plt.title('Density plot of meta features')
 
-    for idx, feature in enumerate(numerical_columns, 1):
-        plt.subplot(num_rows, num_cols, idx)
-        clean_data = dataset[feature].replace([np.inf, -np.inf], np.nan).dropna()
-        sns.histplot(clean_data, kde=True)
-        plt.title(f"{feature}\nSkewness: {round(dataset[feature].skew(), 2)}")
+        for idx, feature in enumerate(numerical_columns, 1):
+            plt.subplot(num_rows, num_cols, idx)
+            clean_data = dataset[feature].replace([np.inf, -np.inf], np.nan).dropna()
+            sns.histplot(clean_data, kde=True)
+            plt.title(f"{feature}\nSkewness: {round(dataset[feature].skew(), 2)}")
 
-    plt.tight_layout()
-    plt.show()
+        plt.tight_layout()
+        plt.savefig(f"{output_path}/features_density_plots_{timestamp}.png")
+        plt.show()
 
     #Show outlier
-    if has_target:
+    if STATS_OPTIONS[2] in selected_processes and has_target:
         print("Making box plot")
         sns.set_style("darkgrid")
 
@@ -159,30 +182,34 @@ def calculate_dataset_stats(full_dataset):
                 plt.title(f"{feature}")
 
             plt.tight_layout()
+            # plt.savefig(f"{output_path}/features_vs_{technique}_box_plots_{timestamp}.png")
             plt.show()
 
     #Bivariate Analysis
-    if has_target:
-        dataset = pd.concat([dataset, targets], axis=1)
+    if STATS_OPTIONS[7] in selected_processes:
+        if has_target:
+            dataset = pd.concat([dataset, targets], axis=1)
 
-    print("Making pair plot")
-    sns.set_palette("Pastel1")
+        print("Making pair plot")
+        sns.set_palette("Pastel1")
 
-    plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(10, 6))
 
-    sns.pairplot(dataset)
+        sns.pairplot(dataset)
 
-    plt.suptitle('Pair Plot for DataFrame')
-    plt.show()
+        plt.suptitle('Pair Plot of Meta Features vs Techniques')
+        plt.show()
 
     #Correlation Heatmap
-    print("Making correlation heatmap")
-    plt.figure(figsize=(25, 20))
+    if STATS_OPTIONS[3] in selected_processes:
+        print("Making correlation heatmap")
+        plt.figure(figsize=(25, 20))
 
-    sns.heatmap(dataset.corr(), annot=True, fmt='.2f', cmap='Greys', linewidths=2)
+        sns.heatmap(dataset.corr(), annot=True, fmt='.2f', cmap='Greys', linewidths=2)
 
-    plt.title('Correlation Heatmap')
-    plt.show()
+        plt.title('Correlation Heatmap')
+        plt.savefig(f"{output_path}/correlation_heatmap_{timestamp}.png")
+        plt.show()
 
 def calculate_meta_learners_stats():
     meta_learners_results = load_results_csv()

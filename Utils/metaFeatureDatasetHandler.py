@@ -47,7 +47,7 @@ def load_meta_feature_dataset(need_subsets_info = False, type ="", should_cover_
 
         output_path = input("Enter the path of the Output dataset folder: ")
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        file_name = f"processed_meta_feature_{timestamp}.csv"
+        file_name = f"regularisation_meta_learning_{timestamp}.csv"
         file_path = output_path + "\\" + file_name
         save_data_frame(dataset, file_path)
     if should_cover_to_binary:

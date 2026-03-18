@@ -8,13 +8,13 @@ OUTPUT_PATH = "Data/Datasets/Output/Raw"
 
 #Menu items
 PROCESS_OPTIONS = ["Optimise NN",  #0-1
-                   "Create Subsets and instances",  #1-2
-                   "Recreate Subsets",  #2-3
+                   "Create subsets and instances",  #1-2
+                   "Recreate subsets",  #2-3
                    "Recreate instances",  #3-4
-                   "Get Statistics of Meta Learning Dataset",  #4-5
-                   "Optimise Meta Learning",  #5-6
-                   "Train Meta Learning",  #6-7
-                   "Get Statistics of Meta Learners results",  #7-8
+                   "Get statistics of meta learning dataset",  #4-5
+                   "Optimise meta learning",  #5-6
+                   "Train meta learning",  #6-7
+                   "Get statistics of meta learners results",  #7-8
                    "Exit"]
 PARAMETER_GROUPS = ["All",
                     "Basic",
@@ -34,6 +34,17 @@ META_LEARN_TYPES = ['All',
                     'Support vector machines',
                     'Custom',
                     'Back']
+STATS_OPTIONS = ["All",
+                 "Bar charts of techniques' ranking count",
+                 "Box charts of meta features vs techniques",
+                 "Correlation heatmap of meta features vs techniques",
+                 "Density plot of meta features",
+                 "Features info",
+                 "Ranking techniques info",
+                 "Pair plot of meta features vs techniques",
+                 "Custom",
+                 "Back"]
+
 #SUBSET CREATION
 MIN_CLASSES_REQUIRED = 2
 MIN_INSTANCES_PER_SUBSET = 100
@@ -57,4 +68,7 @@ META_LEANER_TARGET_COLUMNS = ["baseline_testing_loss",
                               "dropout_testing_loss",
                               "layer_normalisation_testing_loss",
                               "prune_testing_loss",
-                              "weight_normalisation_testing_loss"]
+                              "weight_normalisation_testing_loss",
+                              "SMOTE_testing_loss",
+                              "weight_decay_testing_loss",
+                              "weight_perturbation_testing_loss"]
