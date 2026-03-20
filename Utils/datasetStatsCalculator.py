@@ -83,6 +83,7 @@ def calculate_dataset_stats(full_dataset):
         print(f"Features Description:")
         inf_removed = features.replace([np.inf, -np.inf], np.nan).dropna(axis=0, how='any')
         stats_df = inf_removed.describe().T
+        stats_df = stats_df.round(3)
         stats_df = stats_df.reset_index().rename(columns={'index': 'column name'})
         stats_df = stats_df[['column name', 'count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max']]
         save_data_frame(stats_df, f"{output_path}/features_stats_{timestamp}.csv")
@@ -101,13 +102,13 @@ def calculate_dataset_stats(full_dataset):
         can_not_be_applied = (targets == -1).sum()
 
         summary = pd.DataFrame({
-            'average_rank': targets.mean(),
+            'average_rank': round(targets.mean(),3),
             'best_count': (targets == 1).sum(),
-            'best_count_percent': ((targets == 1).sum()/(targets.shape[0]-can_not_be_applied)*100),
+            'best_count_percent': round(((targets == 1).sum()/(targets.shape[0]-can_not_be_applied)*100),3),
             'worst_count': worst_counts,
-            'worst_count_percent': (worst_counts/(targets.shape[0]-can_not_be_applied)*100),
+            'worst_count_percent': round((worst_counts/(targets.shape[0]-can_not_be_applied)*100),3),
             'can_not_be_used_count': can_not_be_applied,
-            'can_not_be_used_percent': (can_not_be_applied/targets.shape[0]*100)
+            'can_not_be_used_percent': round((can_not_be_applied/targets.shape[0]*100),3)
         })
         summary = summary.reset_index().rename(columns={'index': 'technique'})
 
@@ -123,7 +124,7 @@ def calculate_dataset_stats(full_dataset):
         save_data_frame(rankings_per_dataset, f"{output_path}/rankings_per_dataset_{timestamp}.csv")
 
 
-        plt.figure(figsize=(25,20))
+        plt.figure(figsize=(50,50))
         rankings_per_dataset.plot(x="dataset_name", kind='bar', stacked=True)
         plt.title('Stack bar chart of technique rankings')
         plt.savefig(f"{output_path}/rankings_bar_chart_{timestamp}.png")
@@ -170,7 +171,7 @@ def calculate_dataset_stats(full_dataset):
                 plt.title(f"{feature}")
 
             plt.tight_layout()
-            # plt.savefig(f"{output_path}/features_vs_{technique}_box_plots_{timestamp}.png")
+            plt.savefig(f"{output_path}/features_vs_{technique}_box_plots_{timestamp}.png")
             plt.show()
 
     #Bivariate Analysis

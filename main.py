@@ -96,11 +96,11 @@ def main():
             dataset = load_meta_feature_dataset(should_ask_for_apply_z_scoring = True)
             split_dataset(dataset)
         elif process == PROCESS_OPTIONS[6]:
-            training_set = load_meta_feature_dataset(type = "training set", should_cover_to_binary = True)
+            training_set = load_meta_feature_dataset(type = "training set", should_cover_to_binary = True, should_ask_for_apply_z_scoring= True)
             optimise_meta_learners(training_set)
         elif process == PROCESS_OPTIONS[7]:
-            training_set = load_meta_feature_dataset(type = "training set", should_cover_to_binary = True)
-            testing_set = load_meta_feature_dataset(type = "testing set", should_cover_to_binary = True)
+            training_set = load_meta_feature_dataset(type = "training set", should_cover_to_binary = True, should_ask_for_apply_z_scoring= True)
+            testing_set = load_meta_feature_dataset(type = "testing set", should_cover_to_binary = True, should_ask_for_apply_z_scoring= True)
             train_meta_learners(training_set, testing_set)
         elif process == PROCESS_OPTIONS[8]:
             calculate_meta_learners_stats()

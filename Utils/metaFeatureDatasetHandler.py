@@ -1,5 +1,6 @@
 import ast
 import math
+import random
 from datetime import datetime
 
 import numpy as np
@@ -35,7 +36,12 @@ def split_dataset(dataset):
     rankings_per_dataset["mean_loss"] = rankings_per_dataset[targets].mean(axis=1)
     rankings_per_dataset["bin"] = pd.qcut(rankings_per_dataset["mean_loss"], q=4, labels=False)
 
-    train, test = train_test_split(rankings_per_dataset, test_size=0.25, stratify=rankings_per_dataset["bin"])
+    seed = random.randint(1, 10000)
+    print("Seed:", seed)
+    train, test = train_test_split(rankings_per_dataset,
+                                   test_size=0.25,
+                                   stratify=rankings_per_dataset["bin"],
+                                   random_state = seed)
 
     output_path = input("Enter the path of the Output dataset folder: ")
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -64,15 +70,12 @@ def load_meta_feature_dataset(need_subsets_info = False, type ="", should_cover_
     should_rank_techniques = input("Is the dataset raw? (y/n): ").lower() == "y" if should_ask_rank_techniques else False
     dataset = load_meta_features_csv(type)
     missing = False
-    if not need_subsets_info:
-        columns_to_drop = ["seed", "file_name", "subset_type"]
-        dataset.drop(columns=columns_to_drop, errors="ignore", inplace=True)
     for target_column in META_LEANER_TARGET_COLUMNS:
         if target_column not in dataset.columns:
             missing = True
             break
+    dataset = clean_dataset(dataset)
     if should_rank_techniques and not missing:
-        dataset = clean_dataset(dataset, should_ask_for_apply_z_scoring)
 
         targets = dataset[META_LEANER_TARGET_COLUMNS]
         dataset = dataset.drop(META_LEANER_TARGET_COLUMNS, axis=1)
@@ -87,6 +90,8 @@ def load_meta_feature_dataset(need_subsets_info = False, type ="", should_cover_
         file_path = output_path + "\\" + file_name
         save_data_frame(dataset, file_path)
     if should_cover_to_binary:
+        dataset = dataset.drop(columns=["dataset_name", "SMOTE_testing_loss"], errors="ignore", inplace=False)
+        dataset = apply_z_scoring(dataset, should_ask_for_apply_z_scoring)
         if not need_subsets_info:
             dataset.drop(columns=["dataset_name"], errors="ignore", inplace=True)
         for column in META_LEANER_TARGET_COLUMNS:
@@ -94,7 +99,7 @@ def load_meta_feature_dataset(need_subsets_info = False, type ="", should_cover_
                 dataset[column] = dataset[column].apply(lambda x: 1 if x == 1 else 0)
     return dataset
 
-def clean_dataset(dataset, should_ask_for_apply_z_scoring):
+def clean_dataset(dataset):
     columns_to_drop = [
         "baseline_training_loss", "baseline_validation_loss", "batch_normalisation_training_loss",
         "batch_normalisation_validation_loss", "dropout_training_loss", "dropout_validation_loss",
@@ -109,17 +114,25 @@ def clean_dataset(dataset, should_ask_for_apply_z_scoring):
         "SMOTE_testing_accuracies","prune_training_accuracies","prune_testing_accuracies",
         "weight_decay_training_accuracies","weight_decay_testing_accuracies","weight_normalisation_training_accuracies",
         "weight_normalisation_testing_accuracies","weight_perturbation_training_accuracies",
-        "weight_perturbation_testing_accuracies"
+        "weight_perturbation_testing_accuracies", "seed", "file_name", "subset_type"
     ]
-    should_apply_z_scoring = input("Apply Z scoring? (y/n): ").lower() == "y" if should_ask_for_apply_z_scoring else False
 
     dataset.drop(columns=columns_to_drop, errors="ignore", inplace=True)
-    max_float = np.finfo(np.float32).max
 
     for column in dataset.columns:
         if not(column in META_LEANER_TARGET_COLUMNS) and column != "dataset_name":
             column_data = dataset[column].values.astype(np.float64)
-            if should_apply_z_scoring:
+            dataset[column] = column_data
+
+    return dataset
+
+def apply_z_scoring(dataset, should_ask_for_apply_z_scoring):
+    should_apply_z_scoring = input("Apply Z scoring? (y/n): ").lower() == "y" if should_ask_for_apply_z_scoring else False
+    if should_apply_z_scoring:
+        max_float = np.finfo(np.float32).max
+        for column in dataset.columns:
+            if not(column in META_LEANER_TARGET_COLUMNS) and column != "dataset_name":
+                column_data = dataset[column].values.astype(np.float64)
                 finite_mask = np.isfinite(column_data)
 
                 z_column = np.empty_like(column_data)
@@ -129,11 +142,8 @@ def clean_dataset(dataset, should_ask_for_apply_z_scoring):
                 z_column = np.where(z_column == np.inf, max_float, z_column)
 
                 dataset[column] = z_column
-            else:
-                dataset[column] = column_data
-
-
     return dataset
+
 
 def rank_techniques(dataset):
     assert dataset.shape[1] >= 2, "Need at least two techniques to compare."
