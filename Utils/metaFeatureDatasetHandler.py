@@ -28,7 +28,7 @@ def spilt_dataset_and_targets(dataset):
         return dataset, targets
 
 def split_dataset(dataset):
-    targets = [col for col in META_LEANER_TARGET_COLUMNS if col != "SMOTE_testing_loss"]
+    targets = [col for col in META_LEANER_TARGET_COLUMNS if col != "SMOTE"]
     selected_columns = ['dataset_name'] + targets
     subset = dataset[selected_columns]
     rankings_per_dataset = subset.groupby('dataset_name')[targets].apply(lambda x: (x == 1).sum()).reset_index()
@@ -69,14 +69,11 @@ def split_dataset(dataset):
 def load_meta_feature_dataset(need_subsets_info = False, type ="", should_cover_to_binary = False, should_ask_for_apply_z_scoring = True, should_ask_rank_techniques = True):
     should_rank_techniques = input("Is the dataset raw? (y/n): ").lower() == "y" if should_ask_rank_techniques else False
     dataset = load_meta_features_csv(type)
-    missing = False
+    dataset = clean_dataset(dataset)
     for target_column in META_LEANER_TARGET_COLUMNS:
         if target_column not in dataset.columns:
-            missing = True
-            break
-    dataset = clean_dataset(dataset)
-    if should_rank_techniques and not missing:
-
+            raise ValueError(f"Missing target column: {target_column}")
+    if should_rank_techniques:
         targets = dataset[META_LEANER_TARGET_COLUMNS]
         dataset = dataset.drop(META_LEANER_TARGET_COLUMNS, axis=1)
 
@@ -119,10 +116,17 @@ def clean_dataset(dataset):
 
     dataset.drop(columns=columns_to_drop, errors="ignore", inplace=True)
 
+    suffix = "_testing_loss"
+    rename_map = {
+        col: col[:-len(suffix)]
+        for col in dataset.columns
+        if isinstance(col, str) and col.endswith(suffix)
+    }
+    dataset.rename(columns=rename_map, inplace=True)
+
     for column in dataset.columns:
         if not(column in META_LEANER_TARGET_COLUMNS) and column != "dataset_name":
-            column_data = dataset[column].values.astype(np.float64)
-            dataset[column] = column_data
+            dataset[column] = dataset[column].values.astype(np.float64)
 
     return dataset
 

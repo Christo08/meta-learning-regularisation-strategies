@@ -64,12 +64,12 @@ REGULARISATION_TECHNIQUES = [
     {"name": "weightNormalisation", "param": "weightNormalisation", "fileName": "weight_normalisation"},
     {"name": "weightPerturbation", "param": "weightPerturbation", "fileName": "weight_perturbation"}
 ]
-META_LEANER_TARGET_COLUMNS = ["baseline_testing_loss",
-                              "batch_normalisation_testing_loss",
-                              "dropout_testing_loss",
-                              "layer_normalisation_testing_loss",
-                              "prune_testing_loss",
-                              "weight_normalisation_testing_loss",
-                              "SMOTE_testing_loss",
-                              "weight_decay_testing_loss",
-                              "weight_perturbation_testing_loss"]
+META_LEANER_TARGET_COLUMNS = ["baseline",
+                              "batch_normalisation",
+                              "dropout",
+                              "layer_normalisation",
+                              "prune",
+                              "weight_normalisation",
+                              "SMOTE",
+                              "weight_decay",
+                              "weight_perturbation"]

@@ -23,7 +23,7 @@ def training_all_random_forests(settings_file_path, training_set, testing_set, s
                                      kFold)
         result = {
             "model type": "Random forest",
-            "technique": target_column.replace("_testing_loss","").replace("_"," "),
+            "technique": target_column.replace("_"," "),
             **result
         }
         results.append(result)

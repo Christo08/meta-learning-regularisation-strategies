@@ -1,3 +1,4 @@
+import os
 import warnings as wr
 from datetime import datetime
 
@@ -6,199 +7,216 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-from sklearn.manifold import TSNE
-from sklearn.decomposition import PCA
-import umap
-
-from Utils.fileHandler import load_results_csv, save_data_frame
 from Utils.constants import META_LEANER_TARGET_COLUMNS, STATS_OPTIONS
-from Utils.metaFeatureDatasetHandler import spilt_dataset_and_targets
+from Utils.fileHandler import load_results_csv, save_data_frame
 from Utils.menus import show_menu
+from Utils.metaFeatureDatasetHandler import spilt_dataset_and_targets
 
 wr.filterwarnings('ignore')
-process_options = ["Basic", "Cluster analysis", "Back"]
-dimensional_reduction_options = ["TSNE", "UMAP", "Back"]
-
-def calculate_stats(full_dataset):
-    process = show_menu("Select stats type: ", process_options)
-    if process == process_options[0]:
-        calculate_dataset_stats(full_dataset)
-    elif process == process_options[1]:
-        perform_cluster_analysis(full_dataset)
-    else:
-        return
-
-def perform_cluster_analysis(full_dataset):
-    option = show_menu("Select dimensional reduction technique: ", dimensional_reduction_options)
-    if option in dimensional_reduction_options[2]:
-        return
-    best_instances_for_techniques = get_best_instances_for_techniques(full_dataset)
-    for key, instances in best_instances_for_techniques.items():
-        X_pca = PCA(n_components=10).fit_transform(instances)
-        if option == dimensional_reduction_options[0]:
-            tsne = TSNE(
-                n_components=2,
-                perplexity=30,
-                learning_rate=200,
-                init='pca',
-                random_state=42
-            )
-
-            X_embedded = tsne.fit_transform(X_pca)
-        else:
-            umap_model = umap.UMAP(
-                n_neighbors=15,
-                min_dist=0.05,
-                n_components=2,
-                metric='euclidean',
-                random_state=42
-            )
-
-            X_umap = umap_model.fit_transform(X_pca)
-
-def calculate_dataset_stats(full_dataset):
-    dataset_without_datasets_names = full_dataset.drop(columns=["dataset_name"], errors="ignore")
-    features, targets = spilt_dataset_and_targets(dataset_without_datasets_names)
-    has_target = not targets.empty
-    output_path = input("Enter the path of the Output stats folder: ")
-    prompt ="Select the stats to calculate by entering the numbers "+ "" if has_target else "(Options 1,2 and 3 are not available)"
-    processes_option = show_menu(prompt, STATS_OPTIONS)
-    selected_processes = []
-    if processes_option == STATS_OPTIONS[0]:
-        selected_processes =  STATS_OPTIONS[1:-2]
-    elif processes_option == STATS_OPTIONS[len(processes_option) - 2]:
-        print("Enter the datasets' numbers separated by a comma:")
-        select_dataset_indexes = input().replace(' ', '').split(",")
-        for select_dataset_index in select_dataset_indexes:
-            selected_processes.append(processes_option[int(select_dataset_index) - 1])
-    elif processes_option == STATS_OPTIONS[len(processes_option) - 1]:
-        return
-    else:
-        selected_processes = [processes_option]
-
-    pd.set_option("display.max_columns", None)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-    if STATS_OPTIONS[5] in selected_processes:
-        print(f"Features Description:")
-        inf_removed = features.replace([np.inf, -np.inf], np.nan).dropna(axis=0, how='any')
-        stats_df = inf_removed.describe().T
-        stats_df = stats_df.round(3)
-        stats_df = stats_df.reset_index().rename(columns={'index': 'column name'})
-        stats_df = stats_df[['column name', 'count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max']]
-        save_data_frame(stats_df, f"{output_path}/features_stats_{timestamp}.csv")
-        print(stats_df)
-        print("")
-
-    if STATS_OPTIONS[6] in selected_processes and has_target:
-        print(f"Technique Description:")
-
-        for column in META_LEANER_TARGET_COLUMNS:
-            print(targets[column].describe())
-        print("")
-
-        #Make Technique rankings summary
-        worst_counts = targets.idxmax(axis=1).value_counts().reindex(targets.columns, fill_value=0)
-        can_not_be_applied = (targets == -1).sum()
-
-        summary = pd.DataFrame({
-            'average_rank': round(targets.mean(),3),
-            'best_count': (targets == 1).sum(),
-            'best_count_percent': round(((targets == 1).sum()/(targets.shape[0]-can_not_be_applied)*100),3),
-            'worst_count': worst_counts,
-            'worst_count_percent': round((worst_counts/(targets.shape[0]-can_not_be_applied)*100),3),
-            'can_not_be_used_count': can_not_be_applied,
-            'can_not_be_used_percent': round((can_not_be_applied/targets.shape[0]*100),3)
-        })
-        summary = summary.reset_index().rename(columns={'index': 'technique'})
-
-        print("Technique rankings summary:")
-        print(summary)
-    #Make Technique count bar chart
-    if STATS_OPTIONS[1] in selected_processes and has_target:
-        print("Making technique count bar chart")
-        save_data_frame(summary, f"{output_path}/rankings_stats_{timestamp}.csv")
-        selected_columns = ['dataset_name'] + META_LEANER_TARGET_COLUMNS
-        subset = full_dataset[selected_columns]
-        rankings_per_dataset = subset.groupby('dataset_name')[META_LEANER_TARGET_COLUMNS].apply(lambda x: (x == 1).sum()).reset_index()
-        save_data_frame(rankings_per_dataset, f"{output_path}/rankings_per_dataset_{timestamp}.csv")
 
 
-        plt.figure(figsize=(50,50))
-        rankings_per_dataset.plot(x="dataset_name", kind='bar', stacked=True)
-        plt.title('Stack bar chart of technique rankings')
-        plt.savefig(f"{output_path}/rankings_bar_chart_{timestamp}.png")
-        plt.show()
+def create_feature_stats(features, output_path):
+    print(f"Making the feature summary")
+    inf_removed = features.replace([np.inf, -np.inf], np.nan).dropna(axis=0, how='any')
+    stats_df = inf_removed.describe().T
+    stats_df = stats_df.round(3)
+    stats_df = stats_df.reset_index().rename(columns={'index': 'column name'})
+    stats_df = stats_df[['column name', 'count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max']]
+    save_data_frame(stats_df, f"{output_path}/features_stats.csv")
 
-    #Density plot of columns
-    if STATS_OPTIONS[4] in selected_processes:
-        print("Making density plot")
-        sns.set_style("darkgrid")
 
-        numerical_columns = features.select_dtypes(include=["int64", "float64", "int8"]).columns
+def create_technique_rankings_stats(targets, output_path):
+    print(f"Making the technique summary")
+    #Make Technique rankings summary
+    worst_counts = targets.idxmax(axis=1).value_counts().reindex(targets.columns, fill_value=0)
+    can_not_be_applied = (targets == -1).sum()
 
-        num_cols = 3
-        num_rows = int(np.ceil(len(numerical_columns) / num_cols))
+    summary = pd.DataFrame({
+        'average_rank': round(targets.mean(),3),
+        'best_count': (targets == 1).sum(),
+        'best_count_percent': round(((targets == 1).sum()/(targets.shape[0]-can_not_be_applied)*100),3),
+        'worst_count': worst_counts,
+        'worst_count_percent': round((worst_counts/(targets.shape[0]-can_not_be_applied)*100),3),
+        'can_not_be_used_count': can_not_be_applied,
+        'can_not_be_used_percent': round((can_not_be_applied/targets.shape[0]*100),3)
+    })
+    summary = summary.reset_index().rename(columns={'index': 'technique'})
 
-        plt.figure(figsize=(12, num_rows * 3))
-        plt.title('Density plot of meta features')
+    print("Technique rankings summary:")
+    save_data_frame(summary, f"{output_path}/rankings_stats.csv")
 
-        for idx, feature in enumerate(numerical_columns, 1):
-            plt.subplot(num_rows, num_cols, idx)
-            clean_data = features[feature].replace([np.inf, -np.inf], np.nan).dropna()
-            sns.histplot(clean_data, kde=True)
-            plt.title(f"{feature}\nSkewness: {round(features[feature].skew(), 2)}")
 
+def create_technique_stack_bar_chart(full_dataset, output_path):
+    print("Making technique count bar chart")
+    selected_columns = ['dataset_name'] + META_LEANER_TARGET_COLUMNS
+    subset = full_dataset[selected_columns]
+    rankings_per_dataset = subset.groupby('dataset_name')[META_LEANER_TARGET_COLUMNS].apply(lambda x: (x == 1).sum()).reset_index()
+    save_data_frame(rankings_per_dataset, f"{output_path}/rankings_per_dataset.csv")
+
+
+    plt.figure(figsize=(50,50))
+    rankings_per_dataset.plot(x="dataset_name", kind='bar', stacked=True)
+    plt.title('Stack bar chart of technique rankings')
+    plt.savefig(f"{output_path}/rankings_bar_chart.png")
+    plt.show()
+
+
+def create_feature_density_plots(features, output_path):
+    print("Making density plot")
+    sns.set_style("darkgrid")
+
+    numerical_columns = features.select_dtypes(include=["int64", "float64", "int8"]).columns
+
+    num_cols = 3
+    num_rows = int(np.ceil(len(numerical_columns) / num_cols))
+
+    plt.figure(figsize=(12, num_rows * 3))
+    plt.title('Density plot of meta features')
+
+    for idx, feature in enumerate(numerical_columns, 1):
+        plt.subplot(num_rows, num_cols, idx)
+        clean_data = features[feature].replace([np.inf, -np.inf], np.nan).dropna()
+        sns.histplot(clean_data, kde=True)
+        plt.title(f"{feature}\nSkewness: {round(features[feature].skew(), 2)}")
+
+    plt.tight_layout()
+    plt.savefig(f"{output_path}/features_density_plots.png")
+    plt.show()
+
+
+def create_box_plots(full_dataset, output_path):
+    print("Making box plot")
+    sns.set_style("darkgrid")
+
+    numerical_columns_base = full_dataset.select_dtypes(include=["int64", "float64", "int8"]).columns
+    numerical_columns = [col for col in numerical_columns_base if col not in META_LEANER_TARGET_COLUMNS]
+
+    records = []
+
+    for tech in META_LEANER_TARGET_COLUMNS:
+        if tech not in full_dataset.columns:
+            continue
+
+        df_t = full_dataset[full_dataset[tech] == 1]
+
+        for feature in numerical_columns:
+            for val in df_t[feature].dropna():
+                records.append({
+                    "technique": tech,
+                    "feature": feature,
+                    "value": val,
+                })
+
+    plot_df = pd.DataFrame(records)
+
+    features = plot_df["feature"].unique()
+
+    num_cols = 3
+    num_rows = int(np.ceil(len(features) / num_cols))
+
+    plt.figure(figsize=(12, num_rows * 3))
+    plt.title('Box plots of meta features vs techniques')
+    for idx, feature in enumerate(features, 1):
+        plt.subplot(num_rows, num_cols, idx)
+        df_f = plot_df[plot_df["feature"] == feature]
+
+        sns.boxplot(
+            data=df_f,
+            x="technique",
+            y="value",
+        )
+
+        plt.title(f"{feature} (rank=1 only)")
+        plt.xticks(rotation=0)
         plt.tight_layout()
-        plt.savefig(f"{output_path}/features_density_plots_{timestamp}.png")
-        plt.show()
 
-    #Show outlier
-    if STATS_OPTIONS[2] in selected_processes and has_target:
-        print("Making box plot")
-        sns.set_style("darkgrid")
+        # filename = f"{output_path}/{feature}_rank1_{timestamp}.png"
+        # plt.savefig(filename)
+    plt.tight_layout()
+    plt.savefig(f"{output_path}/features_box_plots.png")
+    plt.show()
 
-        numerical_columns_base = full_dataset.select_dtypes(include=["int64", "float64", "int8"]).columns
-        numerical_columns = [col for col in numerical_columns_base if col not in META_LEANER_TARGET_COLUMNS]
 
-        for technique in META_LEANER_TARGET_COLUMNS:
-            plt.figure(figsize=(15, num_rows * 3))
-            plt.suptitle('Box charts of meta features vs ' + technique)
+def create_pair_plot(features, targets, output_path):
+    if not targets.empty:
+        features = pd.concat([features, targets], axis=1)
 
-            for idx, feature in enumerate(numerical_columns, 1):
-                plt.subplot(num_rows, num_cols, idx)
-                sns.boxplot(y=feature, x=technique, data=full_dataset)  # Ensure 'technique' is string/categorical
-                plt.title(f"{feature}")
+    print("Making pair plot")
+    sns.set_palette("Pastel1")
 
-            plt.tight_layout()
-            plt.savefig(f"{output_path}/features_vs_{technique}_box_plots_{timestamp}.png")
-            plt.show()
+    plt.figure(figsize=(10, 6))
 
-    #Bivariate Analysis
-    if STATS_OPTIONS[7] in selected_processes:
-        if has_target:
-            features = pd.concat([features, targets], axis=1)
+    sns.pairplot(features)
 
-        print("Making pair plot")
-        sns.set_palette("Pastel1")
+    plt.suptitle('Pair Plot of Meta Features vs Techniques')
+    plt.savefig(f"{output_path}/pair_plot.png")
 
-        plt.figure(figsize=(10, 6))
 
-        sns.pairplot(features)
+def create_heatmap(features, targets, output_path):
+    if not targets.empty:
+        features = pd.concat([features, targets], axis=1)
 
-        plt.suptitle('Pair Plot of Meta Features vs Techniques')
-        plt.show()
-
-    #Correlation Heatmap
-    if STATS_OPTIONS[3] in selected_processes:
         print("Making correlation heatmap")
         plt.figure(figsize=(25, 20))
 
         sns.heatmap(features.corr(), annot=True, fmt='.2f', cmap='Greys', linewidths=2)
 
         plt.title('Correlation Heatmap')
-        plt.savefig(f"{output_path}/correlation_heatmap_{timestamp}.png")
-        plt.show()
+        plt.savefig(f"{output_path}/correlation_heatmap.png")
+
+
+def calculate_dataset_stats(full_dataset):
+    dataset_without_datasets_names = full_dataset.drop(columns=["dataset_name"], errors="ignore")
+    features, targets = spilt_dataset_and_targets(dataset_without_datasets_names)
+    has_target = not targets.empty
+    output_path = input("Enter the path of the Output stats folder: ")
+
+    prompt ="Select the stats to calculate by entering the numbers "+ "" if has_target else "(Options 1,2 and 3 are not available)"
+    processes_option = show_menu(prompt, STATS_OPTIONS)
+    selected_processes = []
+    if processes_option == STATS_OPTIONS[0]:
+        selected_processes =  STATS_OPTIONS[1:-2]
+    elif processes_option == STATS_OPTIONS[len(STATS_OPTIONS) - 2]:
+        print("Enter the datasets' numbers separated by a comma:")
+        select_dataset_indexes = input().replace(' ', '').split(",")
+        for select_dataset_index in select_dataset_indexes:
+            selected_processes.append(processes_option[int(select_dataset_index) - 1])
+    elif processes_option == STATS_OPTIONS[len(STATS_OPTIONS) - 1]:
+        return
+    else:
+        selected_processes = [processes_option]
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_path = f"{output_path}/{timestamp}"
+    os.makedirs(output_path, exist_ok=True)
+
+    pd.set_option("display.max_columns", None)
+
+    if STATS_OPTIONS[5] in selected_processes:
+        create_feature_stats(features, output_path)
+
+    if STATS_OPTIONS[6] in selected_processes and has_target:
+        create_technique_rankings_stats(targets, output_path)
+
+    #Make Technique count bar chart
+    if STATS_OPTIONS[1] in selected_processes and has_target:
+        create_technique_stack_bar_chart(full_dataset, output_path)
+
+    #Density plot of columns
+    if STATS_OPTIONS[4] in selected_processes:
+        create_feature_density_plots(features, output_path)
+
+    #Show outlier
+    if STATS_OPTIONS[2] in selected_processes and has_target:
+        create_box_plots(full_dataset, output_path)
+
+    #Bivariate Analysis
+    if STATS_OPTIONS[7] in selected_processes:
+        create_pair_plot(features, targets, output_path)
+
+    #Correlation Heatmap
+    if STATS_OPTIONS[3] in selected_processes:
+        create_heatmap(features, targets, output_path)
 
 def calculate_meta_learners_stats():
     meta_learners_results = load_results_csv()

@@ -24,7 +24,7 @@ def training_all_k_nearest_neighbors(settings_file_path, training_set, testing_s
                                            kFold)
         result = {
             "model type": "KNN",
-            "technique": target_column.replace("_testing_loss","").replace("_"," "),
+            "technique": target_column.replace("_"," "),
             **result
         }
         results.append(result)

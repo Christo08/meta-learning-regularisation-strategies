@@ -62,7 +62,7 @@ def training_all_neural_networks(settings_file_path, raw_training_set, raw_testi
     results = []
     settings = load_settings(settings_file_path)
     for target_column in META_LEANER_TARGET_COLUMNS:
-        print(f"Training neural network for { target_column.replace("_testing_loss","").replace("_"," ")}...")
+        print(f"Training neural network for { target_column.replace("_"," ")}...")
         training_set = prepared_meta_feature_dataset(raw_training_set, META_LEANER_TARGET_COLUMNS, target_column, False)
         testing_set = prepared_meta_feature_dataset(raw_testing_set, META_LEANER_TARGET_COLUMNS, target_column, False)
 
@@ -84,7 +84,7 @@ def training_all_neural_networks(settings_file_path, raw_training_set, raw_testi
         training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_nn(setting, "", training_set, testing_set, seed, [], fold=kFold)
         result = {
             "model type": "NN",
-            "technique": target_column.replace("_testing_loss","").replace("_"," "),
+            "technique": target_column.replace("_"," "),
             "training losses": training_loss_values,
             "training accuracies": training_accuracies_values,
             "testing losses": testing_loss_values,
