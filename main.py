@@ -9,7 +9,7 @@ from Utils.constants import *
 from Utils.datasetStatsCalculator import calculate_meta_learners_stats, calculate_dataset_stats
 from Utils.fileHandler import load_dataset_setting_file, load_settings
 from Utils.menus import show_dataset_menu, show_menu
-from Utils.metaFeatureDatasetHandler import load_meta_feature_dataset
+from Utils.metaFeatureDatasetHandler import load_meta_feature_dataset, split_dataset
 
 
 def main():
@@ -93,13 +93,16 @@ def main():
             dataset = load_meta_feature_dataset(should_ask_for_apply_z_scoring = False)
             calculate_dataset_stats(dataset)
         elif process == PROCESS_OPTIONS[5]:
+            dataset = load_meta_feature_dataset(should_ask_for_apply_z_scoring = True)
+            split_dataset(dataset)
+        elif process == PROCESS_OPTIONS[6]:
             training_set = load_meta_feature_dataset(type = "training set", should_cover_to_binary = True)
             optimise_meta_learners(training_set)
-        elif process == PROCESS_OPTIONS[6]:
+        elif process == PROCESS_OPTIONS[7]:
             training_set = load_meta_feature_dataset(type = "training set", should_cover_to_binary = True)
             testing_set = load_meta_feature_dataset(type = "testing set", should_cover_to_binary = True)
             train_meta_learners(training_set, testing_set)
-        elif process == PROCESS_OPTIONS[7]:
+        elif process == PROCESS_OPTIONS[8]:
             calculate_meta_learners_stats()
         else:
             break

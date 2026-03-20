@@ -6,8 +6,10 @@ import numpy as np
 import pandas as pd
 from scipy.stats import ttest_ind, zscore
 
+from Optimisers.decisionTreeOptimiser import training_set
 from Utils.constants import META_LEANER_TARGET_COLUMNS
 from Utils.fileHandler import load_meta_features_csv, save_data_frame
+from sklearn.model_selection import train_test_split
 
 
 def spilt_dataset_and_targets(dataset):
@@ -23,6 +25,40 @@ def spilt_dataset_and_targets(dataset):
         targets = dataset[META_LEANER_TARGET_COLUMNS]
         dataset = dataset.drop(META_LEANER_TARGET_COLUMNS, axis=1)
         return dataset, targets
+
+def split_dataset(dataset):
+    targets = [col for col in META_LEANER_TARGET_COLUMNS if col != "SMOTE_testing_loss"]
+    selected_columns = ['dataset_name'] + targets
+    subset = dataset[selected_columns]
+    rankings_per_dataset = subset.groupby('dataset_name')[targets].apply(lambda x: (x == 1).sum()).reset_index()
+
+    rankings_per_dataset["mean_loss"] = rankings_per_dataset[targets].mean(axis=1)
+    rankings_per_dataset["bin"] = pd.qcut(rankings_per_dataset["mean_loss"], q=4, labels=False)
+
+    train, test = train_test_split(rankings_per_dataset, test_size=0.25, stratify=rankings_per_dataset["bin"])
+
+    output_path = input("Enter the path of the Output dataset folder: ")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    print("Train datasets:")
+    train_datasets_name = train["dataset_name"].tolist()
+    print(train_datasets_name)
+    training_set = dataset[dataset["dataset_name"].isin(train_datasets_name)]
+    save_data_frame(training_set, f"{output_path}/training_set_{timestamp}.csv")
+    training_set_stats_df = training_set.describe().T
+    training_set_stats_df = training_set_stats_df.reset_index().rename(columns={'index': 'column name'})
+    training_set_stats_df = training_set_stats_df[['column name', 'count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max']]
+    save_data_frame(training_set_stats_df, f"{output_path}/training_set_stats_{timestamp}.csv")
+
+    print("Test datasets:")
+    test_datasets_name = test["dataset_name"].tolist()
+    print(test_datasets_name)
+    testing_set = dataset[dataset["dataset_name"].isin(test_datasets_name)]
+    save_data_frame(testing_set, f"{output_path}/testing_set_{timestamp}.csv")
+    testing_set_stats_df = testing_set.describe().T
+    testing_set_stats_df = testing_set_stats_df.reset_index().rename(columns={'index': 'column name'})
+    testing_set_stats_df = testing_set_stats_df[['column name', 'count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max']]
+    save_data_frame(testing_set_stats_df, f"{output_path}/testing_set_stats_{timestamp}.csv")
 
 def load_meta_feature_dataset(need_subsets_info = False, type ="", should_cover_to_binary = False, should_ask_for_apply_z_scoring = True, should_ask_rank_techniques = True):
     should_rank_techniques = input("Is the dataset raw? (y/n): ").lower() == "y" if should_ask_rank_techniques else False

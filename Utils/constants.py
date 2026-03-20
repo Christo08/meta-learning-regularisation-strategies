@@ -12,9 +12,10 @@ PROCESS_OPTIONS = ["Optimise NN",  #0-1
                    "Recreate subsets",  #2-3
                    "Recreate instances",  #3-4
                    "Get statistics of meta learning dataset",  #4-5
-                   "Optimise meta learning",  #5-6
-                   "Train meta learning",  #6-7
-                   "Get statistics of meta learners results",  #7-8
+                   "Split datasets into training and testing sets", #5-6
+                   "Optimise meta learning",  #6-7
+                   "Train meta learning",  #7-8
+                   "Get statistics of meta learners results",  #8-9
                    "Exit"]
 PARAMETER_GROUPS = ["All",
                     "Basic",
