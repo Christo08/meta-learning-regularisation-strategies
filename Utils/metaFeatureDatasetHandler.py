@@ -43,28 +43,29 @@ def split_dataset(dataset):
                                    stratify=rankings_per_dataset["bin"],
                                    random_state = seed)
 
-    output_path = input("Enter the path of the Output dataset folder: ")
+    set_output_path = input("Enter the path to folder to which the set should be saved: ")
+    stats_output_path = input("Enter the path of the output stats folder: ")
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     print("Train datasets:")
     train_datasets_name = train["dataset_name"].tolist()
     print(train_datasets_name)
     training_set = dataset[dataset["dataset_name"].isin(train_datasets_name)]
-    save_data_frame(training_set, f"{output_path}/training_set_{timestamp}.csv")
+    save_data_frame(training_set, f"{set_output_path}\\training_set_{timestamp}.csv")
     training_set_stats_df = training_set.describe().T
     training_set_stats_df = training_set_stats_df.reset_index().rename(columns={'index': 'column name'})
     training_set_stats_df = training_set_stats_df[['column name', 'count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max']]
-    save_data_frame(training_set_stats_df, f"{output_path}/training_set_stats_{timestamp}.csv")
+    save_data_frame(training_set_stats_df, f"{stats_output_path}\\training_set_stats_{timestamp}.csv")
 
     print("Test datasets:")
     test_datasets_name = test["dataset_name"].tolist()
     print(test_datasets_name)
     testing_set = dataset[dataset["dataset_name"].isin(test_datasets_name)]
-    save_data_frame(testing_set, f"{output_path}/testing_set_{timestamp}.csv")
+    save_data_frame(testing_set, f"{set_output_path}\\testing_set_{timestamp}.csv")
     testing_set_stats_df = testing_set.describe().T
     testing_set_stats_df = testing_set_stats_df.reset_index().rename(columns={'index': 'column name'})
     testing_set_stats_df = testing_set_stats_df[['column name', 'count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max']]
-    save_data_frame(testing_set_stats_df, f"{output_path}/testing_set_stats_{timestamp}.csv")
+    save_data_frame(testing_set_stats_df, f"{stats_output_path}\\testing_set_stats_{timestamp}.csv")
 
 def load_meta_feature_dataset(need_subsets_info = False, type ="", should_cover_to_binary = False, should_ask_for_apply_z_scoring = True, should_ask_rank_techniques = True):
     should_rank_techniques = input("Is the dataset raw? (y/n): ").lower() == "y" if should_ask_rank_techniques else False
