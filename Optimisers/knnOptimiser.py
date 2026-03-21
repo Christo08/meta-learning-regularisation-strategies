@@ -27,7 +27,6 @@ def optimise_k_nearest_neighbors(dataset):
     settings = {}
 
     for target_column in META_LEANER_TARGET_COLUMNS:
-        print(target_column)
         training_set, validation_set = prepared_meta_feature_dataset(dataset, META_LEANER_TARGET_COLUMNS, target_column)
 
         search = pyhopper.Search(parameter_group)

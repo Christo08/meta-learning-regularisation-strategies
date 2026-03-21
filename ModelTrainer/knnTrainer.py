@@ -1,6 +1,6 @@
 import joblib
 import numpy as np
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, accuracy_score
 from sklearn.model_selection import KFold
 from sklearn.neighbors import KNeighborsClassifier
 
@@ -43,17 +43,18 @@ def train_k_nearest_neighbors(params, training_set, testing_set, seed, target_co
     counter = 1
     for train_idx, test_idx in kf.split(training_x):
         x_train = training_x[train_idx]
-        y_train = training_y.iloc[train_idx]
+        y_train = training_y.iloc[train_idx].to_numpy()
         knn = KNeighborsClassifier(**params)
         knn.fit(x_train, y_train)
         y_train_pred = knn.predict(x_train)
         y_test_pred = knn.predict(testing_x)
 
         training_mses.append(mean_squared_error(y_train, y_train_pred))
-        training_accuracy.append(float(np.sum(y_train == y_train_pred)/len(y_train)*100))
+        training_accuracy.append(accuracy_score(y_train, y_train_pred) * 100)
 
+        testing_y = np.asarray(testing_y)
         testing_mses.append(mean_squared_error(testing_y, y_test_pred))
-        testing_accuracy.append(float(np.sum(testing_y == y_test_pred)/len(y_train)*100))
+        testing_accuracy.append(accuracy_score(testing_y, y_test_pred)*100)
 
         if target_column != 'na':
             joblib.dump(knn,f'{MODULE_PATH}KNN/knn_for_{target_column}_fold_{counter}.pkl')
