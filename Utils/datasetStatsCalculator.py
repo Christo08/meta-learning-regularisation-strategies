@@ -22,7 +22,8 @@ def create_feature_stats(features, output_path):
     stats_df = stats_df.round(3)
     stats_df = stats_df.reset_index().rename(columns={'index': 'column name'})
     stats_df = stats_df[['column name', 'count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max']]
-    save_data_frame(stats_df, f"{output_path}/features_stats.csv")
+    save_data_frame(stats_df, f"{output_path}\\features_stats.csv")
+    print(f"The feature summary was save to {output_path}\\features_stats.csv")
 
 
 def create_technique_rankings_stats(targets, output_path):
@@ -42,27 +43,41 @@ def create_technique_rankings_stats(targets, output_path):
     })
     summary = summary.reset_index().rename(columns={'index': 'technique'})
 
-    print("Technique rankings summary:")
-    save_data_frame(summary, f"{output_path}/rankings_stats.csv")
+    save_data_frame(summary, f"{output_path}\\rankings_stats.csv")
+    print(f"The technique summary was save to {output_path}\\rankings_stats.csv")
 
 
 def create_technique_stack_bar_chart(full_dataset, output_path):
     print("Making technique count bar chart")
     selected_columns = ['dataset_name'] + META_LEANER_TARGET_COLUMNS
     subset = full_dataset[selected_columns]
-    rankings_per_dataset = subset.groupby('dataset_name')[META_LEANER_TARGET_COLUMNS].apply(lambda x: (x == 1).sum()).reset_index()
-    save_data_frame(rankings_per_dataset, f"{output_path}/rankings_per_dataset.csv")
+    rankings_per_dataset = (
+        subset.groupby('dataset_name')[META_LEANER_TARGET_COLUMNS]
+        .apply(lambda x: (x == 1).sum())
+        .reset_index()
+    )
+    save_data_frame(rankings_per_dataset, f"{output_path}\\rankings_per_dataset.csv")
 
+    fig, ax = plt.subplots(figsize=(10, 15))
 
-    plt.figure(figsize=(50,50))
-    rankings_per_dataset.plot(x="dataset_name", kind='bar', stacked=True)
-    plt.title('Stack bar chart of technique rankings')
-    plt.savefig(f"{output_path}/rankings_bar_chart.png")
+    rankings_per_dataset.plot(
+        x="dataset_name",
+        kind="bar",
+        stacked=True,
+        ax=ax
+    )
+
+    ax.set_title('Stack bar chart of technique rankings')
+    ax.tick_params(axis='x', labelrotation=90)
+
+    fig.tight_layout()
+    fig.savefig(f"{output_path}\\rankings_bar_chart.png", dpi=300)
     plt.show()
+    print(f"The technique count bar chart was save to {output_path}\\rankings_bar_chart.png")
 
 
 def create_feature_density_plots(features, output_path):
-    print("Making density plot")
+    print("Making features density plot")
     sns.set_style("darkgrid")
 
     numerical_columns = features.select_dtypes(include=["int64", "float64", "int8"]).columns
@@ -80,8 +95,9 @@ def create_feature_density_plots(features, output_path):
         plt.title(f"{feature}\nSkewness: {round(features[feature].skew(), 2)}")
 
     plt.tight_layout()
-    plt.savefig(f"{output_path}/features_density_plots.png")
+    plt.savefig(f"{output_path}\\features_density_plots.png")
     plt.show()
+    print(f"The features density plot was save to {output_path}\\features_density_plots.png")
 
 
 def create_box_plots(full_dataset, output_path):
@@ -113,9 +129,9 @@ def create_box_plots(full_dataset, output_path):
 
     num_cols = 3
     num_rows = int(np.ceil(len(features) / num_cols))
-
-    plt.figure(figsize=(12, num_rows * 3))
-    plt.title('Box plots of meta features vs techniques')
+    height_per_row = 5
+    plt.figure(figsize=(12, num_rows * height_per_row))
+    plt.title('Box plots of features vs techniques')
     for idx, feature in enumerate(features, 1):
         plt.subplot(num_rows, num_cols, idx)
         df_f = plot_df[plot_df["feature"] == feature]
@@ -126,15 +142,13 @@ def create_box_plots(full_dataset, output_path):
             y="value",
         )
 
-        plt.title(f"{feature} (rank=1 only)")
-        plt.xticks(rotation=0)
-        plt.tight_layout()
+        plt.title(f"{feature}")
+        plt.xticks(rotation=90)
 
-        # filename = f"{output_path}/{feature}_rank1_{timestamp}.png"
-        # plt.savefig(filename)
     plt.tight_layout()
-    plt.savefig(f"{output_path}/features_box_plots.png")
+    plt.savefig(f"{output_path}\\features_box_plots.png")
     plt.show()
+    print(f"The features box plots was save to {output_path}\\features_box_plots.png")
 
 
 def create_pair_plot(features, targets, output_path):
@@ -144,12 +158,12 @@ def create_pair_plot(features, targets, output_path):
     print("Making pair plot")
     sns.set_palette("Pastel1")
 
-    plt.figure(figsize=(10, 6))
+    plot = sns.pairplot(features)
 
-    sns.pairplot(features)
-
-    plt.suptitle('Pair Plot of Meta Features vs Techniques')
-    plt.savefig(f"{output_path}/pair_plot.png")
+    plot.figure.suptitle('Pair Plot of Features vs Techniques')
+    plot.figure.savefig(f"{output_path}\\pair_plot.png")
+    plot.figure.show()
+    print(f"The pair plot was save to {output_path}\\pair_plot.png")
 
 
 def create_heatmap(features, targets, output_path):
@@ -162,7 +176,9 @@ def create_heatmap(features, targets, output_path):
         sns.heatmap(features.corr(), annot=True, fmt='.2f', cmap='Greys', linewidths=2)
 
         plt.title('Correlation Heatmap')
-        plt.savefig(f"{output_path}/correlation_heatmap.png")
+        plt.savefig(f"{output_path}\\correlation_heatmap.png")
+        plt.show()
+        print(f"The correlation heatmap was save to {output_path}\\correlation_heatmap.png")
 
 
 def calculate_dataset_stats(full_dataset):
@@ -187,7 +203,7 @@ def calculate_dataset_stats(full_dataset):
         selected_processes = [processes_option]
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_path = f"{output_path}/{timestamp}"
+    output_path = f"{output_path}\\{timestamp}"
     os.makedirs(output_path, exist_ok=True)
 
     pd.set_option("display.max_columns", None)
