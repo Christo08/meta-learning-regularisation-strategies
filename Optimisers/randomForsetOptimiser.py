@@ -2,7 +2,6 @@ import random
 
 import numpy as np
 import pyhopper
-from sklearn.model_selection import train_test_split
 
 from ModelTrainer.randomForestTrainer import train_random_forest
 from Utils.constants import META_LEANER_TARGET_COLUMNS

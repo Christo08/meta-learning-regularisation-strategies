@@ -1,15 +1,12 @@
 import random
 
-import numpy as np
 import pandas as pd
 import pyhopper
-from sklearn.model_selection import train_test_split
 
-from Utils.constants import PARAMETER_GROUPS, META_LEANER_TARGET_COLUMNS
-from Utils.fileHandler import save_nn_settings, load_settings
-from Utils.menus import show_menu
 from ModelTrainer.nnTrainer import train_nn
-from Utils.datasetHandler import load_optimiser_dataset, apply_one_hot_encode, prepared_meta_feature_dataset
+from Utils.constants import PARAMETER_GROUPS, META_LEANER_TARGET_COLUMNS
+from Utils.datasetHandler import load_optimiser_dataset, prepared_meta_feature_dataset
+from Utils.fileHandler import save_nn_settings, load_settings
 
 MAX_NUMBER_OF_LAYERS = 6
 MIN_NUMBER_OF_LAYERS = 2

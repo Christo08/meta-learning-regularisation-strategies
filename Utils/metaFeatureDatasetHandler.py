@@ -6,16 +6,15 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 from scipy.stats import ttest_ind, zscore
-
-from Optimisers.decisionTreeOptimiser import training_set
-from Utils.constants import META_LEANER_TARGET_COLUMNS
-from Utils.fileHandler import load_meta_features_csv, save_data_frame
 from sklearn.model_selection import train_test_split
+
+from Utils.constants import TARGET_COLUMNS
+from Utils.fileHandler import load_meta_features_csv, save_data_frame
 
 
 def spilt_dataset_and_targets(dataset):
     missing = False
-    for target_column in META_LEANER_TARGET_COLUMNS:
+    for target_column in TARGET_COLUMNS:
         if target_column not in dataset.columns:
             missing = True
             break
@@ -23,12 +22,12 @@ def spilt_dataset_and_targets(dataset):
         targets = pd.DataFrame()
         return dataset, targets
     else:
-        targets = dataset[META_LEANER_TARGET_COLUMNS]
-        dataset = dataset.drop(META_LEANER_TARGET_COLUMNS, axis=1)
+        targets = dataset[TARGET_COLUMNS]
+        dataset = dataset.drop(TARGET_COLUMNS, axis=1)
         return dataset, targets
 
 def split_dataset(dataset):
-    targets = [col for col in META_LEANER_TARGET_COLUMNS if col != "SMOTE"]
+    targets = [col for col in TARGET_COLUMNS if col != "SMOTE"]
     selected_columns = ['dataset_name'] + targets
     subset = dataset[selected_columns]
     rankings_per_dataset = subset.groupby('dataset_name')[targets].apply(lambda x: (x == 1).sum()).reset_index()
@@ -71,12 +70,12 @@ def load_meta_feature_dataset(need_subsets_info = False, type ="", should_cover_
     should_rank_techniques = input("Is the dataset raw? (y/n): ").lower() == "y" if should_ask_rank_techniques else False
     dataset = load_meta_features_csv(type)
     dataset = clean_dataset(dataset)
-    for target_column in META_LEANER_TARGET_COLUMNS:
+    for target_column in TARGET_COLUMNS:
         if target_column not in dataset.columns:
             raise ValueError(f"Missing target column: {target_column}")
     if should_rank_techniques:
-        targets = dataset[META_LEANER_TARGET_COLUMNS]
-        dataset = dataset.drop(META_LEANER_TARGET_COLUMNS, axis=1)
+        targets = dataset[TARGET_COLUMNS]
+        dataset = dataset.drop(TARGET_COLUMNS, axis=1)
 
         targets = rank_techniques(targets)
 
@@ -88,11 +87,11 @@ def load_meta_feature_dataset(need_subsets_info = False, type ="", should_cover_
         file_path = output_path + "\\" + file_name
         save_data_frame(dataset, file_path)
     if should_cover_to_binary:
-        dataset = dataset.drop(columns=["dataset_name", "SMOTE_testing_loss"], errors="ignore", inplace=False)
+        dataset = dataset.drop(columns=["dataset_name", "SMOTE"], errors="ignore", inplace=False)
         dataset = apply_z_scoring(dataset, should_ask_for_apply_z_scoring)
         if not need_subsets_info:
             dataset.drop(columns=["dataset_name"], errors="ignore", inplace=True)
-        for column in META_LEANER_TARGET_COLUMNS:
+        for column in TARGET_COLUMNS:
             if column in dataset.columns:
                 dataset[column] = dataset[column].apply(lambda x: 1 if x == 1 else 0)
     return dataset
@@ -126,7 +125,7 @@ def clean_dataset(dataset):
     dataset.rename(columns=rename_map, inplace=True)
 
     for column in dataset.columns:
-        if not(column in META_LEANER_TARGET_COLUMNS) and column != "dataset_name":
+        if not(column in TARGET_COLUMNS) and column != "dataset_name":
             dataset[column] = dataset[column].values.astype(np.float64)
 
     return dataset
@@ -136,7 +135,7 @@ def apply_z_scoring(dataset, should_ask_for_apply_z_scoring):
     if should_apply_z_scoring:
         max_float = np.finfo(np.float32).max
         for column in dataset.columns:
-            if not(column in META_LEANER_TARGET_COLUMNS) and column != "dataset_name":
+            if not(column in TARGET_COLUMNS) and column != "dataset_name":
                 column_data = dataset[column].values.astype(np.float64)
                 finite_mask = np.isfinite(column_data)
 

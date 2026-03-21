@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-from Utils.constants import META_LEANER_TARGET_COLUMNS, STATS_OPTIONS
+from Utils.constants import TARGET_COLUMNS, STATS_OPTIONS
 from Utils.fileHandler import load_results_csv, save_data_frame
 from Utils.menus import show_menu
 from Utils.metaFeatureDatasetHandler import spilt_dataset_and_targets
@@ -49,10 +49,10 @@ def create_technique_rankings_stats(targets, output_path):
 
 def create_technique_stack_bar_chart(full_dataset, output_path):
     print("Making technique count bar chart")
-    selected_columns = ['dataset_name'] + META_LEANER_TARGET_COLUMNS
+    selected_columns = ['dataset_name'] + TARGET_COLUMNS
     subset = full_dataset[selected_columns]
     rankings_per_dataset = (
-        subset.groupby('dataset_name')[META_LEANER_TARGET_COLUMNS]
+        subset.groupby('dataset_name')[TARGET_COLUMNS]
         .apply(lambda x: (x == 1).sum())
         .reset_index()
     )
@@ -105,11 +105,11 @@ def create_box_plots(full_dataset, output_path):
     sns.set_style("darkgrid")
 
     numerical_columns_base = full_dataset.select_dtypes(include=["int64", "float64", "int8"]).columns
-    numerical_columns = [col for col in numerical_columns_base if col not in META_LEANER_TARGET_COLUMNS]
+    numerical_columns = [col for col in numerical_columns_base if col not in TARGET_COLUMNS]
 
     records = []
 
-    for tech in META_LEANER_TARGET_COLUMNS:
+    for tech in TARGET_COLUMNS:
         if tech not in full_dataset.columns:
             continue
 
@@ -292,7 +292,7 @@ def explode_accuracies(df, accuracy_col):
 
 def get_best_instances_for_techniques(full_dataset):
     best_instances = {}
-    for technique in META_LEANER_TARGET_COLUMNS:
-        other_techniques = [t for t in META_LEANER_TARGET_COLUMNS if t != technique]
+    for technique in TARGET_COLUMNS:
+        other_techniques = [t for t in TARGET_COLUMNS if t != technique]
         best_instances[technique] = full_dataset[full_dataset[technique] == 1].drop(columns=other_techniques)
     return best_instances

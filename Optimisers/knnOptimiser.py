@@ -2,7 +2,6 @@ import random
 
 import numpy as np
 import pyhopper
-from sklearn.model_selection import train_test_split
 
 from ModelTrainer.knnTrainer import train_k_nearest_neighbors
 from Utils.constants import META_LEANER_TARGET_COLUMNS
