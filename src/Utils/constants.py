@@ -1,6 +1,6 @@
 #Paths
 BASIC_NN_SETTINGS_PATH = "Models\\Settings\\BasicNN\\"
-META_LEARNERS_SETTINGS_PATH = "MModels\\Settings\\Meta-Learners\\"
+META_LEARNERS_SETTINGS_PATH = "Models\\Settings\\Meta-Learners\\"
 DATASETS_INFO_PATH = "Data\\Input\\all_dataset_info.json"
 MODULE_PATH ="Models\\"
 SUBSET_PATH = "Data\\Input\\Subsets\\"

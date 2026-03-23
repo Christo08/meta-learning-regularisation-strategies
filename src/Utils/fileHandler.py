@@ -22,7 +22,7 @@ def load_meta_features_dataset(path):
     else:
         raise FileNotFound(f"This is not a valid path {path}")
 
-def load_dataset_setting_file(path):
+def load_json_file(path):
     with open(path, 'r') as file:
         data_settings = json.load(file)
     return data_settings
@@ -76,12 +76,13 @@ def save_meta_learner_settings(settings, module_type):
     else:
         file_name = f"nn_setting_{timestamp}.json"
 
-    folder_path = f"{META_LEARNERS_SETTINGS_PATH}\\{module_type}"
+    folder_path = f"{META_LEARNERS_SETTINGS_PATH}{module_type}"
     folder_maker(folder_path)
 
     path = f"{folder_path}\\{file_name}"
     with open(path, "x") as file:
         json.dump(settings, file, indent=4, cls=ObjectEncoder)
+    return path
 
 def load_settings(path):
     try:

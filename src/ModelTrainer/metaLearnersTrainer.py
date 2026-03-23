@@ -9,7 +9,7 @@ from src.ModelTrainer.nnTrainer import training_all_neural_networks
 from src.ModelTrainer.randomForestTrainer import training_all_random_forests
 from src.ModelTrainer.svmTrainer import training_all_support_vector_machines
 from src.Utils.constants import META_LEARN_TYPES, RESULTS_PATH
-from src.Utils.fileHandler import save_data_frame, folder_maker
+from src.Utils.fileHandler import save_data_frame, folder_maker, load_json_file
 from src.Utils.menus import show_meta_leaner_type_menu
 
 
@@ -18,10 +18,9 @@ def train_meta_learners(training_dataset, testing_dataset):
     number_of_folds = int(input("How many folds do you want to use per instance? "))
     results = pd.DataFrame(columns=["model type", "technique",  "training loses", "testing loses"])
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    settings = {}
-    for selected_meta_learn_type in selected_meta_learn_types:
-        settings_file_path = input(f"Enter the path of the {selected_meta_learn_type}' settings file: ")
-        settings[selected_meta_learn_type] = settings_file_path
+    settings_file_path = input(f"Enter the path of the settings index file: ")
+    settings = load_json_file(settings_file_path)
+
     for selected_meta_learn_type in selected_meta_learn_types:
         settings_file_path = settings[selected_meta_learn_type]
         seed = random.randint(0, 4294967295)

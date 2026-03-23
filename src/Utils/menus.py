@@ -1,5 +1,5 @@
 from src.Utils.constants import *
-from src.Utils.fileHandler import load_dataset_setting_file
+from src.Utils.fileHandler import load_json_file
 
 def show_menu(prompt, items):
     selection = -1
@@ -39,7 +39,7 @@ def show_dataset_setting_menu():
         datasets_setting_file_path = "Data/Datasets/Input/training_dataset_info.json"
     else:
         datasets_setting_file_path = "Data/Datasets/Input/testing_dataset_info.json"
-    return load_dataset_setting_file(datasets_setting_file_path)
+    return load_json_file(datasets_setting_file_path)
 
 def show_meta_leaner_type_menu():
     selected_meta_learn_types = show_menu("Select the meta-leaner type by entering its number: ", META_LEARN_TYPES)
