@@ -70,7 +70,7 @@ def train_random_forest(params, training_set, testing_set, seed, target_column =
         testing_accuracy.append(accuracy_score(testing_y, y_test_pred)*100)
 
         if target_column != 'na':
-            folder_path = f"{MODULE_PATH}RandomForest\\{datetime.now().strftime("%Y%m%d")}"
+            folder_path = f"{MODULE_PATH}RandomForest\\{datetime.now().strftime("%Y%m%d_%h")}"
             folder_maker(folder_path)
             joblib.dump(forest, f'{folder_path}\\random_forest_for_{target_column}_fold_{counter}.pkl')
         counter = counter + 1

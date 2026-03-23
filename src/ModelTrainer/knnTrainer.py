@@ -68,7 +68,7 @@ def train_k_nearest_neighbors(params, training_set, testing_set, seed, target_co
         testing_accuracy.append(accuracy_score(testing_y, y_test_pred)*100)
 
         if target_column != 'na':
-            folder_path = f"{MODULE_PATH}KNN\\{datetime.now().strftime("%Y%m%d")}"
+            folder_path = f"{MODULE_PATH}KNN\\{datetime.now().strftime("%Y%m%d_%h")}"
             folder_maker(folder_path)
             joblib.dump(knn, f'{folder_path}\\knn_for_{target_column}_fold_{counter}.pkl')
         counter = counter + 1

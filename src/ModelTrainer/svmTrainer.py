@@ -86,7 +86,7 @@ def train_support_vector_machines(params, training_set, testing_set, seed, targe
 
 
         if target_column != 'na':
-            folder_path = f"{MODULE_PATH}SVM\\{datetime.now().strftime("%Y%m%d")}"
+            folder_path = f"{MODULE_PATH}SVM\\{datetime.now().strftime("%Y%m%d_%h")}"
             folder_maker(folder_path)
             joblib.dump(svm, f'{folder_path}\\svm_for_{target_column}_fold_{counter}.pkl')
         counter = counter + 1

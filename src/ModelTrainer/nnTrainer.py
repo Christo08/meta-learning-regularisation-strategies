@@ -26,11 +26,9 @@ def train_nn(settings, technique, training_set, testing_set, seed, category_colu
         kf = KFold(n_splits=fold, shuffle=True, random_state=seed)
 
         training_mses = []
-        training_f1 =[]
         training_accuracy = []
 
         testing_mses = []
-        testing_f1 =[]
         testing_accuracy = []
 
         counter =0
@@ -260,7 +258,7 @@ def training_loop(x_training, y_training, testing_set, settings, number_of_input
 
 
         if target_column != 'na':
-            folder_path = f"{MODULE_PATH}NN\\{datetime.now().strftime("%Y%m%d")}"
+            folder_path = f"{MODULE_PATH}NN\\{datetime.now().strftime("%Y%m%d_%h")}"
             folder_maker(folder_path)
             model_path = f'{folder_path}\\nn_for_{target_column}_fold_{counter}.pt'
             torch.save({
