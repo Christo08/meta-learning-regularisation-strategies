@@ -10,22 +10,21 @@ from src.Utils.menus import META_LEARN_TYPES
 
 def optimise_meta_learners(dataset):
     selected_meta_learn_types = show_meta_leaner_type_menu()
-    output_path = input("Enter the path to the folder where the settings should be saved: ")
     for selected_meta_learn_type in selected_meta_learn_types:
         if selected_meta_learn_type == META_LEARN_TYPES[1]:
             setting = optimise_decision_tree(dataset)
-            save_meta_learner_settings(setting, output_path, "DecisionTrees")
+            save_meta_learner_settings(setting, "DecisionTrees")
         elif selected_meta_learn_type == META_LEARN_TYPES[2]:
             setting = optimise_k_nearest_neighbors(dataset)
-            save_meta_learner_settings(setting, output_path, "KNearestNeighbors")
+            save_meta_learner_settings(setting, "KNearestNeighbors")
         elif selected_meta_learn_type == META_LEARN_TYPES[3]:
             setting = optimise_meta_leaner_nn(dataset)
-            save_meta_learner_settings(setting, output_path, "NeuralNetworks")
+            save_meta_learner_settings(setting, "NeuralNetworks")
         elif selected_meta_learn_type == META_LEARN_TYPES[4]:
             setting = optimise_random_forest(dataset)
-            save_meta_learner_settings(setting, output_path, "RandomForest")
+            save_meta_learner_settings(setting, "RandomForest")
         elif selected_meta_learn_type == META_LEARN_TYPES[5]:
             setting = optimise_support_vector_machine(dataset)
-            save_meta_learner_settings(setting, output_path, "SupportVectorMachines")
+            save_meta_learner_settings(setting, "SupportVectorMachines")
         else:
             return

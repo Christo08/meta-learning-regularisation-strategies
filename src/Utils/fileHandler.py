@@ -63,7 +63,7 @@ def save_nn_settings(settings, dataset_name, path):
             json.dump(new_settings, file, indent=4, cls=ObjectEncoder)
         return path
 
-def save_meta_learner_settings(settings, output_path, module_type):
+def save_meta_learner_settings(settings, module_type):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     if module_type == "DecisionTrees":
         file_name = f"Decision_trees_setting_{timestamp}.json"
@@ -76,7 +76,7 @@ def save_meta_learner_settings(settings, output_path, module_type):
     else:
         file_name = f"nn_setting_{timestamp}.json"
 
-    folder_path = f"{output_path}\\{module_type}"
+    folder_path = f"{META_LEARNERS_SETTINGS_PATH}\\{module_type}"
     folder_maker(folder_path)
 
     path = f"{folder_path}\\{file_name}"
