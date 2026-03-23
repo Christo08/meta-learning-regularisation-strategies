@@ -1,3 +1,6 @@
+import os
+from datetime import datetime
+
 import joblib
 import numpy as np
 from sklearn.metrics import mean_squared_error, accuracy_score
@@ -72,8 +75,12 @@ def train_support_vector_machines(params, training_set, testing_set, seed, targe
         testing_mses.append(mean_squared_error(y_test, y_test_pred))
         testing_accuracy.append(accuracy_score(y_test, y_test_pred)*100)
 
+
         if target_column != 'na':
-            joblib.dump(svm, f'{MODULE_PATH}SVM/svm_for_{target_column}_fold_{counter}.pkl')
+            folder_path = f"{MODULE_PATH}SVM\\{datetime.now().strftime("%Y%m%d")}"
+            if not os.path.isdir(folder_path):
+                os.makedirs(folder_path, exist_ok=True)
+            joblib.dump(svm, f'{folder_path}\\svm_for_{target_column}_fold_{counter}.pkl')
         counter = counter + 1
     return {
         "training loses": training_mses,

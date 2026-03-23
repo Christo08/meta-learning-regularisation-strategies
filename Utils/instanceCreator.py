@@ -83,7 +83,7 @@ def recreate_subsets(meta_feature_dataset, number_of_instances, datasets_setting
                 **meta_feature
             })
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    pd.DataFrame(meta_feature_dataset).to_csv(f"{OUTPUT_PATH}/SubsetMetaFeatures_{timestamp}.csv", index=False)
+    pd.DataFrame(meta_feature_dataset).to_csv(f"{OUTPUT_PATH}SubsetMetaFeatures_{timestamp}.csv", index=False)
 
 def recreate_dataset(subset_dataset, dataset_names, indexes, output_path, number_of_folds, datasets_settings):
     dataset, output_path = load_meta_features_dataset(output_path)

@@ -1,3 +1,6 @@
+import os
+from datetime import datetime
+
 import pandas as pd
 import torch
 from sklearn.model_selection import KFold
@@ -6,14 +9,14 @@ from torch.utils.data import DataLoader
 
 from Models.NN.customDataset import CustomDataset
 from Models.NN.network import Network
-from Utils.constants import META_LEANER_TARGET_COLUMNS
+from Utils.constants import META_LEANER_TARGET_COLUMNS, MODULE_PATH
 from Utils.datasetHandler import apply_smote
 from Utils.datasetHandler import prepared_meta_feature_dataset
 from Utils.fileHandler import load_settings
 from Models.NN.lossFunctions import CustomCrossEntropyLoss
 
 
-def train_nn(settings, technique, training_set, testing_set, seed, category_columns, fold=None):
+def train_nn(settings, technique, training_set, testing_set, seed, category_columns, fold=None, target_column = 'na'):
 
     number_of_inputs = training_set[0].shape[1]
     number_of_outputs = training_set[1].shape[1]
@@ -40,7 +43,9 @@ def train_nn(settings, technique, training_set, testing_set, seed, category_colu
                                                                                                                      technique,
                                                                                                                      seed,
                                                                                                                      all_labels,
-                                                                                                                     category_columns)
+                                                                                                                     category_columns,
+                                                                                                                     target_column =target_column,
+                                                                                                                     counter=counter)
             training_loss_values.append(training_loss_value)
             training_accuracies_values.append(training_accuracy_value)
             testing_loss_values.append(testing_loss_value)
@@ -81,7 +86,14 @@ def training_all_neural_networks(settings_file_path, raw_training_set, raw_testi
         training_set = (pd.DataFrame(training_set[0]), training_y)
         testing_set = (pd.DataFrame(testing_set[0]), testing_y)
         setting = settings[target_column]
-        training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_nn(setting, "", training_set, testing_set, seed, [], fold=kFold)
+        training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_nn(setting,
+                                                                                                                    "",
+                                                                                                                    training_set,
+                                                                                                                    testing_set,
+                                                                                                                    seed,
+                                                                                                                    [],
+                                                                                                                    fold=kFold,
+                                                                                                                    target_column=target_column)
         result = {
             "model type": "NN",
             "technique": target_column.replace("_"," "),
@@ -93,7 +105,7 @@ def training_all_neural_networks(settings_file_path, raw_training_set, raw_testi
         results.append(result)
     return results
 
-def training_loop(x_training, y_training, testing_set, settings, number_of_inputs, number_of_outputs, technique, seed, all_labels, category_columns):
+def training_loop(x_training, y_training, testing_set, settings, number_of_inputs, number_of_outputs, technique, seed, all_labels, category_columns, target_column = 'na', counter=None):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     if technique == "SMOTE":
@@ -224,6 +236,21 @@ def training_loop(x_training, y_training, testing_set, settings, number_of_input
         test_pred_cls = torch.argmax(y_testing_pred, dim=1)
         test_true_cls = torch.argmax(y_testing, dim=1)
         testing_accuracy = (test_pred_cls == test_true_cls).float().mean().item() * 100.0
+
+
+        if target_column != 'na':
+            folder_path = f"{MODULE_PATH}NN\\{datetime.now().strftime("%Y%m%d")}"
+            if not os.path.isdir(folder_path):
+                os.makedirs(folder_path, exist_ok=True)
+            model_path = f'{folder_path}\\nn_for_{target_column}_fold_{counter}.pt'
+            torch.save({
+                "model_state_dict": network.state_dict(),
+                "settings": settings,
+                "number_of_inputs": number_of_inputs,
+                "number_of_outputs": number_of_outputs,
+                "technique": technique,
+                "all_labels": all_labels,
+            }, model_path)
 
     return training_loss_value, training_accuracy, testing_loss_value, testing_accuracy
 

@@ -1,3 +1,6 @@
+import os
+from datetime import datetime
+
 import joblib
 import numpy as np
 from sklearn.metrics import mean_squared_error, accuracy_score
@@ -57,7 +60,10 @@ def train_k_nearest_neighbors(params, training_set, testing_set, seed, target_co
         testing_accuracy.append(accuracy_score(testing_y, y_test_pred)*100)
 
         if target_column != 'na':
-            joblib.dump(knn,f'{MODULE_PATH}KNN/knn_for_{target_column}_fold_{counter}.pkl')
+            folder_path = f"{MODULE_PATH}KNN\\{datetime.now().strftime("%Y%m%d")}"
+            if not os.path.isdir(folder_path):
+                os.makedirs(folder_path, exist_ok=True)
+            joblib.dump(knn, f'{folder_path}\\knn_for_{target_column}_fold_{counter}.pkl')
         counter = counter + 1
     return {
         "training loses": training_mses,

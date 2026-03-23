@@ -52,7 +52,7 @@ def save_nn_settings(settings, dataset_name, path):
     if path == "":
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         file_name = f"{dataset_name.replace(" ","_")}_nn_setting_{timestamp}.json"
-        new_path = f"{BASIC_NN_SETTINGS_PATH}/{file_name}"
+        new_path = f"{BASIC_NN_SETTINGS_PATH}\\{file_name}"
         with open(new_path, "x") as file:
             json.dump(settings, file, indent=4, cls=ObjectEncoder)
         return new_path
@@ -112,7 +112,7 @@ def get_latest_settings(name):
         key=lambda f: extract_timestamp(f.name),
     )
 
-    return load_settings(BASIC_NN_SETTINGS_PATH+"/"+file_name.name)
+    return load_settings(f"{BASIC_NN_SETTINGS_PATH}\\{file_name.name}")
 
 def extract_timestamp(filename):
     try:
@@ -123,8 +123,8 @@ def extract_timestamp(filename):
 def save_subset(subset, seed, dataset_name):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     file_name = f"{seed}_{timestamp}.csv"
-    folder_path = f"{SUBSET_PATH}/{dataset_name}"
-    file_path = f"{folder_path}/{file_name}"
+    folder_path = f"{SUBSET_PATH}{dataset_name}\\"
+    file_path = f"{folder_path}{file_name}"
 
     os.makedirs(folder_path, exist_ok=True)
     try:

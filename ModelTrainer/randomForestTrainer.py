@@ -1,3 +1,6 @@
+import os
+from datetime import datetime
+
 import joblib
 import numpy as np
 from sklearn.metrics import mean_squared_error, accuracy_score
@@ -59,7 +62,10 @@ def train_random_forest(params, training_set, testing_set, seed, target_column =
         testing_accuracy.append(accuracy_score(testing_y, y_test_pred)*100)
 
         if target_column != 'na':
-            joblib.dump(forest, f'{MODULE_PATH}RandomForest/random_forest_for_{target_column}_fold_{counter}.pkl')
+            folder_path = f"{MODULE_PATH}RandomForest\\{datetime.now().strftime("%Y%m%d")}"
+            if not os.path.isdir(folder_path):
+                os.makedirs(folder_path, exist_ok=True)
+            joblib.dump(forest, f'{folder_path}\\random_forest_for_{target_column}_fold_{counter}.pkl')
         counter = counter + 1
     return {
         "training loses": training_mses,
