@@ -34,7 +34,7 @@
   {
     "name": "Dry Bean",
     "type": "csv",
-    "file_path": "Data/Datasets/Input/DryBeanDataset/Dry_Bean_Dataset.csv",
+    "file_path": "Data\\Input\\DryBeanDataset\\Dry_Bean_Dataset.csv",
     "category_columns": [],
     "target_column": "Class",
     "drop_columns": []
@@ -42,7 +42,7 @@
   {
     "name": "Indian Engineering Student Placement",
     "type": "csv",
-    "file_path": "Data/Datasets/Input/Indian/indian_engineering_student_placement.csv",
+    "file_path": "Data\\Input\\Indian\\indian_engineering_student_placement.csv",
     "category_columns": ["gender","branch","part_time_job","family_income_level","city_tier","internet_access","extracurricular_involvement"],
     "target_column": "placement_status",
     "drop_columns": ["Student_ID"]
@@ -66,7 +66,7 @@
   {
     "name": "Liver Cirrhosis",
     "type": "csv",
-    "file_path": "Data/Datasets/Input/LiverCirrhosis/cirrhosis.csv",
+    "file_path": "Data\\Input\\LiverCirrhosis\\cirrhosis.csv",
     "category_columns": ["Status", "Drug", "Sex", "Ascites", "Hepatomegaly", "Spiders", "Edema"],
     "target_column": "Stage",
     "drop_columns": ["ID"]
@@ -82,7 +82,7 @@
   {
     "name": "Mobile Price Classification",
     "type": "csv",
-    "file_path": "Data/Datasets/Input/MobilePriceClassification/mobile_price_classification.csv",
+    "file_path": "Data\\Input\\MobilePriceClassification\\mobile_price_classification.csv",
     "category_columns": ["blue", "dual_sim", "four_g", "three_g", "touch_screen", "wifi"],
     "target_column": "n_cores",
     "drop_columns": ["id","price_range"]
@@ -98,7 +98,7 @@
   {
     "name": "Mushroom",
     "type": "csv",
-    "file_path": "Data/Datasets/Input/Mushrooms/mushrooms.csv",
+    "file_path": "Data\\Input\\Mushrooms\\mushrooms.csv",
     "category_columns": ["cap-shape", "cap-surface", "cap-color", "bruises", "gill-attachment", "gill-spacing", "gill-size", "gill-color", "stalk-shape", "stalk-root", "stalk-surface-above-ring", "stalk-surface-below-ring", "stalk-color-above-ring", "stalk-color-below-ring", "veil-type", "veil-color", "ring-number", "ring-type", "spore-print-color", "population", "habitat", "class"],
     "target_column": "odor",
     "drop_columns": []
@@ -114,7 +114,7 @@
   {
     "name": "Obesity Levels",
     "type": "csv",
-    "file_path": "Data/Datasets/Input/ObesityDataset/ObesityDataSet_raw_and_data_sinthetic.csv",
+    "file_path": "Data\\Input\\ObesityDataset\\ObesityDataSet_raw_and_data_sinthetic.csv",
     "category_columns": ["Gender", "family_history_with_overweight","FAVC","CAEC","SMOKE","SCC","CALC","MTRANS"],
     "target_column": "NObeyesdad",
     "drop_columns": []
@@ -122,7 +122,7 @@
   {
     "name": "Online shopper",
     "type": "csv",
-    "file_path": "Data/Datasets/Input/OnlineDataset/online_shoppers_intention.csv",
+    "file_path": "Data\\Input\\OnlineDataset\\online_shoppers_intention.csv",
     "category_columns": ["Month","VisitorType", "Weekend"],
     "target_column": "Revenue",
     "drop_columns": []
@@ -154,7 +154,7 @@
   {
     "name": "Pima Indians Diabetes",
     "type": "csv",
-    "file_path": "Data/Datasets/Input/PimaIndiansDiabetes/diabetes.csv",
+    "file_path": "Data\\Input\\PimaIndiansDiabetes\\diabetes.csv",
     "category_columns": [],
     "target_column": "Outcome",
     "drop_columns": []
@@ -170,7 +170,7 @@
   {
     "name": "Salaries 2023",
     "type": "csv",
-    "file_path": "Data/Datasets/Input/Salaries2023/ds_salaries.csv",
+    "file_path": "Data\\Input\\Salaries2023\\ds_salaries.csv",
     "category_columns": ["employment_type", "job_title", "salary_currency", "salary_in_usd", "employee_residence", "company_location", "company_size"],
     "target_column": "experience_level",
     "drop_columns": []
@@ -194,7 +194,7 @@
   {
     "name": "Smartphone battery",
     "type": "csv",
-    "file_path": "Data/Datasets/Input/SmartphoneBattery/smartphone_battery_features.csv",
+    "file_path": "Data\\Input\\SmartphoneBattery\\smartphone_battery_features.csv",
     "category_columns": ["background_app_usage_level","signal_strength_avg"],
     "target_column": "recommended_action",
     "drop_columns": ["Device_ID"]
@@ -202,7 +202,7 @@
   {
     "name": "Students Performance",
     "type": "csv",
-    "file_path": "Data/Datasets/Input/StudentPerformance/students_performance.csv",
+    "file_path": "Data\\Input\\StudentPerformance\\students_performance.csv",
     "category_columns": ["Ethnicity", "ParentalEducation", "Tutoring", "ParentalSupport", "Extracurricular", "Sports", "Music", "Volunteering"],
     "target_column": "GradeClass",
     "drop_columns": ["StudentID"]
@@ -210,7 +210,7 @@
   {
     "name": "Students Performance Burnout",
     "type": "csv",
-    "file_path": "Data/Datasets/Input/StudentPerformanceBurnout/ultimate_student_productivity_dataset_5000.csv",
+    "file_path": "Data\\Input\\StudentPerformanceBurnout\\ultimate_student_productivity_dataset_5000.csv",
     "category_columns": ["gender","academic_level","part_time_job","upcoming_deadline","internet_quality"],
     "target_column": "mental_health_score",
     "drop_columns": ["student_id"]
@@ -266,7 +266,7 @@
   {
     "name": "Yeast",
     "type": "csv",
-    "file_path": "Data/Datasets/Input/Yeast/yeast.csv",
+    "file_path": "Data\\Input\\Yeast\\yeast.csv",
     "category_columns": ["localization_site"],
     "target_column": "localization_site",
     "drop_columns": ["SequenceName"]
