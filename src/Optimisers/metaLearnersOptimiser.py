@@ -8,8 +8,8 @@ from src.Optimisers.randomForsetOptimiser import optimise_random_forest
 from src.Optimisers.svmOptimiser import optimise_support_vector_machine
 from src.Utils.constants import META_LEARNERS_SETTINGS_PATH
 from src.Utils.fileHandler import save_meta_learner_settings, ObjectEncoder
-from src.Utils.menus import show_meta_leaner_type_menu
 from src.Utils.menus import META_LEARN_TYPES
+from src.Utils.menus import show_meta_leaner_type_menu
 
 
 def optimise_meta_learners(dataset):
