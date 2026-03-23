@@ -97,9 +97,9 @@ def training_all_neural_networks(settings_file_path, raw_training_set, raw_testi
         result = {
             "model type": "NN",
             "technique": target_column.replace("_"," "),
-            "training losses": training_loss_values,
+            "training loses": training_loss_values,
             "training accuracies": training_accuracies_values,
-            "testing losses": testing_loss_values,
+            "testing loses": testing_loss_values,
             "testing accuracies": testing_accuracies_values
         }
         results.append(result)

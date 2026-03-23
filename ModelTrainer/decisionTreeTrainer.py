@@ -15,6 +15,7 @@ def training_all_decision_trees(settings_file_path, training_set, testing_set, s
     results = []
     settings = load_settings(settings_file_path)
     for target_column in META_LEANER_TARGET_COLUMNS:
+        print(f"Training decision tree for { target_column.replace("_"," ")}...")
         training_x = np.array(training_set.drop([target_column], axis=1))
         training_y = training_set[target_column]
         testing_x = np.array(testing_set.drop([target_column], axis=1))

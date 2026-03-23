@@ -35,14 +35,14 @@ def optimise_support_vector_machine(dataset):
             steps=number_of_steps,
             # n_jobs="per-gpu"
         )
-        validation_losses = train_support_vector_machine_warp(best_params)
+        validation_loses = train_support_vector_machine_warp(best_params)
         print(
-        f"Tuned params for random forest for {target_column} resulting in an accuracy of: {validation_losses}")
+        f"Tuned params for random forest for {target_column} resulting in an accuracy of: {validation_loses}")
         settings[target_column] = best_params
     return settings
 
 def train_support_vector_machine_warp(params):
     global training_set, validation_set
     seed = random.randint(0, 4294967295)
-    losses = train_support_vector_machines(params, training_set, validation_set, seed)
-    return np.mean(losses["testing accuracies"])
+    loses = train_support_vector_machines(params, training_set, validation_set, seed)
+    return np.mean(loses["testing accuracies"])

@@ -35,14 +35,14 @@ def optimise_k_nearest_neighbors(dataset):
             steps=number_of_steps,
             # n_jobs="per-gpu"
         )
-        validation_losses = train_k_nearest_neighbors_warp(best_params)
+        validation_loses = train_k_nearest_neighbors_warp(best_params)
         print(
-        f"Tuned params for KNearestNeighbors for {target_column} resulting in an accuracy of: {validation_losses}")
+        f"Tuned params for KNearestNeighbors for {target_column} resulting in an accuracy of: {validation_loses}")
         settings[target_column] = best_params
     return settings
 
 def train_k_nearest_neighbors_warp(params):
     global training_set, validation_set
     seed = random.randint(0, 4294967295)
-    losses = train_k_nearest_neighbors(params, training_set, validation_set, seed)
-    return np.mean(losses["testing accuracies"])
+    loses = train_k_nearest_neighbors(params, training_set, validation_set, seed)
+    return np.mean(loses["testing accuracies"])
