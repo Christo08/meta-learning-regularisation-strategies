@@ -1,11 +1,11 @@
 #Paths
-BASIC_NN_SETTINGS_PATH = "Models\\Settings"
+BASIC_NN_SETTINGS_PATH = "Models\\Settings\\BasicNN\\"
 DATASETS_INFO_PATH = "Data\\Input\\all_dataset_info.json"
 MODULE_PATH ="Models\\"
 SUBSET_PATH = "Data\\Input\\Subsets\\"
 OUTPUT_PATH = "Data\\Output\\Raw\\"
 RESULTS_PATH = "Data\\Results\\"
-CHECK_POINTS_PATH = "Models\\Settings\\BasicNN\\"
+CHECK_POINTS_PATH = "Models\\CheckPoints\\"
 
 #Menu items
 PROCESS_OPTIONS = ["Optimise NN",  #0-1
