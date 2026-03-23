@@ -39,10 +39,23 @@ def train_support_vector_machines(params, training_set, testing_set, seed, targe
     training_y = training_set[1]
     testing_x = testing_set[0]
     testing_y = testing_set[1]
+
+    testing_y_raw = np.asarray(testing_y)
+    if testing_y_raw.ndim == 2 and testing_y_raw.shape[1] > 1:
+        y_test = np.argmax(testing_y_raw, axis=1)
+    else:
+        y_test = testing_y_raw.ravel()
+
     counter = 1
     for train_idx, test_idx in kf.split(training_x):
         x_train = training_x[train_idx]
-        y_train = training_y.iloc[train_idx].to_numpy()
+
+        y_train_raw = np.asarray(training_y.iloc[train_idx])
+        if y_train_raw.ndim == 2 and y_train_raw.shape[1] > 1:
+            y_train = np.argmax(y_train_raw, axis=1)
+        else:
+            y_train = y_train_raw.ravel()
+
         svm_params = params.copy()
         if svm_params.get("kernel") != "poly" and "degree" in svm_params:
             del svm_params["degree"]
@@ -56,9 +69,8 @@ def train_support_vector_machines(params, training_set, testing_set, seed, targe
         training_mses.append(mean_squared_error(y_train, y_train_pred))
         training_accuracy.append(accuracy_score(y_train, y_train_pred) * 100)
 
-        testing_y = np.asarray(testing_y)
-        testing_mses.append(mean_squared_error(testing_y, y_test_pred))
-        testing_accuracy.append(accuracy_score(testing_y, y_test_pred)*100)
+        testing_mses.append(mean_squared_error(y_test, y_test_pred))
+        testing_accuracy.append(accuracy_score(y_test, y_test_pred)*100)
 
         if target_column != 'na':
             joblib.dump(svm, f'{MODULE_PATH}SVM/svm_for_{target_column}_fold_{counter}.pkl')
