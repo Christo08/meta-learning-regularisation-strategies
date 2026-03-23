@@ -2,6 +2,7 @@ from datetime import datetime
 
 import pandas as pd
 import torch
+from sklearn.metrics import f1_score
 from sklearn.model_selection import KFold
 from torch import optim
 from torch.utils.data import DataLoader
@@ -15,7 +16,7 @@ from src.Utils.datasetHandler import prepared_meta_feature_dataset
 from src.Utils.fileHandler import load_settings, folder_maker
 
 
-def train_nn(settings, technique, training_set, testing_set, seed, category_columns, fold=None, target_column = 'na'):
+def train_nn(settings, technique, training_set, testing_set, seed, category_columns, fold=None, target_column = 'na',loss_type="loss_function"):
 
     number_of_inputs = training_set[0].shape[1]
     number_of_outputs = training_set[1].shape[1]
@@ -23,10 +24,15 @@ def train_nn(settings, technique, training_set, testing_set, seed, category_colu
     all_labels = training_set[1].columns.tolist()
     if fold is not None and fold >= 3:
         kf = KFold(n_splits=fold, shuffle=True, random_state=seed)
-        training_loss_values = []
-        training_accuracies_values = []
-        testing_loss_values = []
-        testing_accuracies_values = []
+
+        training_mses = []
+        training_f1 =[]
+        training_accuracy = []
+
+        testing_mses = []
+        testing_f1 =[]
+        testing_accuracy = []
+
         counter =0
 
         for train_idx, _ in kf.split(training_set[0]):
@@ -44,12 +50,13 @@ def train_nn(settings, technique, training_set, testing_set, seed, category_colu
                                                                                                                      all_labels,
                                                                                                                      category_columns,
                                                                                                                      target_column =target_column,
-                                                                                                                     counter=counter)
-            training_loss_values.append(training_loss_value)
-            training_accuracies_values.append(training_accuracy_value)
-            testing_loss_values.append(testing_loss_value)
-            testing_accuracies_values.append(testing_accuracy_value)
-        return training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values
+                                                                                                                     counter=counter,
+                                                                                                                     loss_type=loss_type)
+            training_mses.append(training_loss_value)
+            training_accuracy.append(training_accuracy_value)
+            testing_mses.append(testing_loss_value)
+            testing_accuracy.append(testing_accuracy_value)
+        return training_mses, training_accuracy, testing_mses, testing_accuracy
     else:
         return training_loop(training_set[0],
                              training_set[1],
@@ -60,7 +67,8 @@ def train_nn(settings, technique, training_set, testing_set, seed, category_colu
                              technique,
                              seed,
                              all_labels,
-                             category_columns)
+                             category_columns,
+                             loss_type=loss_type)
 
 def training_all_neural_networks(settings_file_path, raw_training_set, raw_testing_set, seed, kFold =5):
     results = []
@@ -91,6 +99,7 @@ def training_all_neural_networks(settings_file_path, raw_training_set, raw_testi
                                                                                                                     testing_set,
                                                                                                                     seed,
                                                                                                                     [],
+                                                                                                                    loss_type="f1",
                                                                                                                     fold=kFold,
                                                                                                                     target_column=target_column)
         result = {
@@ -104,7 +113,7 @@ def training_all_neural_networks(settings_file_path, raw_training_set, raw_testi
         results.append(result)
     return results
 
-def training_loop(x_training, y_training, testing_set, settings, number_of_inputs, number_of_outputs, technique, seed, all_labels, category_columns, target_column = 'na', counter=None):
+def training_loop(x_training, y_training, testing_set, settings, number_of_inputs, number_of_outputs, technique, seed, all_labels, category_columns, loss_type, target_column = 'na', counter=None):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     if technique == "SMOTE":
@@ -230,11 +239,24 @@ def training_loop(x_training, y_training, testing_set, settings, number_of_input
         # Classification accuracy: compare predicted class index vs true class index
         train_pred_cls = torch.argmax(y_training_pred, dim=1)
         train_true_cls = torch.argmax(y_training, dim=1)
-        training_accuracy = (train_pred_cls == train_true_cls).float().mean().item() * 100.0
 
         test_pred_cls = torch.argmax(y_testing_pred, dim=1)
         test_true_cls = torch.argmax(y_testing, dim=1)
-        testing_accuracy = (test_pred_cls == test_true_cls).float().mean().item() * 100.0
+        if loss_type == "loss_function":
+            training_accuracy = (train_pred_cls == train_true_cls).float().mean().item() * 100.0
+            testing_accuracy = (test_pred_cls == test_true_cls).float().mean().item() * 100.0
+        else:
+            training_accuracy = f1_score(
+                train_true_cls.detach().cpu().numpy(),
+                train_pred_cls.detach().cpu().numpy(),
+                average="macro",
+            ) * 100.0
+
+            testing_accuracy = f1_score(
+                test_true_cls.detach().cpu().numpy(),
+                test_pred_cls.detach().cpu().numpy(),
+                average="macro",
+            ) * 100.0
 
 
         if target_column != 'na':

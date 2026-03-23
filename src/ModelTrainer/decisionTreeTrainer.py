@@ -2,7 +2,7 @@ from datetime import datetime
 
 import joblib
 import numpy as np
-from sklearn.metrics import mean_squared_error, accuracy_score
+from sklearn.metrics import mean_squared_error, accuracy_score, f1_score
 from sklearn.model_selection import KFold
 from sklearn.tree import DecisionTreeClassifier
 
@@ -35,10 +35,15 @@ def training_all_decision_trees(settings_file_path, training_set, testing_set, s
 
 def train_decision_tree(params, training_set, testing_set, seed, target_column = 'na', kFold = 5):
     kf = KFold(n_splits=kFold, shuffle=True, random_state=seed)
+
     training_mses = []
+    training_f1 =[]
     training_accuracy = []
+
     testing_mses = []
+    testing_f1 =[]
     testing_accuracy = []
+
     training_x = training_set[0]
     training_y = training_set[1]
     testing_x = testing_set[0]
@@ -53,10 +58,12 @@ def train_decision_tree(params, training_set, testing_set, seed, target_column =
         y_test_pred = tree.predict(testing_x)
 
         training_mses.append(mean_squared_error(y_train, y_train_pred))
+        training_f1.append(f1_score(y_train, y_train_pred, average='weighted'))
         training_accuracy.append(accuracy_score(y_train, y_train_pred) * 100)
 
         testing_y = np.asarray(testing_y)
         testing_mses.append(mean_squared_error(testing_y, y_test_pred))
+        testing_f1.append(f1_score(testing_y, y_test_pred, average='weighted'))
         testing_accuracy.append(accuracy_score(testing_y, y_test_pred)*100)
 
         if target_column != 'na':
@@ -67,6 +74,8 @@ def train_decision_tree(params, training_set, testing_set, seed, target_column =
     return {
         "training loses": training_mses,
         "training accuracies": training_accuracy,
+        "training f1": training_f1,
         "testing loses": testing_mses,
+        "testing f1": testing_f1,
         "testing accuracies": testing_accuracy
     }

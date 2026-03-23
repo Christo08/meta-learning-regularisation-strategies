@@ -52,4 +52,4 @@ def train_random_forest_warp(params):
     global training_set, validation_set
     seed = random.randint(0, 4294967295)
     loses = train_random_forest(params, training_set, validation_set, seed)
-    return np.mean(loses["testing accuracies"])
+    return np.mean(loses["testing f1"])

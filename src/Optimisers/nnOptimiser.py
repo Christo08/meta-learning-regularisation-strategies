@@ -169,20 +169,23 @@ def optimise_meta_leaner_nn(dataset):
 
 def train_nn_warp(params):
     global training_set, validation_set, category_columns, mode
-    if "batch_size" in params:
-        settings = params
-        training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_nn(settings, "", training_set, validation_set, category_columns, seed)
-    else:
-        settings = {**basic_settings, **params}
-        if "dropout_layers" in params:
-            training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_nn(settings, "dropout", training_set, validation_set, category_columns, seed)
-        elif "prune_amount" in params:
-            training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_nn(settings, "prune", training_set, validation_set, category_columns, seed)
-        elif "weight_decay" in params:
-            training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_nn(settings, "weightDecay", training_set, validation_set, category_columns, seed)
+    if mode == "basic":
+        if "batch_size" in params:
+            settings = params
+            training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_nn(settings, "", training_set, validation_set, category_columns, seed)
         else:
-            training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values= train_nn(settings, "weightPerturbation", training_set, validation_set, category_columns, seed)
-    if mode =="loss":
+            settings = {**basic_settings, **params}
+            if "dropout_layers" in params:
+                training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_nn(settings, "dropout", training_set, validation_set, category_columns, seed)
+            elif "prune_amount" in params:
+                training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_nn(settings, "prune", training_set, validation_set, category_columns, seed)
+            elif "weight_decay" in params:
+                training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_nn(settings, "weightDecay", training_set, validation_set, category_columns, seed)
+            else:
+                training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values= train_nn(settings, "weightPerturbation", training_set, validation_set, category_columns, seed)
+
         return testing_loss_values
     else:
+        settings = params
+        training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_nn(settings, "", training_set, validation_set, category_columns, seed, loss_type="f1")
         return testing_accuracies_values
