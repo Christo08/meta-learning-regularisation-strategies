@@ -1,12 +1,13 @@
+import datetime
 import random
 
 import pandas as pd
 import pyhopper
 
 from src.ModelTrainer.nnTrainer import train_nn
-from src.Utils.constants import PARAMETER_GROUPS, META_LEANER_TARGET_COLUMNS
+from src.Utils.constants import PARAMETER_GROUPS, META_LEANER_TARGET_COLUMNS, CHECK_POINTS_PATH
 from src.Utils.datasetHandler import load_optimiser_dataset, prepared_meta_feature_dataset
-from src.Utils.fileHandler import save_nn_settings, load_settings
+from src.Utils.fileHandler import save_nn_settings, load_settings, folder_maker
 
 MAX_NUMBER_OF_LAYERS = 6
 MIN_NUMBER_OF_LAYERS = 2
@@ -114,12 +115,14 @@ def optimise_nn(dataset_name_input, dataset_settings, parameter_group, basic_set
 
 def setup_optimiser_and_run_it(dataset_name, parameter_group_name, parameter_group, number_of_steps):
     search = pyhopper.Search(parameter_group)
-
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    check_point_path = f"{CHECK_POINTS_PATH}BasicNN\\{dataset_name}"
+    folder_maker(check_point_path)
     best_params = search.run(
         train_nn_warp,
         direction="min",
         steps=number_of_steps,
-        checkpoint_path="Data/CheckPoints/NN/" + dataset_name.strip().replace(" ", "_") + "_" + parameter_group_name + "_Checkpoint",
+        checkpoint_path=f"{check_point_path}\\{parameter_group_name}_{timestamp}",
         # n_jobs="per-gpu"
     )
     test_loss = train_nn_warp(best_params)
@@ -130,6 +133,7 @@ def optimise_meta_leaner_nn(dataset):
     global training_set, validation_set, category_columns, mode
     mode = "accuracy"
     settings = {}
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     for target_column in META_LEANER_TARGET_COLUMNS:
         training_set, validation_set = prepared_meta_feature_dataset(dataset, META_LEANER_TARGET_COLUMNS, target_column)
@@ -149,11 +153,13 @@ def optimise_meta_leaner_nn(dataset):
 
         training_set = (pd.DataFrame(training_set[0]), training_y)
         validation_set = (pd.DataFrame(validation_set[0]), validation_y)
+        check_point_path = f"{CHECK_POINTS_PATH}Meta-learners\\NN"
+        folder_maker(check_point_path)
         best_params = search.run(
             train_nn_warp,
             direction="max",
             steps=200,
-            # n_jobs="per-gpu"
+            checkpoint_path=f"{check_point_path}\\{target_column}_{timestamp}"
         )
         validation_accuracy = train_nn_warp(best_params)
         print(

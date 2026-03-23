@@ -1,11 +1,13 @@
 import random
+from datetime import datetime
 
 import numpy as np
 import pyhopper
 
 from src.ModelTrainer.randomForestTrainer import train_random_forest
-from src.Utils.constants import META_LEANER_TARGET_COLUMNS
+from src.Utils.constants import META_LEANER_TARGET_COLUMNS, CHECK_POINTS_PATH
 from src.Utils.datasetHandler import prepared_meta_feature_dataset
+from src.Utils.fileHandler import folder_maker
 
 number_of_steps = 400
 parameter_group = {
@@ -27,15 +29,18 @@ def optimise_random_forest(dataset):
 
     settings = {}
 
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     for target_column in META_LEANER_TARGET_COLUMNS:
         training_set, validation_set = prepared_meta_feature_dataset(dataset, META_LEANER_TARGET_COLUMNS, target_column)
 
         search = pyhopper.Search(parameter_group)
+        check_point_path = f"{CHECK_POINTS_PATH}Meta-learners\\RandomForest"
+        folder_maker(check_point_path)
         best_params = search.run(
             train_random_forest_warp,
             direction="max",
             steps=number_of_steps,
-            # n_jobs="per-gpu"
+            checkpoint_path=f"{check_point_path}\\{target_column}_{timestamp}"
         )
         validation_loses = train_random_forest_warp(best_params)
         print(
