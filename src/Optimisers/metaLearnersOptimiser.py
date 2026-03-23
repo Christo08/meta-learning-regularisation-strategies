@@ -34,7 +34,7 @@ def optimise_meta_learners(dataset):
         else:
             return
         setting_indexes[module_type] = save_meta_learner_settings(setting, module_type)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now().strftime("%Y%m%d_%H")
     path = f"{META_LEARNERS_SETTINGS_PATH}\\settings_index_{timestamp}.json"
     with open(path, "x") as file:
         json.dump(setting_indexes, file, indent=4, cls=ObjectEncoder)

@@ -131,7 +131,7 @@ def setup_optimiser_and_run_it(dataset_name, parameter_group_name, parameter_gro
 
 def optimise_meta_leaner_nn(dataset):
     global training_set, validation_set, category_columns, mode
-    mode = "accuracy"
+    mode = "meta-learners"
     settings = {}
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 

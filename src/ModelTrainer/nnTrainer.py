@@ -248,13 +248,13 @@ def training_loop(x_training, y_training, testing_set, settings, number_of_input
                 train_true_cls.detach().cpu().numpy(),
                 train_pred_cls.detach().cpu().numpy(),
                 average="macro",
-            ) * 100.0
+            )
 
             testing_accuracy = f1_score(
                 test_true_cls.detach().cpu().numpy(),
                 test_pred_cls.detach().cpu().numpy(),
                 average="macro",
-            ) * 100.0
+            )
 
 
         if target_column != 'na':
