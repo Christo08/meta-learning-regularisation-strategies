@@ -65,10 +65,13 @@ training_set = ""
 validation_set = ""
 category_columns = []
 seed = random.randint(0, 4294967295)
+mode = "loss"
 
 
 def optimise_nn(dataset_name_input, dataset_settings, parameter_group, basic_settings_parm = None):
-    global dataset_name, basic_settings, training_set, validation_set, category_columns
+    global dataset_name, basic_settings, training_set, validation_set, category_columns, mode
+
+    mode = "loss"
 
     if parameter_group == PARAMETER_GROUPS[len(PARAMETER_GROUPS) - 1]:
         return True
@@ -124,8 +127,8 @@ def setup_optimiser_and_run_it(dataset_name, parameter_group_name, parameter_gro
     return best_params
 
 def optimise_meta_leaner_nn(dataset):
-    global training_set, validation_set, category_columns
-
+    global training_set, validation_set, category_columns, mode
+    mode = "accuracy"
     settings = {}
 
     for target_column in META_LEANER_TARGET_COLUMNS:
@@ -148,18 +151,18 @@ def optimise_meta_leaner_nn(dataset):
         validation_set = (pd.DataFrame(validation_set[0]), validation_y)
         best_params = search.run(
             train_nn_warp,
-            direction="min",
-            steps=150,
+            direction="max",
+            steps=200,
             # n_jobs="per-gpu"
         )
-        validation_losses = train_nn_warp(best_params)
+        validation_accuracy = train_nn_warp(best_params)
         print(
-        f"Tuned params for random forest for {target_column} resulting in a of mse: {validation_losses}")
+        f"Tuned params for nn for {target_column} resulting in an accuracy of {validation_accuracy}")
         settings[target_column] = best_params
     return settings
 
 def train_nn_warp(params):
-    global training_set, validation_set, category_columns
+    global training_set, validation_set, category_columns, mode
     if "batch_size" in params:
         settings = params
         training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_nn(settings, "", training_set, validation_set, category_columns, seed)
@@ -173,4 +176,7 @@ def train_nn_warp(params):
             training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_nn(settings, "weightDecay", training_set, validation_set, category_columns, seed)
         else:
             training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values= train_nn(settings, "weightPerturbation", training_set, validation_set, category_columns, seed)
-    return testing_loss_values
+    if mode =="loss":
+        return testing_loss_values
+    else:
+        return testing_accuracies_values

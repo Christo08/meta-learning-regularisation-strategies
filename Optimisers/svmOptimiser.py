@@ -37,7 +37,7 @@ def optimise_support_vector_machine(dataset):
         )
         validation_losses = train_support_vector_machine_warp(best_params)
         print(
-        f"Tuned params for random forest for {target_column} resulting in a of mse: {validation_losses}")
+        f"Tuned params for random forest for {target_column} resulting in an accuracy of: {validation_losses}")
         settings[target_column] = best_params
     return settings
 
