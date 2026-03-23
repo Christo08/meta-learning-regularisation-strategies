@@ -7,13 +7,13 @@ from sklearn.model_selection import KFold
 from torch import optim
 from torch.utils.data import DataLoader
 
-from Models.NN.customDataset import CustomDataset
-from Models.NN.network import Network
-from Utils.constants import META_LEANER_TARGET_COLUMNS, MODULE_PATH
-from Utils.datasetHandler import apply_smote
-from Utils.datasetHandler import prepared_meta_feature_dataset
-from Utils.fileHandler import load_settings
-from Models.NN.lossFunctions import CustomCrossEntropyLoss
+from src.Models.NN.customDataset import CustomDataset
+from src.Models.NN.network import Network
+from src.Utils.constants import META_LEANER_TARGET_COLUMNS, MODULE_PATH
+from src.Utils.datasetHandler import apply_smote
+from src.Utils.datasetHandler import prepared_meta_feature_dataset
+from src.Utils.fileHandler import load_settings
+from src.Models.NN.lossFunctions import CustomCrossEntropyLoss
 
 
 def train_nn(settings, technique, training_set, testing_set, seed, category_columns, fold=None, target_column = 'na'):

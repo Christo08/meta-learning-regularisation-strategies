@@ -5,11 +5,11 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 
-from ModelTrainer.nnTrainer import train_nn
-from Utils.constants import *
-from Utils.datasetHandler import create_subsets, load_dataset, create_subsets_with_seeds, load_subset
-from Utils.fileHandler import load_meta_features_dataset, save_data_frame, get_latest_settings
-from Utils.timeFormatter import format_duration
+from src.ModelTrainer.nnTrainer import train_nn
+from src.Utils.constants import *
+from src.Utils.datasetHandler import create_subsets, load_dataset, create_subsets_with_seeds, load_subset
+from src.Utils.fileHandler import load_meta_features_dataset, save_data_frame, get_latest_settings
+from src.Utils.timeFormatter import format_duration
 
 
 def recreate_subsets(meta_feature_dataset, number_of_instances, datasets_settings, names=None):

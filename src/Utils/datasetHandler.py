@@ -9,9 +9,9 @@ from pmlb import fetch_data
 from scipy.stats import zscore
 from sklearn.model_selection import train_test_split
 
-from Utils.constants import *
-from Utils.fileHandler import save_subset
-from Utils.metaFeatureCalculator import calculate_meta_features
+from src.Utils.constants import *
+from src.Utils.fileHandler import save_subset
+from src.Utils.metaFeatureCalculator import calculate_meta_features
 
 dataset = pd.DataFrame()
 dataset_name = ""

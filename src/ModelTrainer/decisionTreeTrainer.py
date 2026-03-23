@@ -7,8 +7,8 @@ from sklearn.metrics import mean_squared_error, accuracy_score
 from sklearn.model_selection import KFold
 from sklearn.tree import DecisionTreeClassifier
 
-from Utils.constants import *
-from Utils.fileHandler import load_settings
+from src.Utils.constants import *
+from src.Utils.fileHandler import load_settings
 
 
 def training_all_decision_trees(settings_file_path, training_set, testing_set, seed, kFold =5):

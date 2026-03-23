@@ -3,9 +3,9 @@ import random
 import numpy as np
 import pyhopper
 
-from ModelTrainer.svmTrainer import train_support_vector_machines
-from Utils.constants import META_LEANER_TARGET_COLUMNS
-from Utils.datasetHandler import prepared_meta_feature_dataset
+from src.ModelTrainer.svmTrainer import train_support_vector_machines
+from src.Utils.constants import META_LEANER_TARGET_COLUMNS
+from src.Utils.datasetHandler import prepared_meta_feature_dataset
 
 number_of_steps = 400
 parameter_group = {

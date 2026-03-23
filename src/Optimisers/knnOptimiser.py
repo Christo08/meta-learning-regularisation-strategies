@@ -3,9 +3,9 @@ import random
 import numpy as np
 import pyhopper
 
-from ModelTrainer.knnTrainer import train_k_nearest_neighbors
-from Utils.constants import META_LEANER_TARGET_COLUMNS
-from Utils.datasetHandler import prepared_meta_feature_dataset
+from src.ModelTrainer.knnTrainer import train_k_nearest_neighbors
+from src.Utils.constants import META_LEANER_TARGET_COLUMNS
+from src.Utils.datasetHandler import prepared_meta_feature_dataset
 
 number_of_steps = 400
 parameter_group = {

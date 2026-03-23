@@ -3,14 +3,14 @@ from datetime import datetime
 import random
 import pandas as pd
 
-from ModelTrainer.decisionTreeTrainer import training_all_decision_trees
-from ModelTrainer.knnTrainer import training_all_k_nearest_neighbors
-from ModelTrainer.randomForestTrainer import training_all_random_forests
-from ModelTrainer.svmTrainer import training_all_support_vector_machines
-from ModelTrainer.nnTrainer import training_all_neural_networks
-from Utils.constants import META_LEARN_TYPES, RESULTS_PATH
-from Utils.fileHandler import save_data_frame
-from Utils.menus import show_meta_leaner_type_menu
+from src.ModelTrainer.decisionTreeTrainer import training_all_decision_trees
+from src.ModelTrainer.knnTrainer import training_all_k_nearest_neighbors
+from src.ModelTrainer.randomForestTrainer import training_all_random_forests
+from src.ModelTrainer.svmTrainer import training_all_support_vector_machines
+from src.ModelTrainer.nnTrainer import training_all_neural_networks
+from src.Utils.constants import META_LEARN_TYPES, RESULTS_PATH
+from src.Utils.fileHandler import save_data_frame
+from src.Utils.menus import show_meta_leaner_type_menu
 
 
 def train_meta_learners(training_dataset, testing_dataset):

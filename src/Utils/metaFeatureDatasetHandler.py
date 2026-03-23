@@ -8,8 +8,8 @@ import pandas as pd
 from scipy.stats import ttest_ind, zscore
 from sklearn.model_selection import train_test_split
 
-from Utils.constants import TARGET_COLUMNS
-from Utils.fileHandler import load_meta_features_csv, save_data_frame
+from src.Utils.constants import TARGET_COLUMNS
+from src.Utils.fileHandler import load_meta_features_csv, save_data_frame
 
 
 def spilt_dataset_and_targets(dataset):

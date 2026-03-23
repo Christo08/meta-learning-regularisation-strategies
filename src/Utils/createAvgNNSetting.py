@@ -1,7 +1,7 @@
 import json
 import os
 
-from Utils.fileHandler import save_nn_settings
+from src.Utils.fileHandler import save_nn_settings
 
 
 def create_generic_nn_setting():

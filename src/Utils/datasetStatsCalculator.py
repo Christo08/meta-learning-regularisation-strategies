@@ -7,10 +7,10 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-from Utils.constants import TARGET_COLUMNS, STATS_OPTIONS
-from Utils.fileHandler import load_results_csv, save_data_frame
-from Utils.menus import show_menu
-from Utils.metaFeatureDatasetHandler import spilt_dataset_and_targets
+from src.Utils.constants import TARGET_COLUMNS, STATS_OPTIONS
+from src.Utils.fileHandler import load_results_csv, save_data_frame
+from src.Utils.menus import show_menu
+from src.Utils.metaFeatureDatasetHandler import spilt_dataset_and_targets
 
 wr.filterwarnings('ignore')
 

@@ -3,10 +3,10 @@ import random
 import pandas as pd
 import pyhopper
 
-from ModelTrainer.nnTrainer import train_nn
-from Utils.constants import PARAMETER_GROUPS, META_LEANER_TARGET_COLUMNS
-from Utils.datasetHandler import load_optimiser_dataset, prepared_meta_feature_dataset
-from Utils.fileHandler import save_nn_settings, load_settings
+from src.ModelTrainer.nnTrainer import train_nn
+from src.Utils.constants import PARAMETER_GROUPS, META_LEANER_TARGET_COLUMNS
+from src.Utils.datasetHandler import load_optimiser_dataset, prepared_meta_feature_dataset
+from src.Utils.fileHandler import save_nn_settings, load_settings
 
 MAX_NUMBER_OF_LAYERS = 6
 MIN_NUMBER_OF_LAYERS = 2

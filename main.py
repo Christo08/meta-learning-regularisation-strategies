@@ -1,15 +1,15 @@
 import pandas as pd
 import torch
 
-from Utils.instanceCreator import create_dataset, recreate_subsets, recreate_dataset
-from ModelTrainer.metaLearnersTrainer import train_meta_learners
-from Optimisers.metaLearnersOptimiser import optimise_meta_learners
-from Optimisers.nnOptimiser import optimise_nn
-from Utils.constants import *
-from Utils.datasetStatsCalculator import calculate_meta_learners_stats, calculate_dataset_stats
-from Utils.fileHandler import load_dataset_setting_file, load_settings
-from Utils.menus import show_dataset_menu, show_menu
-from Utils.metaFeatureDatasetHandler import load_meta_feature_dataset, split_dataset
+from src.Utils.instanceCreator import create_dataset, recreate_subsets, recreate_dataset
+from src.ModelTrainer.metaLearnersTrainer import train_meta_learners
+from src.Optimisers.metaLearnersOptimiser import optimise_meta_learners
+from src.Optimisers.nnOptimiser import optimise_nn
+from src.Utils.constants import *
+from src.Utils.datasetStatsCalculator import calculate_meta_learners_stats, calculate_dataset_stats
+from src.Utils.fileHandler import load_dataset_setting_file, load_settings
+from src.Utils.menus import show_dataset_menu, show_menu
+from src.Utils.metaFeatureDatasetHandler import load_meta_feature_dataset, split_dataset
 
 
 def main():

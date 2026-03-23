@@ -1,11 +1,11 @@
-from Optimisers.decisionTreeOptimiser import optimise_decision_tree
-from Optimisers.knnOptimiser import optimise_k_nearest_neighbors
-from Optimisers.nnOptimiser import optimise_meta_leaner_nn
-from Optimisers.randomForsetOptimiser import optimise_random_forest
-from Optimisers.svmOptimiser import optimise_support_vector_machine
-from Utils.fileHandler import save_meta_learner_settings
-from Utils.menus import show_meta_leaner_type_menu
-from Utils.menus import META_LEARN_TYPES
+from src.Optimisers.decisionTreeOptimiser import optimise_decision_tree
+from src.Optimisers.knnOptimiser import optimise_k_nearest_neighbors
+from src.Optimisers.nnOptimiser import optimise_meta_leaner_nn
+from src.Optimisers.randomForsetOptimiser import optimise_random_forest
+from src.Optimisers.svmOptimiser import optimise_support_vector_machine
+from src.Utils.fileHandler import save_meta_learner_settings
+from src.Utils.menus import show_meta_leaner_type_menu
+from src.Utils.menus import META_LEARN_TYPES
 
 
 def optimise_meta_learners(dataset):
