@@ -5,6 +5,7 @@ MODULE_PATH ="Models\\"
 SUBSET_PATH = "Data\\Input\\Subsets\\"
 OUTPUT_PATH = "Data\\Output\\Raw\\"
 RESULTS_PATH = "Data\\Results\\"
+CHECK_POINTS_PATH = "Models\\Settings\\BasicNN\\"
 
 #Menu items
 PROCESS_OPTIONS = ["Optimise NN",  #0-1

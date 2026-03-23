@@ -1,4 +1,3 @@
-import os
 from datetime import datetime
 
 import pandas as pd
@@ -8,12 +7,12 @@ from torch import optim
 from torch.utils.data import DataLoader
 
 from src.Models.NN.customDataset import CustomDataset
+from src.Models.NN.lossFunctions import CustomCrossEntropyLoss
 from src.Models.NN.network import Network
 from src.Utils.constants import META_LEANER_TARGET_COLUMNS, MODULE_PATH
 from src.Utils.datasetHandler import apply_smote
 from src.Utils.datasetHandler import prepared_meta_feature_dataset
-from src.Utils.fileHandler import load_settings
-from src.Models.NN.lossFunctions import CustomCrossEntropyLoss
+from src.Utils.fileHandler import load_settings, folder_maker
 
 
 def train_nn(settings, technique, training_set, testing_set, seed, category_columns, fold=None, target_column = 'na'):
@@ -240,8 +239,7 @@ def training_loop(x_training, y_training, testing_set, settings, number_of_input
 
         if target_column != 'na':
             folder_path = f"{MODULE_PATH}NN\\{datetime.now().strftime("%Y%m%d")}"
-            if not os.path.isdir(folder_path):
-                os.makedirs(folder_path, exist_ok=True)
+            folder_maker(folder_path)
             model_path = f'{folder_path}\\nn_for_{target_column}_fold_{counter}.pt'
             torch.save({
                 "model_state_dict": network.state_dict(),

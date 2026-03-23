@@ -1,4 +1,3 @@
-import os
 from datetime import datetime
 
 import joblib
@@ -8,7 +7,7 @@ from sklearn.model_selection import KFold
 from sklearn.neighbors import KNeighborsClassifier
 
 from src.Utils.constants import *
-from src.Utils.fileHandler import load_settings
+from src.Utils.fileHandler import load_settings, folder_maker
 
 
 def training_all_k_nearest_neighbors(settings_file_path, training_set, testing_set, seed, kFold =5):
@@ -62,8 +61,7 @@ def train_k_nearest_neighbors(params, training_set, testing_set, seed, target_co
 
         if target_column != 'na':
             folder_path = f"{MODULE_PATH}KNN\\{datetime.now().strftime("%Y%m%d")}"
-            if not os.path.isdir(folder_path):
-                os.makedirs(folder_path, exist_ok=True)
+            folder_maker(folder_path)
             joblib.dump(knn, f'{folder_path}\\knn_for_{target_column}_fold_{counter}.pkl')
         counter = counter + 1
     return {

@@ -1,4 +1,3 @@
-import os
 from datetime import datetime
 
 import joblib
@@ -8,7 +7,8 @@ from sklearn.model_selection import KFold
 from sklearn.svm import SVC
 
 from src.Utils.constants import *
-from src.Utils.fileHandler import load_settings
+from src.Utils.fileHandler import load_settings, folder_maker
+
 
 def training_all_support_vector_machines(settings_file_path, training_set, testing_set, seed, kFold =5):
     results = []
@@ -79,8 +79,7 @@ def train_support_vector_machines(params, training_set, testing_set, seed, targe
 
         if target_column != 'na':
             folder_path = f"{MODULE_PATH}SVM\\{datetime.now().strftime("%Y%m%d")}"
-            if not os.path.isdir(folder_path):
-                os.makedirs(folder_path, exist_ok=True)
+            folder_maker(folder_path)
             joblib.dump(svm, f'{folder_path}\\svm_for_{target_column}_fold_{counter}.pkl')
         counter = counter + 1
     return {

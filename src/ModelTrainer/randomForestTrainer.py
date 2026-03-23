@@ -1,14 +1,14 @@
-import os
 from datetime import datetime
 
 import joblib
 import numpy as np
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import mean_squared_error, accuracy_score
 from sklearn.model_selection import KFold
-from sklearn.ensemble import RandomForestClassifier
 
 from src.Utils.constants import *
-from src.Utils.fileHandler import load_settings
+from src.Utils.fileHandler import load_settings, folder_maker
+
 
 def training_all_random_forests(settings_file_path, training_set, testing_set, seed, kFold =5):
     results = []
@@ -64,8 +64,7 @@ def train_random_forest(params, training_set, testing_set, seed, target_column =
 
         if target_column != 'na':
             folder_path = f"{MODULE_PATH}RandomForest\\{datetime.now().strftime("%Y%m%d")}"
-            if not os.path.isdir(folder_path):
-                os.makedirs(folder_path, exist_ok=True)
+            folder_maker(folder_path)
             joblib.dump(forest, f'{folder_path}\\random_forest_for_{target_column}_fold_{counter}.pkl')
         counter = counter + 1
     return {

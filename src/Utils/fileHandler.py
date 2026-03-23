@@ -1,11 +1,11 @@
 import json
 import os
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-from datetime import datetime
 from src.Utils.Errors.fileNotFound import FileNotFound
 from src.Utils.constants import *
 
@@ -77,8 +77,7 @@ def save_meta_learner_settings(settings, output_path, module_type):
         file_name = f"nn_setting_{timestamp}.json"
 
     folder_path = f"{output_path}\\{module_type}"
-    if not os.path.isdir(folder_path):
-        os.makedirs(folder_path, exist_ok=True)
+    folder_maker(folder_path)
 
     path = f"{folder_path}\\{file_name}"
     with open(path, "x") as file:
@@ -133,6 +132,10 @@ def save_subset(subset, seed, dataset_name):
         print(f"Error saving subset to CSV at '{file_path}': {e}")
         raise
     return file_path
+
+def folder_maker(folder_path):
+    if not os.path.isdir(folder_path):
+        os.makedirs(folder_path, exist_ok=True)
 
 class ObjectEncoder(json.JSONEncoder):
     def default(self, obj):
