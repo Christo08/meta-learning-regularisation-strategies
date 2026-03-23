@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from sklearn.metrics import confusion_matrix
 
 from src.Utils.constants import TARGET_COLUMNS, STATS_OPTIONS
 from src.Utils.fileHandler import load_results_csv, save_data_frame
@@ -296,3 +297,14 @@ def get_best_instances_for_techniques(full_dataset):
         other_techniques = [t for t in TARGET_COLUMNS if t != technique]
         best_instances[technique] = full_dataset[full_dataset[technique] == 1].drop(columns=other_techniques)
     return best_instances
+
+def tp_tn_fp_fn(y_true, y_pred, positive_label=1):
+
+    y_true = np.asarray(y_true).ravel()
+    y_pred = np.asarray(y_pred).ravel()
+
+    cm = confusion_matrix(y_true, y_pred, labels=[0, positive_label])
+
+
+    tn, fp, fn, tp = cm.ravel()
+    return float(tp), float(tn), float(fp), float(fn)

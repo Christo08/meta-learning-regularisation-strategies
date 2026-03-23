@@ -8,6 +8,7 @@ from sklearn.svm import SVC
 
 from src.Utils.constants import *
 from src.Utils.fileHandler import load_settings, folder_maker
+from src.Utils.statsCalculator import tp_tn_fp_fn
 
 
 def training_all_support_vector_machines(settings_file_path, training_set, testing_set, seed, kFold =5):
@@ -43,18 +44,15 @@ def train_support_vector_machines(params, training_set, testing_set, seed, targe
     testing_mses = []
     testing_f1 =[]
     testing_accuracy = []
+    testing_true_positives = []
+    testing_true_negatives = []
+    testing_false_positives = []
+    testing_false_negatives= []
 
     training_x = training_set[0]
     training_y = training_set[1]
     testing_x = testing_set[0]
     testing_y = testing_set[1]
-
-    testing_y_raw = np.asarray(testing_y)
-    if testing_y_raw.ndim == 2 and testing_y_raw.shape[1] > 1:
-        y_test = np.argmax(testing_y_raw, axis=1)
-    else:
-        y_test = testing_y_raw.ravel()
-
     counter = 1
     for train_idx, test_idx in kf.split(training_x):
         x_train = training_x[train_idx]
@@ -83,6 +81,11 @@ def train_support_vector_machines(params, training_set, testing_set, seed, targe
         testing_mses.append(mean_squared_error(testing_y, y_test_pred))
         testing_f1.append(f1_score(testing_y, y_test_pred, average='weighted'))
         testing_accuracy.append(accuracy_score(testing_y, y_test_pred)*100)
+        tp, tn, fp, fn = tp_tn_fp_fn(testing_y, y_test_pred)
+        testing_true_positives.append(tp)
+        testing_true_negatives.append(tn)
+        testing_false_positives.append(fp)
+        testing_false_negatives.append(fn)
 
 
         if target_column != 'na':
@@ -96,5 +99,9 @@ def train_support_vector_machines(params, training_set, testing_set, seed, targe
         "training f1": training_f1,
         "testing loses": testing_mses,
         "testing f1": testing_f1,
-        "testing accuracies": testing_accuracy
+        "testing accuracies": testing_accuracy,
+        "testing_true_positives": testing_true_positives,
+        "testing_true_negatives": testing_true_positives,
+        "testing_false_positives": testing_false_positives,
+        "testing_false_negatives": testing_false_negatives
     }

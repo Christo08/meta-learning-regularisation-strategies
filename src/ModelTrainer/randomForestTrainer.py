@@ -8,6 +8,7 @@ from sklearn.model_selection import KFold
 
 from src.Utils.constants import *
 from src.Utils.fileHandler import load_settings, folder_maker
+from src.Utils.statsCalculator import tp_tn_fp_fn
 
 
 def training_all_random_forests(settings_file_path, training_set, testing_set, seed, kFold =5):
@@ -43,6 +44,10 @@ def train_random_forest(params, training_set, testing_set, seed, target_column =
     testing_mses = []
     testing_f1 =[]
     testing_accuracy = []
+    testing_true_positives = []
+    testing_true_negatives = []
+    testing_false_positives = []
+    testing_false_negatives= []
 
     training_x = training_set[0]
     training_y = training_set[1]
@@ -68,6 +73,11 @@ def train_random_forest(params, training_set, testing_set, seed, target_column =
         testing_mses.append(mean_squared_error(testing_y, y_test_pred))
         testing_f1.append(f1_score(testing_y, y_test_pred, average='weighted'))
         testing_accuracy.append(accuracy_score(testing_y, y_test_pred)*100)
+        tp, tn, fp, fn = tp_tn_fp_fn(testing_y, y_test_pred)
+        testing_true_positives.append(tp)
+        testing_true_negatives.append(tn)
+        testing_false_positives.append(fp)
+        testing_false_negatives.append(fn)
 
         if target_column != 'na':
             folder_path = f"{MODULE_PATH}RandomForest\\{datetime.now().strftime("%Y%m%d_%h")}"
@@ -80,5 +90,9 @@ def train_random_forest(params, training_set, testing_set, seed, target_column =
         "training f1": training_f1,
         "testing loses": testing_mses,
         "testing f1": testing_f1,
-        "testing accuracies": testing_accuracy
+        "testing accuracies": testing_accuracy,
+        "testing_true_positives": testing_true_positives,
+        "testing_true_negatives": testing_true_positives,
+        "testing_false_positives": testing_false_positives,
+        "testing_false_negatives": testing_false_negatives
     }
