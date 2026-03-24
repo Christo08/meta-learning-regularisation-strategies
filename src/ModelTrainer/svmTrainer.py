@@ -11,7 +11,7 @@ from src.Utils.fileHandler import load_settings, folder_maker
 from src.Utils.statsCalculator import tp_tn_fp_fn
 
 
-def training_all_support_vector_machines(settings_file_path, training_set, testing_set, seed, kFold =5):
+def training_meta_support_vector_machines(settings_file_path, training_set, testing_set, seed, kFold =5):
     results = []
     settings = load_settings(settings_file_path)
     for target_column in META_LEANER_TARGET_COLUMNS:
@@ -101,7 +101,7 @@ def train_support_vector_machines(params, training_set, testing_set, seed, targe
         "testing f1": testing_f1,
         "testing accuracies": testing_accuracy,
         "testing_true_positives": testing_true_positives,
-        "testing_true_negatives": testing_true_positives,
+        "testing_true_negatives": testing_true_negatives,
         "testing_false_positives": testing_false_positives,
         "testing_false_negatives": testing_false_negatives
     }

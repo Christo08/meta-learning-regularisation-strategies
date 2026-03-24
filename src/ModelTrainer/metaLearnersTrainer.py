@@ -3,11 +3,11 @@ from datetime import datetime
 
 import pandas as pd
 
-from src.ModelTrainer.decisionTreeTrainer import training_all_decision_trees
-from src.ModelTrainer.knnTrainer import training_all_k_nearest_neighbors
-from src.ModelTrainer.nnTrainer import training_all_neural_networks
-from src.ModelTrainer.randomForestTrainer import training_all_random_forests
-from src.ModelTrainer.svmTrainer import training_all_support_vector_machines
+from src.ModelTrainer.decisionTreeTrainer import training_meta_decision_trees
+from src.ModelTrainer.knnTrainer import training_meta_k_nearest_neighbors
+from src.ModelTrainer.nnTrainer import training_meta_nns
+from src.ModelTrainer.randomForestTrainer import training_meta_random_forests
+from src.ModelTrainer.svmTrainer import training_meta_support_vector_machines
 from src.Utils.constants import META_LEARN_TYPES
 from src.Utils.fileHandler import save_data_frame, folder_maker, load_json_file
 from src.Utils.menus import show_meta_leaner_type_menu
@@ -26,15 +26,15 @@ def train_meta_learners(training_dataset, testing_dataset):
         settings_file_path = settings[selected_meta_learn_type]
         seed = random.randint(0, 4294967295)
         if selected_meta_learn_type == META_LEARN_TYPES[1]:
-            result = training_all_decision_trees(settings_file_path , training_dataset, testing_dataset, seed, number_of_folds)
+            result = training_meta_decision_trees(settings_file_path, training_dataset, testing_dataset, seed, number_of_folds)
         elif selected_meta_learn_type == META_LEARN_TYPES[4]:
-            result = training_all_random_forests(settings_file_path , training_dataset, testing_dataset, seed, number_of_folds)
+            result = training_meta_random_forests(settings_file_path, training_dataset, testing_dataset, seed, number_of_folds)
         elif selected_meta_learn_type == META_LEARN_TYPES[2]:
-            result = training_all_k_nearest_neighbors(settings_file_path , training_dataset, testing_dataset, seed, number_of_folds)
+            result = training_meta_k_nearest_neighbors(settings_file_path, training_dataset, testing_dataset, seed, number_of_folds)
         elif selected_meta_learn_type == META_LEARN_TYPES[3]:
-            result = training_all_neural_networks(settings_file_path , training_dataset, testing_dataset, seed, number_of_folds)
+            result = training_meta_nns(settings_file_path, training_dataset, testing_dataset, number_of_folds)
         elif selected_meta_learn_type == META_LEARN_TYPES[5]:
-            result = training_all_support_vector_machines(settings_file_path , training_dataset, testing_dataset, seed,number_of_folds)
+            result = training_meta_support_vector_machines(settings_file_path, training_dataset, testing_dataset, seed, number_of_folds)
         else:
             return
         results = pd.concat([results, pd.DataFrame(result)], ignore_index=True)

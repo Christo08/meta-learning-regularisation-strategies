@@ -11,7 +11,7 @@ from src.Utils.fileHandler import load_settings, folder_maker
 from src.Utils.statsCalculator import tp_tn_fp_fn
 
 
-def training_all_decision_trees(settings_file_path, training_set, testing_set, seed, kFold =5):
+def training_meta_decision_trees(settings_file_path, training_set, testing_set, seed, kFold =5):
     results = []
     settings = load_settings(settings_file_path)
     for target_column in META_LEANER_TARGET_COLUMNS:
@@ -88,8 +88,8 @@ def train_decision_tree(params, training_set, testing_set, seed, target_column =
         "testing loses": testing_mses,
         "testing f1": testing_f1,
         "testing accuracies": testing_accuracy,
-        "testing_true_positives": testing_true_positives,
-        "testing_true_negatives": testing_true_positives,
-        "testing_false_positives": testing_false_positives,
-        "testing_false_negatives": testing_false_negatives
+        "testing true positives": testing_true_positives,
+        "testing true negatives": testing_true_negatives,
+        "testing false positives": testing_false_positives,
+        "testing false negatives": testing_false_negatives
     }

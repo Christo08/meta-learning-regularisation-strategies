@@ -14,9 +14,10 @@ from src.Utils.constants import META_LEANER_TARGET_COLUMNS, MODULE_PATH
 from src.Utils.datasetHandler import apply_smote
 from src.Utils.datasetHandler import prepared_meta_feature_dataset
 from src.Utils.fileHandler import load_settings, folder_maker
+from src.Utils.statsCalculator import tp_tn_fp_fn
 
 
-def train_nn(settings, technique, training_set, testing_set, seed, category_columns, fold=None, target_column = 'na',loss_type="loss_function"):
+def train_basic_nns(settings, technique, training_set, testing_set, seed, category_columns, fold=None):
 
     number_of_inputs = training_set[0].shape[1]
     number_of_outputs = training_set[1].shape[1]
@@ -37,38 +38,34 @@ def train_nn(settings, technique, training_set, testing_set, seed, category_colu
             counter+=1
             training_set_x = training_set[0].iloc[train_idx]
             training_set_y = training_set[1].iloc[train_idx]
-            training_loss_value, training_accuracy_value, testing_loss_value, testing_accuracy_value = training_loop(training_set_x,
-                                                                                                                     training_set_y,
-                                                                                                                     testing_set,
-                                                                                                                     settings,
-                                                                                                                     number_of_inputs,
-                                                                                                                     number_of_outputs,
-                                                                                                                     technique,
-                                                                                                                     seed,
-                                                                                                                     all_labels,
-                                                                                                                     category_columns,
-                                                                                                                     target_column =target_column,
-                                                                                                                     counter=counter,
-                                                                                                                     loss_type=loss_type)
+            training_loss_value, training_accuracy_value, testing_loss_value, testing_accuracy_value = training_basic_loop(training_set_x,
+                                                                                                                           training_set_y,
+                                                                                                                           testing_set,
+                                                                                                                           settings,
+                                                                                                                           number_of_inputs,
+                                                                                                                           number_of_outputs,
+                                                                                                                           technique,
+                                                                                                                           seed,
+                                                                                                                           all_labels,
+                                                                                                                           category_columns)
             training_mses.append(training_loss_value)
             training_accuracy.append(training_accuracy_value)
             testing_mses.append(testing_loss_value)
             testing_accuracy.append(testing_accuracy_value)
         return training_mses, training_accuracy, testing_mses, testing_accuracy
     else:
-        return training_loop(training_set[0],
-                             training_set[1],
-                             testing_set,
-                             settings,
-                             number_of_inputs,
-                             number_of_outputs,
-                             technique,
-                             seed,
-                             all_labels,
-                             category_columns,
-                             loss_type=loss_type)
+        return training_basic_loop(training_set[0],
+                                   training_set[1],
+                                   testing_set,
+                                   settings,
+                                   number_of_inputs,
+                                   number_of_outputs,
+                                   technique,
+                                   seed,
+                                   all_labels,
+                                   category_columns)
 
-def training_all_neural_networks(settings_file_path, raw_training_set, raw_testing_set, seed, kFold =5):
+def training_meta_nns(settings_file_path, raw_training_set, raw_testing_set, kFold =5):
     results = []
     settings = load_settings(settings_file_path)
     for target_column in META_LEANER_TARGET_COLUMNS:
@@ -91,15 +88,8 @@ def training_all_neural_networks(settings_file_path, raw_training_set, raw_testi
         training_set = (pd.DataFrame(training_set[0]), training_y)
         testing_set = (pd.DataFrame(testing_set[0]), testing_y)
         setting = settings[target_column]
-        training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_nn(setting,
-                                                                                                                    "",
-                                                                                                                    training_set,
-                                                                                                                    testing_set,
-                                                                                                                    seed,
-                                                                                                                    [],
-                                                                                                                    loss_type="f1",
-                                                                                                                    fold=kFold,
-                                                                                                                    target_column=target_column)
+        all_labels = training_set[1].columns.tolist()
+        mertics = train_meta_loop(setting, training_set, testing_set, all_labels, target_column, fold=kFold)
         result = {
             "model type": "NN",
             "technique": target_column.replace("_"," "),
@@ -111,7 +101,7 @@ def training_all_neural_networks(settings_file_path, raw_training_set, raw_testi
         results.append(result)
     return results
 
-def training_loop(x_training, y_training, testing_set, settings, number_of_inputs, number_of_outputs, technique, seed, all_labels, category_columns, loss_type, target_column = 'na', counter=None):
+def training_basic_loop(x_training, y_training, testing_set, settings, number_of_inputs, number_of_outputs, technique, seed, all_labels, category_columns):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     if technique == "SMOTE":
@@ -240,39 +230,13 @@ def training_loop(x_training, y_training, testing_set, settings, number_of_input
 
         test_pred_cls = torch.argmax(y_testing_pred, dim=1)
         test_true_cls = torch.argmax(y_testing, dim=1)
-        if loss_type == "loss_function":
-            training_accuracy = (train_pred_cls == train_true_cls).float().mean().item() * 100.0
-            testing_accuracy = (test_pred_cls == test_true_cls).float().mean().item() * 100.0
-        else:
-            training_accuracy = f1_score(
-                train_true_cls.detach().cpu().numpy(),
-                train_pred_cls.detach().cpu().numpy(),
-                average="macro",
-            )
 
-            testing_accuracy = f1_score(
-                test_true_cls.detach().cpu().numpy(),
-                test_pred_cls.detach().cpu().numpy(),
-                average="macro",
-            )
-
-
-        if target_column != 'na':
-            folder_path = f"{MODULE_PATH}NN\\{datetime.now().strftime("%Y%m%d_%h")}"
-            folder_maker(folder_path)
-            model_path = f'{folder_path}\\nn_for_{target_column}_fold_{counter}.pt'
-            torch.save({
-                "model_state_dict": network.state_dict(),
-                "settings": settings,
-                "number_of_inputs": number_of_inputs,
-                "number_of_outputs": number_of_outputs,
-                "technique": technique,
-                "all_labels": all_labels,
-            }, model_path)
+        training_accuracy = (train_pred_cls == train_true_cls).float().mean().item() * 100.0
+        testing_accuracy = (test_pred_cls == test_true_cls).float().mean().item() * 100.0
 
     return training_loss_value, training_accuracy, testing_loss_value, testing_accuracy
 
-def train_meta_nn(settings, training_set, testing_set, seed, target_column = 'na',fold=5):
+def train_meta_loop(settings, training_set, testing_set, all_labels, target_column, fold=None):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Convert data to tensors
@@ -348,10 +312,38 @@ def train_meta_nn(settings, training_set, testing_set, seed, target_column = 'na
         test_pred_cls = torch.argmax(y_testing_pred, dim=1)
         test_true_cls = torch.argmax(y_testing, dim=1)
         testing_accuracy = (test_pred_cls == test_true_cls).float().mean().item() * 100.0
+        training_f1 = f1_score(
+            train_true_cls.detach().cpu().numpy(),
+            train_pred_cls.detach().cpu().numpy(),
+            average="macro",
+        )
+
+        testing_f1 = f1_score(
+                test_true_cls.detach().cpu().numpy(),
+                test_pred_cls.detach().cpu().numpy(),
+                average="macro",
+        )
+        tp, tn, fp, fn = tp_tn_fp_fn(test_pred_cls, test_true_cls)
+        folder_path = f"{MODULE_PATH}NN\\{datetime.now().strftime("%Y%m%d_%h")}"
+        folder_maker(folder_path)
+        model_path = f'{folder_path}\\nn_for_{target_column}_fold_{fold}.pt'
+        torch.save({
+            "model_state_dict": network.state_dict(),
+            "settings": settings,
+            "number_of_inputs": number_of_inputs,
+            "number_of_outputs": number_of_outputs,
+            "all_labels": all_labels,
+        }, model_path)
 
     return {
         "training loss": training_loss_value,
         "training accuracies": training_accuracy,
+        "training f1": training_f1,
         "testing loss": testing_loss_value,
-        "testing accuracies": testing_accuracy
+        "testing accuracies": testing_accuracy,
+        "testing f1": testing_f1,
+        "testing true positives": tp,
+        "testing true negatives": tn,
+        "testing false positives": fp,
+        "testing false negatives": fn
     }
