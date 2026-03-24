@@ -47,6 +47,10 @@ STATS_OPTIONS = ["All",
                  "Pair plot of meta features vs techniques",
                  "Custom",
                  "Back"]
+OPTIMED_METRIC_OPTIONS = ["Accuracies",
+                          "f1 scores",
+                          "MSE",
+                          "True positives"]
 
 #SUBSET CREATION
 MIN_CLASSES_REQUIRED = 2

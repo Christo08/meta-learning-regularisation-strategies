@@ -5,7 +5,7 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 
-from src.ModelTrainer.nnTrainer import train_nn
+from src.ModelTrainer.nnTrainer import train_basic_nns
 from src.Utils.constants import *
 from src.Utils.datasetHandler import create_subsets, load_dataset, create_subsets_with_seeds, load_subset
 from src.Utils.fileHandler import load_meta_features_dataset, save_data_frame, get_latest_settings
@@ -192,13 +192,13 @@ def create_instance(dataset_name, settings, number_of_folds, training_set, testi
     # Perform training for each configuration
     for config in REGULARISATION_TECHNIQUES:
         print(config["param"])
-        training_loss_values, training_accuracies, testing_loss_values, testing_accuracies = train_nn(settings,
-                                                                                                      config["param"],
-                                                                                                      training_set,
-                                                                                                      testing_set,
-                                                                                                      seed,
-                                                                                                      category_columns,
-                                                                                                      number_of_folds)
+        training_loss_values, training_accuracies, testing_loss_values, testing_accuracies = train_basic_nns(settings,
+                                                                                                             config["param"],
+                                                                                                             training_set,
+                                                                                                             testing_set,
+                                                                                                             seed,
+                                                                                                             category_columns,
+                                                                                                             number_of_folds)
 
         instance_json_object[config['fileName']+"_training_loss"] = training_loss_values
         instance_json_object[config['fileName']+"_training_accuracies"] = training_accuracies

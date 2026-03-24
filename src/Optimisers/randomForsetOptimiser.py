@@ -5,7 +5,7 @@ import numpy as np
 import pyhopper
 
 from src.ModelTrainer.randomForestTrainer import train_random_forest
-from src.Utils.constants import META_LEANER_TARGET_COLUMNS, CHECK_POINTS_PATH
+from src.Utils.constants import META_LEANER_TARGET_COLUMNS, CHECK_POINTS_PATH, OPTIMED_METRIC_OPTIONS
 from src.Utils.datasetHandler import prepared_meta_feature_dataset
 from src.Utils.fileHandler import folder_maker
 
@@ -22,12 +22,14 @@ parameter_group = {
 }
 training_set = {}
 validation_set = {}
+selected_metric = ""
 
 
-def optimise_random_forest(dataset):
-    global training_set, validation_set
+def optimise_random_forest(dataset, selected_metrics, direction):
+    global training_set, validation_set, selected_metric
 
     settings = {}
+    selected_metric = selected_metrics
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     for target_column in META_LEANER_TARGET_COLUMNS:
@@ -38,7 +40,7 @@ def optimise_random_forest(dataset):
         folder_maker(check_point_path)
         best_params = search.run(
             train_random_forest_warp,
-            direction="max",
+            direction=direction,
             steps=number_of_steps,
             checkpoint_path=f"{check_point_path}\\{target_column}_{timestamp}"
         )
@@ -49,7 +51,14 @@ def optimise_random_forest(dataset):
     return settings
 
 def train_random_forest_warp(params):
-    global training_set, validation_set
+    global training_set, validation_set, selected_metric
     seed = random.randint(0, 4294967295)
     loses = train_random_forest(params, training_set, validation_set, seed)
-    return np.mean(loses["testing f1"])
+    if selected_metric == OPTIMED_METRIC_OPTIONS[0]:
+        return np.mean(loses["testing accuracies"])
+    elif selected_metric == OPTIMED_METRIC_OPTIONS[1]:
+        return np.mean(loses["testing f1"])
+    elif selected_metric == OPTIMED_METRIC_OPTIONS[2]:
+        return np.mean(loses["testing loses"])
+    else:
+        return np.mean(loses["testing true positives"])
