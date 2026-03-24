@@ -8,6 +8,8 @@ from src.Models.NN.lossFunctions import CustomCrossEntropyLoss
 from src.Models.NN.network import Network
 from src.Utils.datasetHandler import apply_smote
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 def train_basic_nns(settings, technique, training_set, testing_set, seed, category_columns, fold=None):
 
@@ -30,8 +32,8 @@ def train_basic_nns(settings, technique, training_set, testing_set, seed, catego
             counter+=1
             training_set_x = training_set[0].iloc[train_idx]
             training_set_y = training_set[1].iloc[train_idx]
-            training_loss_value, training_accuracy_value, testing_loss_value, testing_accuracy_value = training_basic_loop(training_set_x,
-                                                                                                                           training_set_y,
+            training_set = (training_set_x, training_set_y)
+            training_loss_value, training_accuracy_value, testing_loss_value, testing_accuracy_value = training_basic_loop(training_set,
                                                                                                                            testing_set,
                                                                                                                            settings,
                                                                                                                            number_of_inputs,
@@ -46,8 +48,7 @@ def train_basic_nns(settings, technique, training_set, testing_set, seed, catego
             testing_accuracy.append(testing_accuracy_value)
         return training_mses, training_accuracy, testing_mses, testing_accuracy
     else:
-        return training_basic_loop(training_set[0],
-                                   training_set[1],
+        return training_basic_loop(training_set,
                                    testing_set,
                                    settings,
                                    number_of_inputs,
@@ -57,9 +58,10 @@ def train_basic_nns(settings, technique, training_set, testing_set, seed, catego
                                    all_labels,
                                    category_columns)
 
-def training_basic_loop(x_training, y_training, testing_set, settings, number_of_inputs, number_of_outputs, technique, seed, all_labels, category_columns):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+def training_basic_loop(training_set, testing_set, settings, number_of_inputs, number_of_outputs, technique, seed, all_labels, category_columns):
+    global device
+    x_training = training_set[0]
+    y_training = training_set[1]
     if technique == "SMOTE":
         number_of_neighbors = number_of_outputs - 1
         if number_of_neighbors < 3 or x_training.shape[1] - len(category_columns) < 2:

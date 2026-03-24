@@ -59,7 +59,6 @@ weight_perturbation_parameters = {
     "weight_perturbation_interval": pyhopper.int(5, 30)
 }
 
-dataset_name = ""
 basic_settings = {}
 training_set = ""
 validation_set = ""
@@ -67,15 +66,11 @@ category_columns = []
 seed = random.randint(0, 4294967295)
 
 
-def optimise_basic_nn(dataset_name_input, dataset_settings, parameter_group, basic_settings_parm = None):
-    global dataset_name, basic_settings, training_set, validation_set, category_columns, mode, selected_metric
-
-    mode = "basic"
-    selected_metric = ""
+def optimise_basic_nn(dataset_name, dataset_settings, parameter_group, basic_settings_parm = None):
+    global basic_settings, training_set, validation_set, category_columns
 
     if parameter_group == PARAMETER_GROUPS[len(PARAMETER_GROUPS) - 1]:
         return True
-    dataset_name = dataset_name_input
     sets, category_columns = load_optimiser_dataset(seed, dataset_settings)
     training_set = sets[0]
     validation_set = sets[1]
@@ -128,22 +123,19 @@ def setup_optimiser_and_run_it(dataset_name, parameter_group_name, parameter_gro
     return best_params
 
 def train_nn_warp(params):
-    global training_set, validation_set, category_columns, mode, selected_metric
-    if mode == "basic":
-        if "batch_size" in params:
-            settings = params
-            training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_basic_nns(settings, "", training_set, validation_set, category_columns, seed)
-        else:
-            settings = {**basic_settings, **params}
-            if "dropout_layers" in params:
-                training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_basic_nns(settings, "dropout", training_set, validation_set, category_columns, seed)
-            elif "prune_amount" in params:
-                training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_basic_nns(settings, "prune", training_set, validation_set, category_columns, seed)
-            elif "weight_decay" in params:
-                training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_basic_nns(settings, "weightDecay", training_set, validation_set, category_columns, seed)
-            else:
-                training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values= train_basic_nns(settings, "weightPerturbation", training_set, validation_set, category_columns, seed)
-
-        return testing_loss_values
+    global training_set, validation_set, category_columns
+    if "batch_size" in params:
+        settings = params
+        training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_basic_nns(settings, "", training_set, validation_set, category_columns, seed)
     else:
-        print(2)
+        settings = {**basic_settings, **params}
+        if "dropout_layers" in params:
+            training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_basic_nns(settings, "dropout", training_set, validation_set, category_columns, seed)
+        elif "prune_amount" in params:
+            training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_basic_nns(settings, "prune", training_set, validation_set, category_columns, seed)
+        elif "weight_decay" in params:
+            training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_basic_nns(settings, "weightDecay", training_set, validation_set, category_columns, seed)
+        else:
+            training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values= train_basic_nns(settings, "weightPerturbation", training_set, validation_set, category_columns, seed)
+
+    return testing_loss_values
