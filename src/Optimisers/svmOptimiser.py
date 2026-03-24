@@ -4,7 +4,7 @@ from datetime import datetime
 import numpy as np
 import pyhopper
 
-from src.ModelTrainer.svmTrainer import train_support_vector_machines
+from src.ModelTrainer.svmTrainer import train_meta_support_vector_machines
 from src.Utils.constants import META_LEANER_TARGET_COLUMNS, CHECK_POINTS_PATH, OPTIMED_METRIC_OPTIONS
 from src.Utils.datasetHandler import prepared_meta_feature_dataset
 from src.Utils.fileHandler import folder_maker
@@ -51,7 +51,7 @@ def optimise_support_vector_machine(dataset, selected_metrics, direction):
 def train_support_vector_machine_warp(params):
     global training_set, validation_set, selected_metric
     seed = random.randint(0, 4294967295)
-    loses = train_support_vector_machines(params, training_set, validation_set, seed)
+    loses = train_meta_support_vector_machines(params, training_set, validation_set, seed)
     if selected_metric == OPTIMED_METRIC_OPTIONS[0]:
         return np.mean(loses["testing accuracies"])
     elif selected_metric == OPTIMED_METRIC_OPTIONS[1]:

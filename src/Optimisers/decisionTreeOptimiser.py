@@ -4,7 +4,7 @@ from datetime import datetime
 import numpy as np
 import pyhopper
 
-from src.ModelTrainer.decisionTreeTrainer import train_decision_tree
+from src.ModelTrainer.decisionTreeTrainer import train_meta_decision_tree
 from src.Utils.constants import META_LEANER_TARGET_COLUMNS, CHECK_POINTS_PATH, OPTIMED_METRIC_OPTIONS
 from src.Utils.datasetHandler import prepared_meta_feature_dataset
 from src.Utils.fileHandler import folder_maker
@@ -51,7 +51,7 @@ def optimise_decision_tree(dataset, selected_metrics, direction):
 def train_decision_tree_warp(params):
     global training_set, validation_set, selected_metric
     seed = random.randint(0, 4294967295)
-    loses = train_decision_tree(params, training_set, validation_set, seed)
+    loses = train_meta_decision_tree(params, training_set, validation_set, seed)
     if selected_metric == OPTIMED_METRIC_OPTIONS[0]:
         return np.mean(loses["testing accuracies"])
     elif selected_metric == OPTIMED_METRIC_OPTIONS[1]:

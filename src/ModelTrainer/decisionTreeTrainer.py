@@ -20,12 +20,12 @@ def training_meta_decision_trees(settings_file_path, training_set, testing_set, 
         training_y = training_set[target_column]
         testing_x = np.array(testing_set.drop([target_column], axis=1))
         testing_y = testing_set[target_column]
-        result = train_decision_tree(settings[target_column],
-                                     (training_x, training_y),
-                                     (testing_x, testing_y),
-                                     seed,
-                                     target_column,
-                                     kFold)
+        result = train_meta_decision_tree(settings[target_column],
+                                          (training_x, training_y),
+                                          (testing_x, testing_y),
+                                          seed,
+                                          target_column,
+                                          kFold)
         result = {
             "model type": "Decision tree",
             "technique": target_column.replace("_"," "),
@@ -34,7 +34,7 @@ def training_meta_decision_trees(settings_file_path, training_set, testing_set, 
         results.append(result)
     return results
 
-def train_decision_tree(params, training_set, testing_set, seed, target_column = 'na', kFold = 5):
+def train_meta_decision_tree(params, training_set, testing_set, seed, target_column ='na', kFold = 5):
     kf = KFold(n_splits=kFold, shuffle=True, random_state=seed)
 
     training_mses = []
