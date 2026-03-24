@@ -1,8 +1,4 @@
-from datetime import datetime
-
-import pandas as pd
 import torch
-from sklearn.metrics import f1_score
 from sklearn.model_selection import KFold
 from torch import optim
 from torch.utils.data import DataLoader
@@ -10,11 +6,7 @@ from torch.utils.data import DataLoader
 from src.Models.NN.customDataset import CustomDataset
 from src.Models.NN.lossFunctions import CustomCrossEntropyLoss
 from src.Models.NN.network import Network
-from src.Utils.constants import META_LEANER_TARGET_COLUMNS, MODULE_PATH
 from src.Utils.datasetHandler import apply_smote
-from src.Utils.datasetHandler import prepared_meta_feature_dataset
-from src.Utils.fileHandler import load_settings, folder_maker
-from src.Utils.statsCalculator import tp_tn_fp_fn
 
 
 def train_basic_nns(settings, technique, training_set, testing_set, seed, category_columns, fold=None):
@@ -64,42 +56,6 @@ def train_basic_nns(settings, technique, training_set, testing_set, seed, catego
                                    seed,
                                    all_labels,
                                    category_columns)
-
-def training_meta_nns(settings_file_path, raw_training_set, raw_testing_set, kFold =5):
-    results = []
-    settings = load_settings(settings_file_path)
-    for target_column in META_LEANER_TARGET_COLUMNS:
-        print(f"Training neural network for { target_column.replace("_"," ")}...")
-        training_set = prepared_meta_feature_dataset(raw_training_set, META_LEANER_TARGET_COLUMNS, target_column, False)
-        testing_set = prepared_meta_feature_dataset(raw_testing_set, META_LEANER_TARGET_COLUMNS, target_column, False)
-
-        training_y = training_set[1]
-        testing_y = testing_set[1]
-
-        if training_y.shape[1] > testing_y.shape[1]:
-            difference = training_y.shape[1] - testing_y.shape[1]
-            for i in range(difference):
-                testing_y[f"{target_column}_class_{training_y.shape[1]-difference + i}"] = False
-        if training_y.shape[1] < testing_y.shape[1]:
-            difference = testing_y.shape[1] - training_y.shape[1]
-            for i in range(difference):
-                training_y[f"{target_column}_class_{testing_y.shape[1]-difference + i}"] = False
-
-        training_set = (pd.DataFrame(training_set[0]), training_y)
-        testing_set = (pd.DataFrame(testing_set[0]), testing_y)
-        setting = settings[target_column]
-        all_labels = training_set[1].columns.tolist()
-        mertics = train_meta_loop(setting, training_set, testing_set, all_labels, target_column, fold=kFold)
-        result = {
-            "model type": "NN",
-            "technique": target_column.replace("_"," "),
-            "training loses": training_loss_values,
-            "training accuracies": training_accuracies_values,
-            "testing loses": testing_loss_values,
-            "testing accuracies": testing_accuracies_values
-        }
-        results.append(result)
-    return results
 
 def training_basic_loop(x_training, y_training, testing_set, settings, number_of_inputs, number_of_outputs, technique, seed, all_labels, category_columns):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -235,115 +191,3 @@ def training_basic_loop(x_training, y_training, testing_set, settings, number_of
         testing_accuracy = (test_pred_cls == test_true_cls).float().mean().item() * 100.0
 
     return training_loss_value, training_accuracy, testing_loss_value, testing_accuracy
-
-def train_meta_loop(settings, training_set, testing_set, all_labels, target_column, fold=None):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    # Convert data to tensors
-    x_training = torch.tensor(training_set[0], dtype=torch.float32)
-    y_training = torch.tensor(training_set[1], dtype=torch.float32)
-
-    number_of_inputs = training_set[0].shape[1]
-    number_of_outputs = training_set[1].shape[1]
-
-    # Create custom dataset and DataLoader
-    train_dataset = CustomDataset(x_training, y_training)
-    train_loader = DataLoader(train_dataset, batch_size=settings["batch_size"], shuffle=True)
-    # Initialize the network based on the technique
-    network = Network(input_size=number_of_inputs,
-                      hidden_sizes=settings["number_of_neurons_in_layers"],
-                      number_of_hidden_layers=settings["number_of_hidden_layers"],
-                      output_size=number_of_outputs)
-    x_testing = torch.tensor(testing_set[0], dtype=torch.float32)
-    y_testing = torch.tensor(testing_set[1], dtype=torch.float32)
-    # Move network and tensors to GPU if available
-    if torch.cuda.is_available():
-        network = network.to(device)
-        x_training = x_training.to(device)
-        y_training = y_training.to(device)
-        x_testing = x_testing.to(device)
-        y_testing = y_testing.to(device)
-
-    # Loss function and optimizer
-    loss_function = CustomCrossEntropyLoss()
-
-    optimiser = optim.SGD(network.parameters(), lr=settings["learning_rate"], momentum=settings["momentum"])
-
-    # Training loop
-    for epoch in range(settings["number_of_epochs"]):
-        for batch in train_loader:
-            network.train()
-            x_batch = batch["data"]
-            y_batch = batch["label"]
-
-            if torch.cuda.is_available():
-                x_batch = x_batch.to(device)
-                y_batch = y_batch.to(device)
-
-            training_outputs = network(x_batch)
-            for index in range(x_batch.shape[0]):
-                batch = x_batch[index]
-                output = training_outputs[index]
-                if torch.isnan(batch).any() or torch.isnan(output).any():
-                    print(f"NaN detected in sample index {index} of the batch, skipping this sample.")
-
-            if torch.isnan(x_batch).any():
-                print("NaN detected in training batch, skipping this batch.")
-            if torch.isnan(training_outputs).any():
-                print("NaN detected in training outputs, skipping this batch.")
-
-            training_loss = loss_function(training_outputs, y_batch)
-
-            optimiser.zero_grad()
-            training_loss.backward()
-            optimiser.step()
-
-    # Final loss computation on training, validation, and testing sets
-    with torch.no_grad():
-        y_training_pred = network(x_training)
-        y_testing_pred = network(x_testing)
-        training_loss_value = loss_function(y_training_pred, y_training).item()
-        testing_loss_value = loss_function(y_testing_pred, y_testing).item()
-        # Classification accuracy: compare predicted class index vs true class index
-        train_pred_cls = torch.argmax(y_training_pred, dim=1)
-        train_true_cls = torch.argmax(y_training, dim=1)
-        training_accuracy = (train_pred_cls == train_true_cls).float().mean().item() * 100.0
-
-        test_pred_cls = torch.argmax(y_testing_pred, dim=1)
-        test_true_cls = torch.argmax(y_testing, dim=1)
-        testing_accuracy = (test_pred_cls == test_true_cls).float().mean().item() * 100.0
-        training_f1 = f1_score(
-            train_true_cls.detach().cpu().numpy(),
-            train_pred_cls.detach().cpu().numpy(),
-            average="macro",
-        )
-
-        testing_f1 = f1_score(
-                test_true_cls.detach().cpu().numpy(),
-                test_pred_cls.detach().cpu().numpy(),
-                average="macro",
-        )
-        tp, tn, fp, fn = tp_tn_fp_fn(test_pred_cls, test_true_cls)
-        folder_path = f"{MODULE_PATH}NN\\{datetime.now().strftime("%Y%m%d_%h")}"
-        folder_maker(folder_path)
-        model_path = f'{folder_path}\\nn_for_{target_column}_fold_{fold}.pt'
-        torch.save({
-            "model_state_dict": network.state_dict(),
-            "settings": settings,
-            "number_of_inputs": number_of_inputs,
-            "number_of_outputs": number_of_outputs,
-            "all_labels": all_labels,
-        }, model_path)
-
-    return {
-        "training loss": training_loss_value,
-        "training accuracies": training_accuracy,
-        "training f1": training_f1,
-        "testing loss": testing_loss_value,
-        "testing accuracies": testing_accuracy,
-        "testing f1": testing_f1,
-        "testing true positives": tp,
-        "testing true negatives": tn,
-        "testing false positives": fp,
-        "testing false negatives": fn
-    }

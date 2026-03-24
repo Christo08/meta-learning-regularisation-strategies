@@ -1,12 +1,11 @@
 import random
 from datetime import datetime
 
-import pandas as pd
 import pyhopper
 
-from src.ModelTrainer.nnTrainer import train_nn
-from src.Utils.constants import PARAMETER_GROUPS, META_LEANER_TARGET_COLUMNS, CHECK_POINTS_PATH
-from src.Utils.datasetHandler import load_optimiser_dataset, prepared_meta_feature_dataset
+from src.ModelTrainer.nnTrainer import train_basic_nns
+from src.Utils.constants import PARAMETER_GROUPS, CHECK_POINTS_PATH
+from src.Utils.datasetHandler import load_optimiser_dataset
 from src.Utils.fileHandler import save_nn_settings, load_settings, folder_maker
 
 MAX_NUMBER_OF_LAYERS = 6
@@ -66,13 +65,13 @@ training_set = ""
 validation_set = ""
 category_columns = []
 seed = random.randint(0, 4294967295)
-mode = "loss"
 
 
-def optimise_nn(dataset_name_input, dataset_settings, parameter_group, basic_settings_parm = None):
-    global dataset_name, basic_settings, training_set, validation_set, category_columns, mode
+def optimise_basic_nn(dataset_name_input, dataset_settings, parameter_group, basic_settings_parm = None):
+    global dataset_name, basic_settings, training_set, validation_set, category_columns, mode, selected_metric
 
-    mode = "loss"
+    mode = "basic"
+    selected_metric = ""
 
     if parameter_group == PARAMETER_GROUPS[len(PARAMETER_GROUPS) - 1]:
         return True
@@ -112,7 +111,6 @@ def optimise_nn(dataset_name_input, dataset_settings, parameter_group, basic_set
         save_nn_settings(best_params, dataset_name, "")
     return parameter_group == PARAMETER_GROUPS[len(PARAMETER_GROUPS) - 1]
 
-
 def setup_optimiser_and_run_it(dataset_name, parameter_group_name, parameter_group, number_of_steps):
     search = pyhopper.Search(parameter_group)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -129,63 +127,23 @@ def setup_optimiser_and_run_it(dataset_name, parameter_group_name, parameter_gro
     print(f"Tuned params for {dataset_name} dataset using {parameter_group_name} parameter group resulting in a of mse: {test_loss}")
     return best_params
 
-def optimise_meta_leaner_nn(dataset):
-    global training_set, validation_set, category_columns, mode
-    mode = "meta-learners"
-    settings = {}
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-    for target_column in META_LEANER_TARGET_COLUMNS:
-        training_set, validation_set = prepared_meta_feature_dataset(dataset, META_LEANER_TARGET_COLUMNS, target_column)
-        training_y = training_set[1]
-        validation_y = validation_set[1]
-
-        if training_y.shape[1] > validation_y.shape[1]:
-            difference = training_y.shape[1] - validation_y.shape[1]
-            for i in range(difference):
-                validation_y[f"{target_column}_class_{training_y.shape[1]-difference + i}"] = False
-        if training_y.shape[1] < validation_y.shape[1]:
-            difference = validation_y.shape[1] - training_y.shape[1]
-            for i in range(difference):
-                training_y[f"{target_column}_class_{validation_y.shape[1]-difference + i}"] = False
-
-        search = pyhopper.Search(basic_parameters)
-
-        training_set = (pd.DataFrame(training_set[0]), training_y)
-        validation_set = (pd.DataFrame(validation_set[0]), validation_y)
-        check_point_path = f"{CHECK_POINTS_PATH}Meta-learners\\NN"
-        folder_maker(check_point_path)
-        best_params = search.run(
-            train_nn_warp,
-            direction="max",
-            steps=200,
-            checkpoint_path=f"{check_point_path}\\{target_column}_{timestamp}"
-        )
-        validation_accuracy = train_nn_warp(best_params)
-        print(
-        f"Tuned params for nn for {target_column} resulting in an accuracy of {validation_accuracy}")
-        settings[target_column] = best_params
-    return settings
-
 def train_nn_warp(params):
-    global training_set, validation_set, category_columns, mode
+    global training_set, validation_set, category_columns, mode, selected_metric
     if mode == "basic":
         if "batch_size" in params:
             settings = params
-            training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_nn(settings, "", training_set, validation_set, category_columns, seed)
+            training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_basic_nns(settings, "", training_set, validation_set, category_columns, seed)
         else:
             settings = {**basic_settings, **params}
             if "dropout_layers" in params:
-                training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_nn(settings, "dropout", training_set, validation_set, category_columns, seed)
+                training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_basic_nns(settings, "dropout", training_set, validation_set, category_columns, seed)
             elif "prune_amount" in params:
-                training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_nn(settings, "prune", training_set, validation_set, category_columns, seed)
+                training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_basic_nns(settings, "prune", training_set, validation_set, category_columns, seed)
             elif "weight_decay" in params:
-                training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_nn(settings, "weightDecay", training_set, validation_set, category_columns, seed)
+                training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_basic_nns(settings, "weightDecay", training_set, validation_set, category_columns, seed)
             else:
-                training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values= train_nn(settings, "weightPerturbation", training_set, validation_set, category_columns, seed)
+                training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values= train_basic_nns(settings, "weightPerturbation", training_set, validation_set, category_columns, seed)
 
         return testing_loss_values
     else:
-        settings = params
-        training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_nn(settings, "", training_set, validation_set, category_columns, seed, loss_type="f1")
-        return testing_accuracies_values
+        print(2)

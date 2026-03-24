@@ -5,7 +5,6 @@ import pandas as pd
 
 from src.ModelTrainer.decisionTreeTrainer import training_meta_decision_trees
 from src.ModelTrainer.knnTrainer import training_meta_k_nearest_neighbors
-from src.ModelTrainer.nnTrainer import training_meta_nns
 from src.ModelTrainer.randomForestTrainer import training_meta_random_forests
 from src.ModelTrainer.svmTrainer import training_meta_support_vector_machines
 from src.Utils.constants import META_LEARN_TYPES
@@ -32,7 +31,8 @@ def train_meta_learners(training_dataset, testing_dataset):
         elif selected_meta_learn_type == META_LEARN_TYPES[2]:
             result = training_meta_k_nearest_neighbors(settings_file_path, training_dataset, testing_dataset, seed, number_of_folds)
         elif selected_meta_learn_type == META_LEARN_TYPES[3]:
-            result = training_meta_nns(settings_file_path, training_dataset, testing_dataset, number_of_folds)
+            print(1)
+            # result = training_meta_nns(settings_file_path, training_dataset, testing_dataset, number_of_folds)
         elif selected_meta_learn_type == META_LEARN_TYPES[5]:
             result = training_meta_support_vector_machines(settings_file_path, training_dataset, testing_dataset, seed, number_of_folds)
         else:

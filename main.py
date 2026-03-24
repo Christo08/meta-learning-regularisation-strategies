@@ -3,7 +3,7 @@ import torch
 
 from src.ModelTrainer.metaLearnersTrainer import train_meta_learners
 from src.Optimisers.metaLearnersOptimiser import optimise_meta_learners
-from src.Optimisers.nnOptimiser import optimise_nn
+from src.Optimisers.nnOptimiser import optimise_basic_nn
 from src.Utils.constants import *
 from src.Utils.statsCalculator import calculate_meta_learners_stats, calculate_dataset_stats
 from src.Utils.fileHandler import load_json_file, load_settings
@@ -36,7 +36,7 @@ def main():
                     basic_settings = load_settings(input("Enter the path to the basic settings file of the NN:"))
                 for name in names:
                     dataset_settings = next((item for item in datasets_settings if item["name"] == name), None)
-                    quited = optimise_nn(name, dataset_settings,parameter_group, basic_settings)
+                    quited = optimise_basic_nn(name, dataset_settings, parameter_group, basic_settings)
                     if quited:
                          break
         elif process == PROCESS_OPTIONS[1]:
