@@ -77,11 +77,15 @@ def train_support_vector_machines(params, training_set, testing_set, seed, targe
         training_f1.append(f1_score(y_train, y_train_pred, average='weighted'))
         training_accuracy.append(accuracy_score(y_train, y_train_pred) * 100)
 
-        testing_y = np.asarray(testing_y)
-        testing_mses.append(mean_squared_error(testing_y, y_test_pred))
-        testing_f1.append(f1_score(testing_y, y_test_pred, average='weighted'))
-        testing_accuracy.append(accuracy_score(testing_y, y_test_pred)*100)
-        tp, tn, fp, fn = tp_tn_fp_fn(testing_y, y_test_pred)
+        y_testing_raw = np.asarray(testing_y)
+        if y_testing_raw.ndim == 2 and y_testing_raw.shape[1] > 1:
+            y_test= np.argmax(y_testing_raw, axis=1)
+        else:
+            y_test = y_testing_raw.ravel()
+        testing_mses.append(mean_squared_error(y_test, y_test_pred))
+        testing_f1.append(f1_score(y_test, y_test_pred, average='weighted'))
+        testing_accuracy.append(accuracy_score(y_test, y_test_pred)*100)
+        tp, tn, fp, fn = tp_tn_fp_fn(y_test, y_test_pred)
         testing_true_positives.append(tp)
         testing_true_negatives.append(tn)
         testing_false_positives.append(fp)
