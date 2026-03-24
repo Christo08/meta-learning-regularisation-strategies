@@ -1,11 +1,12 @@
 import random
 from datetime import datetime
 
+import numpy as np
 import pyhopper
 
-from src.ModelTrainer.nnTrainer import train_basic_nns
-from src.Utils.constants import PARAMETER_GROUPS, CHECK_POINTS_PATH
-from src.Utils.datasetHandler import load_optimiser_dataset
+from src.ModelTrainer.nnTrainer import train_basic_nns, train_meta_nn_loop
+from src.Utils.constants import PARAMETER_GROUPS, CHECK_POINTS_PATH, OPTIMED_METRIC_OPTIONS, META_LEANER_TARGET_COLUMNS
+from src.Utils.datasetHandler import load_optimiser_dataset, prepared_meta_feature_dataset
 from src.Utils.fileHandler import save_nn_settings, load_settings, folder_maker
 
 MAX_NUMBER_OF_LAYERS = 6
@@ -64,7 +65,7 @@ training_set = ""
 validation_set = ""
 category_columns = []
 seed = random.randint(0, 4294967295)
-
+counter = 0
 
 def optimise_basic_nn(dataset_name, dataset_settings, parameter_group, basic_settings_parm = None):
     global basic_settings, training_set, validation_set, category_columns
@@ -122,11 +123,35 @@ def setup_optimiser_and_run_it(dataset_name, parameter_group_name, parameter_gro
     print(f"Tuned params for {dataset_name} dataset using {parameter_group_name} parameter group resulting in a of mse: {test_loss}")
     return best_params
 
+def optimise_mate_nn(dataset, selected_metrics, direction):
+    global training_set, validation_set, selected_metric
+
+    settings = {}
+    selected_metric = selected_metrics
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    for target_column in META_LEANER_TARGET_COLUMNS:
+        training_set, validation_set = prepared_meta_feature_dataset(dataset, META_LEANER_TARGET_COLUMNS, target_column)
+
+        search = pyhopper.Search(basic_parameters)
+        check_point_path = f"{CHECK_POINTS_PATH}Meta-learners\\KNN"
+        folder_maker(check_point_path)
+        best_params = search.run(
+            train_meta_nn_warp,
+            direction=direction,
+            steps=400,
+            checkpoint_path=f"{check_point_path}\\{target_column}_{timestamp}"
+        )
+        validation_loses = train_meta_nn_warp(best_params)
+        print(
+        f"Tuned params for NN for {target_column} resulting in an accuracy of: {validation_loses}")
+        settings[target_column] = best_params
+    return settings
+
 def train_nn_warp(params):
     global training_set, validation_set, category_columns
     if "batch_size" in params:
-        settings = params
-        training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_basic_nns(settings, "", training_set, validation_set, category_columns, seed)
+        training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_basic_nns(params, "", training_set, validation_set, category_columns, seed)
     else:
         settings = {**basic_settings, **params}
         if "dropout_layers" in params:
@@ -139,3 +164,17 @@ def train_nn_warp(params):
             training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values= train_basic_nns(settings, "weightPerturbation", training_set, validation_set, category_columns, seed)
 
     return testing_loss_values
+
+def train_meta_nn_warp(params):
+    global training_set, validation_set, selected_metric, counter
+    seed = random.randint(0, 4294967295)
+    counter = counter+1
+    loses = train_meta_nn_loop(params, training_set, validation_set, seed, counter)
+    if selected_metric == OPTIMED_METRIC_OPTIONS[0]:
+        return np.mean(loses["testing accuracies"])
+    elif selected_metric == OPTIMED_METRIC_OPTIONS[1]:
+        return np.mean(loses["testing f1"])
+    elif selected_metric == OPTIMED_METRIC_OPTIONS[2]:
+        return np.mean(loses["testing loses"])
+    else:
+        return np.mean(loses["testing true positives"])

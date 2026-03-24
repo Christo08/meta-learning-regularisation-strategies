@@ -1,3 +1,6 @@
+from datetime import datetime
+
+import numpy as np
 import torch
 from sklearn.model_selection import KFold
 from torch import optim
@@ -6,7 +9,10 @@ from torch.utils.data import DataLoader
 from src.Models.NN.customDataset import CustomDataset
 from src.Models.NN.lossFunctions import CustomCrossEntropyLoss
 from src.Models.NN.network import Network
+from src.Utils.constants import META_LEANER_TARGET_COLUMNS, MODULE_PATH
 from src.Utils.datasetHandler import apply_smote
+from src.Utils.fileHandler import load_settings, folder_maker
+from src.Utils.metaLearnerStatsCalculator import MetaLearnerStats
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -193,3 +199,136 @@ def training_basic_loop(training_set, testing_set, settings, number_of_inputs, n
         testing_accuracy = (test_pred_cls == test_true_cls).float().mean().item() * 100.0
 
     return training_loss_value, training_accuracy, testing_loss_value, testing_accuracy
+
+
+def training_meta_nns(settings_file_path, training_set, testing_set, seed, kFold =5):
+    results = []
+    settings = load_settings(settings_file_path)
+    for target_column in META_LEANER_TARGET_COLUMNS:
+        print(f"Training nn for { target_column.replace("_"," ")}...")
+        training_x = np.array(training_set.drop([target_column], axis=1))
+        training_y = training_set[target_column]
+        testing_x = np.array(testing_set.drop([target_column], axis=1))
+        testing_y = testing_set[target_column]
+        result = train_meta_nn_loop(settings[target_column],
+                                          (training_x, training_y),
+                                          (testing_x, testing_y),
+                                          seed,
+                                          target_column,
+                                          kFold)
+        result = {
+            "model type": "Neural Network",
+            "technique": target_column.replace("_"," "),
+            **result
+        }
+        results.append(result)
+    return results
+
+def train_meta_nn_loop(params, training_set, testing_set, seed, step, target_column ='na', kFold = 5):
+    kf = KFold(n_splits=kFold, shuffle=True, random_state=seed)
+
+    nn_stats = MetaLearnerStats()
+
+    training_x = training_set[0]
+    training_y = training_set[1]
+    testing_x = testing_set[0]
+    testing_y = testing_set[1]
+    counter = 1
+    print("")
+    for train_idx, test_idx in kf.split(training_x):
+        print(f"Fold {counter} step {step}")
+        x_train = training_x[train_idx]
+        y_train = training_y.iloc[train_idx].to_numpy()
+
+        nn = train_nn((x_train, y_train), params)
+
+        x_training = torch.tensor(x_train, dtype=torch.float32)
+        y_training = torch.tensor(y_train, dtype=torch.float32)
+        x_testing = torch.tensor(testing_x, dtype=torch.float32)
+        y_testing_np = testing_y.to_numpy() if hasattr(testing_y, "to_numpy") else np.asarray(testing_y)
+        y_testing = torch.tensor(y_testing_np, dtype=torch.float32)
+
+        if torch.cuda.is_available():
+            x_training = x_training.to(device)
+            y_training = y_training.to(device)
+            x_testing = x_testing.to(device)
+            y_testing = y_testing.to(device)
+
+        with torch.no_grad():
+            y_train_pred = nn(x_training)
+            y_test_pred = nn(x_testing)
+        y_training_cpu = output_cleaner(y_training.detach().cpu().numpy())
+        y_train_pred_cpu= output_cleaner(y_train_pred.detach().cpu().numpy())
+        y_testing_cpu = output_cleaner(y_testing.detach().cpu().numpy())
+        y_test_pred_cpu = output_cleaner(y_test_pred.detach().cpu().numpy())
+
+        nn_stats.update_stats(y_training_cpu, y_train_pred_cpu, y_testing_cpu, y_test_pred_cpu)
+
+        if target_column != 'na':
+            folder_path = f"{MODULE_PATH}NN\\{datetime.now().strftime("%Y%m%d_%H")}"
+            folder_maker(folder_path)
+            checkpoint = {
+                "model_class": "Network",
+                "model_kwargs": {
+                    "input_size": training_set[0].shape[1],
+                    "hidden_sizes": params["number_of_neurons_in_layers"],
+                    "number_of_hidden_layers": params["number_of_hidden_layers"],
+                    "output_size": training_set[1].shape[1],
+                },
+                "state_dict": nn.state_dict(),
+            }
+            torch.save(checkpoint, f'{folder_path}\\nn_for_{target_column}_fold_{counter}.pt')
+        counter = counter + 1
+    return nn_stats.get_stats_json_object()
+
+def train_nn(training_set, settings):
+    global device
+
+    number_of_inputs = training_set[0].shape[1]
+    number_of_outputs = training_set[1].shape[1]
+
+    # Convert data to tensors
+    x_training = torch.tensor(training_set[0], dtype=torch.float32)
+    y_training = torch.tensor(training_set[1], dtype=torch.float32)
+
+    # Initialize the network based on the technique
+    network = Network(input_size=number_of_inputs,
+                      hidden_sizes=settings["number_of_neurons_in_layers"],
+                      number_of_hidden_layers=settings["number_of_hidden_layers"],
+                      output_size=number_of_outputs)
+
+    # Move network and tensors to GPU if available
+    if torch.cuda.is_available():
+        network = network.to(device)
+        x_training = x_training.to(device)
+        y_training = y_training.to(device)
+
+    # Create custom dataset and DataLoader
+    train_dataset = CustomDataset(x_training, y_training)
+    train_loader = DataLoader(train_dataset, batch_size=settings["batch_size"], shuffle=True)
+
+    # Loss function and optimizer
+    loss_function = CustomCrossEntropyLoss()
+    optimiser = optim.Adam(network.parameters(), lr=settings["learning_rate"])
+
+
+    # Training loop
+    for epoch in range(settings["number_of_epochs"]):
+        for batch in train_loader:
+            network.train()
+            x_batch = batch["data"]
+            y_batch = batch["label"]
+
+            training_outputs = network(x_batch)
+
+            training_loss = loss_function(training_outputs, y_batch)
+
+            optimiser.zero_grad()
+            training_loss.backward()
+            optimiser.step()
+    return network
+
+def output_cleaner(output):
+    if output.ndim == 2:
+        return np.argmax(output, axis=1)
+    return output

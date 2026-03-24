@@ -2,13 +2,12 @@ from datetime import datetime
 
 import joblib
 import numpy as np
-from sklearn.metrics import mean_squared_error, accuracy_score, f1_score
 from sklearn.model_selection import KFold
 from sklearn.svm import SVC
 
 from src.Utils.constants import *
 from src.Utils.fileHandler import load_settings, folder_maker
-from src.Utils.statsCalculator import tp_tn_fp_fn
+from src.Utils.metaLearnerStatsCalculator import MetaLearnerStats
 
 
 def training_meta_support_vector_machines(settings_file_path, training_set, testing_set, seed, kFold =5):
@@ -37,17 +36,7 @@ def training_meta_support_vector_machines(settings_file_path, training_set, test
 def train_meta_support_vector_machines(params, training_set, testing_set, seed, target_column ='na', kFold = 5):
     kf = KFold(n_splits=kFold, shuffle=True, random_state=seed)
 
-    training_mses = []
-    training_f1 =[]
-    training_accuracy = []
-
-    testing_mses = []
-    testing_f1 =[]
-    testing_accuracy = []
-    testing_true_positives = []
-    testing_true_negatives = []
-    testing_false_positives = []
-    testing_false_negatives= []
+    svm_stats = MetaLearnerStats()
 
     training_x = training_set[0]
     training_y = training_set[1]
@@ -73,39 +62,17 @@ def train_meta_support_vector_machines(params, training_set, testing_set, seed, 
         y_train_pred = svm.predict(x_train)
         y_test_pred = svm.predict(testing_x)
 
-        training_mses.append(mean_squared_error(y_train, y_train_pred))
-        training_f1.append(f1_score(y_train, y_train_pred, average='weighted'))
-        training_accuracy.append(accuracy_score(y_train, y_train_pred) * 100)
-
         y_testing_raw = np.asarray(testing_y)
         if y_testing_raw.ndim == 2 and y_testing_raw.shape[1] > 1:
             y_test= np.argmax(y_testing_raw, axis=1)
         else:
             y_test = y_testing_raw.ravel()
-        testing_mses.append(mean_squared_error(y_test, y_test_pred))
-        testing_f1.append(f1_score(y_test, y_test_pred, average='weighted'))
-        testing_accuracy.append(accuracy_score(y_test, y_test_pred)*100)
-        tp, tn, fp, fn = tp_tn_fp_fn(y_test, y_test_pred)
-        testing_true_positives.append(tp)
-        testing_true_negatives.append(tn)
-        testing_false_positives.append(fp)
-        testing_false_negatives.append(fn)
 
+        svm_stats.update_stats(y_train, y_train_pred, y_test, y_test_pred)
 
         if target_column != 'na':
             folder_path = f"{MODULE_PATH}SVM\\{datetime.now().strftime("%Y%m%d_%h")}"
             folder_maker(folder_path)
             joblib.dump(svm, f'{folder_path}\\svm_for_{target_column}_fold_{counter}.pkl')
         counter = counter + 1
-    return {
-        "training loses": training_mses,
-        "training accuracies": training_accuracy,
-        "training f1": training_f1,
-        "testing loses": testing_mses,
-        "testing f1": testing_f1,
-        "testing accuracies": testing_accuracy,
-        "testing_true_positives": testing_true_positives,
-        "testing_true_negatives": testing_true_negatives,
-        "testing_false_positives": testing_false_positives,
-        "testing_false_negatives": testing_false_negatives
-    }
+    return svm_stats.get_stats_json_object()

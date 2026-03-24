@@ -2,13 +2,12 @@ from datetime import datetime
 
 import joblib
 import numpy as np
-from sklearn.metrics import mean_squared_error, accuracy_score, f1_score
 from sklearn.model_selection import KFold
 from sklearn.neighbors import KNeighborsClassifier
 
 from src.Utils.constants import *
 from src.Utils.fileHandler import load_settings, folder_maker
-from src.Utils.statsCalculator import tp_tn_fp_fn
+from src.Utils.metaLearnerStatsCalculator import MetaLearnerStats
 
 
 def training_meta_k_nearest_neighbors(settings_file_path, training_set, testing_set, seed, kFold =5):
@@ -37,18 +36,7 @@ def training_meta_k_nearest_neighbors(settings_file_path, training_set, testing_
 def train_meta_k_nearest_neighbors(params, training_set, testing_set, seed, target_column ='na', kFold = 5):
     kf = KFold(n_splits=kFold, shuffle=True, random_state=seed)
 
-    training_mses = []
-    training_f1 =[]
-    training_accuracy = []
-
-    testing_mses = []
-    testing_f1 =[]
-    testing_accuracy = []
-    testing_true_positives = []
-    testing_true_negatives = []
-    testing_false_positives = []
-    testing_false_negatives= []
-
+    knn_stats = MetaLearnerStats()
 
     training_x = training_set[0]
     training_y = training_set[1]
@@ -63,34 +51,11 @@ def train_meta_k_nearest_neighbors(params, training_set, testing_set, seed, targ
         y_train_pred = knn.predict(x_train)
         y_test_pred = knn.predict(testing_x)
 
-        training_mses.append(mean_squared_error(y_train, y_train_pred))
-        training_f1.append(f1_score(y_train, y_train_pred, average='weighted'))
-        training_accuracy.append(accuracy_score(y_train, y_train_pred) * 100)
-
-        testing_y = np.asarray(testing_y)
-        testing_mses.append(mean_squared_error(testing_y, y_test_pred))
-        testing_f1.append(f1_score(testing_y, y_test_pred, average='weighted'))
-        testing_accuracy.append(accuracy_score(testing_y, y_test_pred)*100)
-        tp, tn, fp, fn = tp_tn_fp_fn(testing_y, y_test_pred)
-        testing_true_positives.append(tp)
-        testing_true_negatives.append(tn)
-        testing_false_positives.append(fp)
-        testing_false_negatives.append(fn)
+        knn_stats.update_stats(y_train, y_train_pred, testing_y, y_test_pred)
 
         if target_column != 'na':
             folder_path = f"{MODULE_PATH}KNN\\{datetime.now().strftime("%Y%m%d_%h")}"
             folder_maker(folder_path)
             joblib.dump(knn, f'{folder_path}\\knn_for_{target_column}_fold_{counter}.pkl')
         counter = counter + 1
-    return {
-        "training loses": training_mses,
-        "training accuracies": training_accuracy,
-        "training f1": training_f1,
-        "testing loses": testing_mses,
-        "testing f1": testing_f1,
-        "testing accuracies": testing_accuracy,
-        "testing true positives": testing_true_positives,
-        "testing true negatives": testing_true_negatives,
-        "testing false positives": testing_false_positives,
-        "testing false negatives": testing_false_negatives
-    }
+    return knn_stats.get_stats_json_object()

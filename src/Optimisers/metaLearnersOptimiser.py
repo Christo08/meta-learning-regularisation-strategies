@@ -3,6 +3,7 @@ from datetime import datetime
 
 from src.Optimisers.decisionTreeOptimiser import optimise_decision_tree
 from src.Optimisers.knnOptimiser import optimise_k_nearest_neighbors
+from src.Optimisers.nnOptimiser import optimise_mate_nn
 from src.Optimisers.randomForsetOptimiser import optimise_random_forest
 from src.Optimisers.svmOptimiser import optimise_support_vector_machine
 from src.Utils.constants import META_LEARNERS_SETTINGS_PATH, OPTIMED_METRIC_OPTIONS
@@ -24,6 +25,7 @@ def optimise_meta_learners(dataset):
             setting = optimise_k_nearest_neighbors(dataset, selected_metrics, direction)
             module_type = "KNearestNeighbors"
         elif selected_meta_learn_type == META_LEARN_TYPES[3]:
+            setting = optimise_mate_nn(dataset, selected_metrics, direction)
             module_type = "NeuralNetworks"
         elif selected_meta_learn_type == META_LEARN_TYPES[4]:
             setting = optimise_random_forest(dataset, selected_metrics, direction)
