@@ -9,7 +9,7 @@ from scipy.stats import ttest_ind, zscore
 from sklearn.model_selection import train_test_split
 
 from src.Utils.constants import TARGET_COLUMNS
-from src.Utils.fileHandler import load_meta_features_csv, save_data_frame
+from src.Utils.fileHandler import load_meta_features_csv, save_data_frame, get_latest_settings
 
 
 def spilt_dataset_and_targets(dataset):
@@ -66,9 +66,11 @@ def split_dataset(dataset):
     testing_set_stats_df = testing_set_stats_df[['column name', 'count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max']]
     save_data_frame(testing_set_stats_df, f"{stats_output_path}\\testing_set_stats_{timestamp}.csv")
 
-def load_meta_feature_dataset(need_subsets_info = False, type ="", should_cover_to_binary = False, should_ask_for_apply_z_scoring = True, should_ask_rank_techniques = True):
+def load_meta_feature_dataset(need_subsets_info = False, type ="", should_cover_to_binary = False, should_ask_for_apply_z_scoring = True, should_ask_rank_techniques = True, should_add_params = False):
     should_rank_techniques = input("Is the dataset raw? (y/n): ").lower() == "y" if should_ask_rank_techniques else False
     dataset = load_meta_features_csv(type)
+    if should_add_params:
+        dataset = append_hyperparameters(dataset)
     dataset = clean_dataset(dataset)
     for target_column in TARGET_COLUMNS:
         if target_column not in dataset.columns:
@@ -130,6 +132,21 @@ def clean_dataset(dataset):
 
     return dataset
 
+def append_hyperparameters(dataset):
+    for index, row in dataset.iterrows():
+        setting = get_latest_settings(row["dataset_name"])
+        if not setting:
+            raise ValueError(f"Missing setting: {row}")
+        dataset.loc[index, "batch_size"] = setting["batch_size"]
+        dataset.loc[index, "learning_rate"] = setting["learning_rate"]
+        dataset.loc[index, "number_of_epochs"] = setting["number_of_epochs"]
+        dataset.loc[index, "number_of_hidden_layers"] = setting["number_of_hidden_layers"]
+        number_of_neurons = setting["number_of_neurons_in_layers"][:setting["number_of_hidden_layers"]]
+        dataset.loc[index, "avg_number_of_neurons"] = np.average(number_of_neurons)
+        dataset.loc[index, "min_number_of_neurons"] = np.min(number_of_neurons)
+        dataset.loc[index, "max_number_of_neurons"] = np.max(number_of_neurons)
+    return dataset
+
 def apply_z_scoring(dataset, should_ask_for_apply_z_scoring):
     should_apply_z_scoring = input("Apply Z scoring? (y/n): ").lower() == "y" if should_ask_for_apply_z_scoring else False
     if should_apply_z_scoring:
@@ -147,7 +164,6 @@ def apply_z_scoring(dataset, should_ask_for_apply_z_scoring):
 
                 dataset[column] = z_column
     return dataset
-
 
 def rank_techniques(dataset):
     assert dataset.shape[1] >= 2, "Need at least two techniques to compare."

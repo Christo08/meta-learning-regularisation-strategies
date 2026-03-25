@@ -16,9 +16,9 @@ def recreate_subsets(meta_feature_dataset, number_of_instances, datasets_setting
     if names is None:
         names = []
     seeds = []
-    if len(meta_feature_dataset)>0:
+    if len(meta_feature_dataset) > 0:
         for name, group in meta_feature_dataset.groupby('dataset_name'):
-            seed ={
+            seed = {
                 "name": name,
                 "datasetSettings": next((item for item in datasets_settings if item["name"] == name), None),
                 "classSeeds": [],
@@ -49,7 +49,7 @@ def recreate_subsets(meta_feature_dataset, number_of_instances, datasets_setting
             seeds.append(seed)
     else:
         for name in names:
-            seed ={
+            seed = {
                 "name": name,
                 "datasetSettings": next((item for item in datasets_settings if item["name"] == name), None),
                 "isComplete": False
@@ -59,17 +59,19 @@ def recreate_subsets(meta_feature_dataset, number_of_instances, datasets_setting
     meta_feature_dataset = []
     for seed in seeds:
         if seed["isComplete"]:
-            subsets, meta_features, return_seeds, subset_category_columns, subset_file_paths = create_subsets_with_seeds(seed["name"],
-                                                                                                                         number_of_instances,
-                                                                                                                         seed["classSeeds"],
-                                                                                                                         seed["featuresSeeds"],
-                                                                                                                         seed["instancesSeeds"],
-                                                                                                                         seed["datasetSettings"])
+            subsets, meta_features, return_seeds, subset_category_columns, subset_file_paths = create_subsets_with_seeds(
+                seed["name"],
+                number_of_instances,
+                seed["classSeeds"],
+                seed["featuresSeeds"],
+                seed["instancesSeeds"],
+                seed["datasetSettings"])
         else:
-            subsets, meta_features, return_seeds, subset_category_columns, subset_file_paths = create_subsets(seed["name"],
-                                                                                                              number_of_instances,
-                                                                                                              seed["datasetSettings"],
-                                                                                                              False)
+            subsets, meta_features, return_seeds, subset_category_columns, subset_file_paths = create_subsets(
+                seed["name"],
+                number_of_instances,
+                seed["datasetSettings"],
+                False)
         for subset, meta_feature, return_seed, category_columns, subset_file_path in zip(subsets,
                                                                                          meta_features,
                                                                                          return_seeds,
@@ -85,13 +87,14 @@ def recreate_subsets(meta_feature_dataset, number_of_instances, datasets_setting
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     pd.DataFrame(meta_feature_dataset).to_csv(f"{OUTPUT_PATH}SubsetMetaFeatures_{timestamp}.csv", index=False)
 
+
 def recreate_dataset(subset_dataset, dataset_names, indexes, output_path, number_of_folds, datasets_settings):
     dataset, output_path = load_meta_features_dataset(output_path)
     seeds = []
     for name, group in subset_dataset.groupby('dataset_name'):
         if name in dataset_names:
             settings = get_latest_settings(name)
-            dataset_settings =  next((item for item in datasets_settings if item["name"] == name), None)
+            dataset_settings = next((item for item in datasets_settings if item["name"] == name), None)
             seed = {
                 "name": name,
                 "dataset_settings": dataset_settings,
@@ -112,24 +115,20 @@ def recreate_dataset(subset_dataset, dataset_names, indexes, output_path, number
         counter = 1
         for index in indexes:
             row = seed["rows"][index]
-            training_set, testing_set, subset_category_columns = load_subset(row["file_path"], row["seed"], seed["dataset_settings"])
+            training_set, testing_set, subset_category_columns = load_subset(row["file_path"], row["seed"],
+                                                                             seed["dataset_settings"])
             meta_feature = meta_features.iloc[row["index"]]
-            instance, duration = create_instance(seed["name"], seed["nn_settings"], number_of_folds, training_set, testing_set, meta_feature, row, subset_category_columns, row["file_path"])
-                # create_instance(seed["name"],
-                #                                  settings,
-                #                                  number_of_folds,
-                #                                  training_set,
-                #                                  testing_set,
-                #                                  meta_feature,
-                #                                  row,
-                #                                  subset_category_columns)
+            instance, duration = create_instance(seed["name"], seed["nn_settings"], number_of_folds, training_set,
+                                                 testing_set, meta_feature, row, subset_category_columns,
+                                                 row["file_path"])
             total_duration += duration
             dataset = pd.concat([dataset, instance], ignore_index=True)
             save_data_frame(dataset, output_path)
-            predicted_duration = total_duration/counter * (len(dataset_names))
+            predicted_duration = total_duration / counter * (len(dataset_names))
             print(f"{counter} instance created from the {seed["name"]} dataset subset. "
                   f"It took {format_duration(total_duration)}/{format_duration(predicted_duration)}")
-            counter+=1
+            counter += 1
+
 
 def create_dataset(database_name, output_path, number_of_instances, number_of_folds, dataset_settings):
     dataset, output_path = load_meta_features_dataset(output_path)
@@ -137,11 +136,13 @@ def create_dataset(database_name, output_path, number_of_instances, number_of_fo
     total_duration = 0
 
     if number_of_instances > 1:
-        training_sets, testing_sets, meta_features, seeds, subset_category_columns, subset_file_paths = create_subsets(database_name,
-                                                                                                    number_of_instances,
-                                                                                                    dataset_settings)
+        training_sets, testing_sets, meta_features, seeds, subset_category_columns, subset_file_paths = create_subsets(
+            database_name,
+            number_of_instances,
+            dataset_settings)
     else:
-        training_sets, testing_sets, meta_features, seeds, subset_category_columns, subset_file_paths = load_dataset(dataset_settings)
+        training_sets, testing_sets, meta_features, seeds, subset_category_columns, subset_file_paths = load_dataset(
+            dataset_settings)
 
     counter = 0
 
@@ -163,18 +164,21 @@ def create_dataset(database_name, output_path, number_of_instances, number_of_fo
         total_duration += duration
         dataset = pd.concat([dataset, instance], ignore_index=True)
         save_data_frame(dataset, output_path)
-        counter+=1
+        counter += 1
         predicted_duration = total_duration / counter * number_of_instances
-        print(f"{counter} instance created. It took {format_duration(total_duration)}/{format_duration(predicted_duration)}")
+        print(
+            f"{counter} instance created. It took {format_duration(total_duration)}/{format_duration(predicted_duration)}")
     return output_path
 
-def create_instance(dataset_name, settings, number_of_folds, training_set, testing_set, meta_feature, seed, category_columns, subset_file_path):
+
+def create_instance(dataset_name, settings, number_of_folds, training_set, testing_set, meta_feature, seed,
+                    category_columns, subset_file_path):
     start_time = time.time()
     print("")
     print("Dataset name: " + dataset_name)
     print("Seed: " + str(seed["seed"]))
     # Add dataset name, seed and meta feature
-    instance_json_object= {
+    instance_json_object = {
         "dataset_name": dataset_name,
         "seed": seed["seed"],
         "subset_type": seed["subsetType"],
@@ -186,24 +190,25 @@ def create_instance(dataset_name, settings, number_of_folds, training_set, testi
     best_testing_loss = float('inf')
     best_testing_technique = ""
     random.seed(seed["seed"])
-    seed = random.randint(0, 2**32 - 1)
+    seed = random.randint(0, 2 ** 32 - 1)
     random.seed(seed)
 
     # Perform training for each configuration
     for config in REGULARISATION_TECHNIQUES:
         print(config["param"])
         training_loss_values, training_accuracies, testing_loss_values, testing_accuracies = train_basic_nns(settings,
-                                                                                                             config["param"],
+                                                                                                             config[
+                                                                                                                 "param"],
                                                                                                              training_set,
                                                                                                              testing_set,
                                                                                                              seed,
                                                                                                              category_columns,
                                                                                                              number_of_folds)
 
-        instance_json_object[config['fileName']+"_training_loss"] = training_loss_values
-        instance_json_object[config['fileName']+"_training_accuracies"] = training_accuracies
-        instance_json_object[config['fileName']+"_testing_loss"] = testing_loss_values
-        instance_json_object[config['fileName']+"_testing_accuracies"] = testing_accuracies
+        instance_json_object[config['fileName'] + "_training_loss"] = training_loss_values
+        instance_json_object[config['fileName'] + "_training_accuracies"] = training_accuracies
+        instance_json_object[config['fileName'] + "_testing_loss"] = testing_loss_values
+        instance_json_object[config['fileName'] + "_testing_accuracies"] = testing_accuracies
 
         if best_training_loss > np.mean(training_loss_values):
             best_training_loss = np.mean(training_loss_values)
@@ -214,10 +219,10 @@ def create_instance(dataset_name, settings, number_of_folds, training_set, testi
             best_testing_technique = config['fileName']
 
     instance_json_object["best_training_technique"] = best_training_technique
-    print("best training technique: "+best_training_technique)
+    print("best training technique: " + best_training_technique)
 
     instance_json_object["best_testing_technique"] = best_testing_technique
-    print("best testing technique: "+best_testing_technique)
+    print("best testing technique: " + best_testing_technique)
     endTime = time.time()
     duration = endTime - start_time
 

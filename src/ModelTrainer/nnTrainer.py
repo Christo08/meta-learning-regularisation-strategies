@@ -134,14 +134,12 @@ def training_basic_loop(training_set, testing_set, settings, number_of_inputs, n
         x_testing = x_testing.to(device)
         y_testing = y_testing.to(device)
 
-
     # Loss function and optimizer
     loss_function = CustomCrossEntropyLoss()
     if technique == "weightDecay":
         optimiser = optim.Adam(network.parameters(), lr=settings["learning_rate"], weight_decay=settings["weight_decay"])
     else:
         optimiser = optim.Adam(network.parameters(), lr=settings["learning_rate"])
-
 
     # Training loop
     for epoch in range(settings["number_of_epochs"]):
@@ -199,7 +197,6 @@ def training_basic_loop(training_set, testing_set, settings, number_of_inputs, n
         testing_accuracy = (test_pred_cls == test_true_cls).float().mean().item() * 100.0
 
     return training_loss_value, training_accuracy, testing_loss_value, testing_accuracy
-
 
 def training_meta_nns(settings_file_path, training_set, testing_set, seed, kFold =5):
     results = []
