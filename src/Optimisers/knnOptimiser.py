@@ -43,8 +43,7 @@ def optimise_k_nearest_neighbors(dataset, selected_metrics, direction):
             checkpoint_path=f"{check_point_path}\\{target_column}_{timestamp}"
         )
         validation_loses = train_k_nearest_neighbors_warp(best_params)
-        print(
-        f"Tuned params for KNearestNeighbors for {target_column} resulting in an accuracy of: {validation_loses}")
+        print(f"Tuned params for knn for {target_column} resulting in {validation_loses} {selected_metrics}")
         settings[target_column] = best_params
     return settings
 

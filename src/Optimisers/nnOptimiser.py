@@ -143,7 +143,7 @@ def optimise_mate_nn(dataset, selected_metrics, direction):
         )
         validation_loses = train_meta_nn_warp(best_params)
         print(
-        f"Tuned params for NN for {target_column} resulting in an accuracy of: {validation_loses}")
+        print(f"Tuned params for NN for {target_column} resulting in {validation_loses} {selected_metrics}")
         settings[target_column] = best_params
     return settings
 

@@ -43,8 +43,7 @@ def optimise_support_vector_machine(dataset, selected_metrics, direction):
             checkpoint_path=f"{check_point_path}\\{target_column}_{timestamp}"
         )
         validation_loses = train_support_vector_machine_warp(best_params)
-        print(
-        f"Tuned params for random forest for {target_column} resulting in an accuracy of: {validation_loses}")
+        print(f"Tuned params for svm for {target_column} resulting in {validation_loses} {selected_metrics}")
         settings[target_column] = best_params
     return settings
 

@@ -44,7 +44,7 @@ def optimise_decision_tree(dataset, selected_metrics, direction):
         )
         validation_loses = train_decision_tree_warp(best_params)
         print(
-        f"Tuned params for decision tree for {target_column} resulting in an accuracy of: {validation_loses}")
+        f"Tuned params for decision tree for {target_column} resulting in {validation_loses} {selected_metrics}")
         settings[target_column] = best_params
     return settings
 
