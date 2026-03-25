@@ -65,7 +65,6 @@ training_set = ""
 validation_set = ""
 category_columns = []
 seed = random.randint(0, 4294967295)
-counter = 0
 
 def optimise_basic_nn(dataset_name, dataset_settings, parameter_group, basic_settings_parm = None):
     global basic_settings, training_set, validation_set, category_columns
@@ -134,12 +133,12 @@ def optimise_mate_nn(dataset, selected_metrics, direction):
         training_set, validation_set = prepared_meta_feature_dataset(dataset, META_LEANER_TARGET_COLUMNS, target_column)
 
         search = pyhopper.Search(basic_parameters)
-        check_point_path = f"{CHECK_POINTS_PATH}Meta-learners\\KNN"
+        check_point_path = f"{CHECK_POINTS_PATH}Meta-learners\\NN"
         folder_maker(check_point_path)
         best_params = search.run(
             train_meta_nn_warp,
             direction=direction,
-            steps=400,
+            steps=200,
             checkpoint_path=f"{check_point_path}\\{target_column}_{timestamp}"
         )
         validation_loses = train_meta_nn_warp(best_params)
@@ -166,10 +165,9 @@ def train_nn_warp(params):
     return testing_loss_values
 
 def train_meta_nn_warp(params):
-    global training_set, validation_set, selected_metric, counter
+    global training_set, validation_set, selected_metric
     seed = random.randint(0, 4294967295)
-    counter = counter+1
-    loses = train_meta_nn_loop(params, training_set, validation_set, seed, counter)
+    loses = train_meta_nn_loop(params, training_set, validation_set, seed)
     if selected_metric == OPTIMED_METRIC_OPTIONS[0]:
         return np.mean(loses["testing accuracies"])
     elif selected_metric == OPTIMED_METRIC_OPTIONS[1]:

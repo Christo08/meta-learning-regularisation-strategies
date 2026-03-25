@@ -224,7 +224,7 @@ def training_meta_nns(settings_file_path, training_set, testing_set, seed, kFold
         results.append(result)
     return results
 
-def train_meta_nn_loop(params, training_set, testing_set, seed, step, target_column ='na', kFold = 5):
+def train_meta_nn_loop(params, training_set, testing_set, seed, target_column ='na', kFold = 5):
     kf = KFold(n_splits=kFold, shuffle=True, random_state=seed)
 
     nn_stats = MetaLearnerStats()
@@ -234,9 +234,7 @@ def train_meta_nn_loop(params, training_set, testing_set, seed, step, target_col
     testing_x = testing_set[0]
     testing_y = testing_set[1]
     counter = 1
-    print("")
     for train_idx, test_idx in kf.split(training_x):
-        print(f"Fold {counter} step {step}")
         x_train = training_x[train_idx]
         y_train = training_y.iloc[train_idx].to_numpy()
 
