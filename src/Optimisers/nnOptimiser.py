@@ -142,7 +142,6 @@ def optimise_mate_nn(dataset, selected_metrics, direction):
             checkpoint_path=f"{check_point_path}\\{target_column}_{timestamp}"
         )
         validation_loses = train_meta_nn_warp(best_params)
-        print(
         print(f"Tuned params for NN for {target_column} resulting in {validation_loses} {selected_metrics}")
         settings[target_column] = best_params
     return settings
