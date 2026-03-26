@@ -380,12 +380,20 @@ def get_best_instances_for_techniques(full_dataset):
     return best_instances
 
 def tp_tn_fp_fn(y_true, y_pred, positive_label=1):
+    y_true = np.asarray(y_true)
+    y_pred = np.asarray(y_pred)
 
-    y_true = np.asarray(y_true).ravel()
-    y_pred = np.asarray(y_pred).ravel()
+    # Convert one-hot → class index
+    if y_true.ndim == 2:
+        y_true = np.argmax(y_true, axis=1)
+
+    if y_pred.ndim == 2:
+        y_pred = np.argmax(y_pred, axis=1)
 
     cm = confusion_matrix(y_true, y_pred, labels=[0, positive_label])
 
-
     tn, fp, fn, tp = cm.ravel()
+
+    assert tn + fp + fn + tp == len(y_true)
+
     return float(tp), float(tn), float(fp), float(fn)
