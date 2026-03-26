@@ -242,11 +242,84 @@ def calculate_meta_learners_stats():
     print("Meta Learners Results Correlation:")
     show_meta_learners_box_plots(meta_learners_results, 'testing accuracies', output_path)
     show_meta_learners_box_plots(meta_learners_results, 'testing f1', output_path)
-    show_meta_learners_box_plots(meta_learners_results, 'testing true positives', output_path)
-    show_meta_learners_box_plots(meta_learners_results, 'testing true negatives', output_path)
-    show_meta_learners_box_plots(meta_learners_results, 'testing false positives', output_path)
-    show_meta_learners_box_plots(meta_learners_results, 'testing false negatives', output_path)
 
+    create_confusion_matrix(meta_learners_results, output_path)
+
+def create_confusion_matrix(dataset, output_path):
+    required_cols = [
+        "model type",
+        "technique",
+        "testing true positives",
+        "testing true negatives",
+        "testing false positives",
+        "testing false negatives",
+    ]
+    missing = [c for c in required_cols if c not in dataset.columns]
+    if missing:
+        raise ValueError(f"Missing required columns: {missing}")
+
+    df =dataset.copy()
+
+    # Parse list-like strings to Python lists
+    for column in required_cols[2:]:
+        df[column] = df[column].apply(_parse_list_cell)
+
+    # Explode all four metric columns together so folds stay aligned
+    df = df.explode(required_cols[2:], ignore_index=True)
+
+    # Convert to numeric
+    for c in required_cols[2:]:
+        df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0)
+
+    # Now build one figure per technique; each figure has one subplot per model type
+    techniques = list(df["technique"].dropna().unique())
+    model_types = list(df["model type"].dropna().unique())
+
+    for technique in techniques:
+        technique_df = df[df["technique"] == technique]
+
+        # Make a grid for up to 5 models (you said 5)
+        number_of_models = len(model_types)
+        number_cols = 3
+        number_rows = int(np.ceil(number_of_models / number_cols))
+        fig, axes = plt.subplots(number_rows, number_cols, figsize=(14, number_rows * 5))
+        axes = np.array(axes).reshape(-1)
+
+        for idx, model_type in enumerate(model_types):
+            ax = axes[idx]
+            module_df = technique_df[technique_df["model type"] == model_type]
+
+            # Get the mean of the folds
+            tp = module_df["testing true positives"].mean().round(0)
+            tn = module_df["testing true negatives"].mean().round(0)
+            fp = module_df["testing false positives"].mean().round(0)
+            fn = module_df["testing false negatives"].mean().round(0)
+
+            confusion_matrix = np.array([[tn, fp], [fn, tp]])
+
+            sns.heatmap(confusion_matrix, annot=True, fmt=".0f",  cmap="Blues", ax=ax)
+            ax.set_title(f"{model_type}")
+            ax.set_xlabel("Predicted")
+            ax.set_ylabel("Actual")
+
+        # delete unused axes
+        for counter in range(len(model_types), len(axes)):
+            fig.delaxes(axes[counter])
+
+        fig.suptitle(f"Confusion Matrices (mean of folds) — Technique: {technique}", fontsize=16)
+        fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+        file_path = f"{output_path}\\confusion_matrices_{str(technique).replace(' ', '_')}.png"
+        fig.savefig(file_path, dpi=300)
+        plt.show()
+
+        print(f"Saved confusion matrices for technique '{technique}' to {file_path}")
+
+
+
+def _parse_list_cell(x):
+    if isinstance(x, str):
+        return eval(x)  # your file already uses eval; safer alternative is ast.literal_eval
+    return x
 
 def show_meta_learners_box_plots(meta_learners_results, metric_column_name, output_path):
     sns.set_style("darkgrid")
@@ -289,7 +362,7 @@ def show_meta_learners_box_plots(meta_learners_results, metric_column_name, outp
 
     plt.suptitle(f'Boxplot of {metric_column_name} by Model Type for Each Technique', fontsize=16)
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-    file_path = f"{output_path}\\{metric_column_name.replace(" ","_")}_box_plot.png"
+    file_path = f"{output_path}\\{metric_column_name.replace("testing ","")}_box_plot.png"
     plt.savefig(file_path, dpi=300)
     plt.show()
     print(f'Saved {metric_column_name}\'s box plot to {file_path}')
