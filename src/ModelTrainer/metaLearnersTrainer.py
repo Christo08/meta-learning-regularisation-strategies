@@ -42,6 +42,7 @@ def train_meta_learners(training_dataset, testing_dataset):
         else:
             return
         results = pd.concat([results, pd.DataFrame(result)], ignore_index=True)
+    output_path = f'{output_path}\\{timestamp}'
     folder_maker(output_path)
-    file_name = f"{output_path}meta_learners_results_{timestamp}.csv"
+    file_name = f"{output_path}\\meta_learners_results.csv"
     save_data_frame(results, file_name)
