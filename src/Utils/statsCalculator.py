@@ -396,4 +396,4 @@ def tp_tn_fp_fn(y_true, y_pred, positive_label=1):
 
     assert tn + fp + fn + tp == len(y_true)
 
-    return float(tp), float(tn), float(fp), float(fn)
+    return tp, tn, fp, fn

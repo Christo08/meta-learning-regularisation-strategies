@@ -3,7 +3,7 @@ from sklearn.metrics import mean_squared_error, f1_score, accuracy_score
 from src.Utils.statsCalculator import tp_tn_fp_fn
 
 
-class MetaLearnerStats:
+class TrainingMetaLearnerStats:
 
     def __init__(self):
         self.training_mses = []
@@ -13,10 +13,6 @@ class MetaLearnerStats:
         self.testing_mses = []
         self.testing_f1 = []
         self.testing_accuracy = []
-        self.testing_true_positives = []
-        self.testing_true_negatives = []
-        self.testing_false_positives = []
-        self.testing_false_negatives = []
 
     def update_stats(self, y_training, y_train_pred, y_testing, y_test_pred):
         self.training_mses.append(mean_squared_error(y_training, y_train_pred))
@@ -26,11 +22,6 @@ class MetaLearnerStats:
         self.testing_mses.append(mean_squared_error(y_testing, y_test_pred))
         self.testing_f1.append(f1_score(y_testing, y_test_pred, average='weighted'))
         self.testing_accuracy.append(accuracy_score(y_testing, y_test_pred)*100)
-        tp, tn, fp, fn = tp_tn_fp_fn(y_testing, y_test_pred)
-        self.testing_true_positives.append(tp)
-        self.testing_true_negatives.append(tn)
-        self.testing_false_positives.append(fp)
-        self.testing_false_negatives.append(fn)
 
     def get_stats_json_object(self):
         return {
@@ -39,9 +30,29 @@ class MetaLearnerStats:
         "training f1": self.training_f1,
         "testing loses": self.testing_mses,
         "testing f1": self.testing_f1,
-        "testing accuracies": self.testing_accuracy,
-        "testing true positives": self.testing_true_positives,
-        "testing true negatives": self.testing_true_negatives,
-        "testing false positives": self.testing_false_positives,
-        "testing false negatives": self.testing_false_negatives
+        "testing accuracies": self.testing_accuracy
     }
+
+class TestingMetaLearnerStats:
+    def __init__(self):
+        self.f1 = 0
+        self.accuracy = 0
+        self.true_negative = 0
+        self.false_negative = 0
+        self.true_positive = 0
+        self.false_positive = 0
+
+    def update_stats(self, y_testing, y_testing_pred):
+        self.f1 = f1_score(y_testing, y_testing_pred, average='weighted')
+        self.accuracy = accuracy_score(y_testing, y_testing_pred) * 100
+        self.true_positive, self.true_negative, self.false_positive, self.false_negative = tp_tn_fp_fn(y_testing, y_testing_pred)
+
+    def get_stats_json_object(self):
+        return {
+            "testing f1": self.f1,
+            "testing accuracies": self.accuracy,
+            "testing true positive": self.true_positive,
+            "testing true negative": self.true_negative,
+            "testing false positive": self.false_positive,
+            "testing false negative": self.false_negative
+        }
