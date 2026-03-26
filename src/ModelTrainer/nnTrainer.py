@@ -10,7 +10,7 @@ from src.Models.NN.customDataset import CustomDataset
 from src.Models.NN.lossFunctions import CustomCrossEntropyLoss
 from src.Models.NN.network import Network
 from src.Utils.constants import META_LEANER_TARGET_COLUMNS, MODULE_PATH
-from src.Utils.datasetHandler import apply_smote
+from src.Utils.datasetHandler import apply_smote, prepared_meta_feature_dataset
 from src.Utils.fileHandler import load_settings, folder_maker
 from src.Utils.metaLearnerStatsCalculator import MetaLearnerStats
 
@@ -203,13 +203,11 @@ def training_meta_nns(settings_file_path, training_set, testing_set, seed, kFold
     settings = load_settings(settings_file_path)
     for target_column in META_LEANER_TARGET_COLUMNS:
         print(f"Training nn for { target_column.replace("_"," ")}...")
-        training_x = np.array(training_set.drop([target_column], axis=1))
-        training_y = training_set[target_column]
-        testing_x = np.array(testing_set.drop([target_column], axis=1))
-        testing_y = testing_set[target_column]
+        cleaned_training_set = prepared_meta_feature_dataset(training_set,target_column,False)
+        cleaned_testing_set = prepared_meta_feature_dataset(testing_set,target_column,False)
         result = train_meta_nn_loop(settings[target_column],
-                                          (training_x, training_y),
-                                          (testing_x, testing_y),
+                                          cleaned_training_set,
+                                          cleaned_testing_set,
                                           seed,
                                           target_column,
                                           kFold)

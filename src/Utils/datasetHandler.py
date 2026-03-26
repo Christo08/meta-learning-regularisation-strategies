@@ -387,10 +387,10 @@ def apply_one_hot_encode(dataset, target_column_name ='target'):
     dataset = pd.concat([dataset, encoded_columns], axis=1)
     return dataset
 
-def prepared_meta_feature_dataset(dataset, target_columns, target_column, need_split=True):
+def prepared_meta_feature_dataset(dataset, target_column, need_split=True):
     seed = random.randint(0, 4294967295)
 
-    dataset_x = np.array(dataset.drop(target_columns, axis=1))
+    dataset_x = np.array(dataset.drop(META_LEANER_TARGET_COLUMNS, axis=1))
     dataset_y = apply_one_hot_encode(dataset, target_column)
     dataset_y = dataset_y[[col for col in dataset_y.columns if col.startswith(f"{target_column}_")]]
     if need_split:

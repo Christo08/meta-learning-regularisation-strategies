@@ -31,7 +31,7 @@ def optimise_decision_tree(dataset, selected_metrics, direction):
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     for target_column in META_LEANER_TARGET_COLUMNS:
-        training_set, validation_set = prepared_meta_feature_dataset(dataset, META_LEANER_TARGET_COLUMNS, target_column)
+        training_set, validation_set = prepared_meta_feature_dataset(dataset, target_column)
 
         search = pyhopper.Search(parameter_group)
         check_point_path = f"{CHECK_POINTS_PATH}Meta-learners\\DecisionTree"
