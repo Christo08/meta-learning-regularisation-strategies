@@ -237,11 +237,18 @@ def calculate_dataset_stats(full_dataset):
 
 def calculate_meta_learners_stats():
     meta_learners_results = load_results_csv()
-
-    print("Meta Learners Results Info:")
-    print(meta_learners_results.info())
+    output_path = input("Enter the path of the Output stats folder: ")
 
     print("Meta Learners Results Correlation:")
+    show_meta_learners_box_plots(meta_learners_results, 'testing accuracies', output_path)
+    show_meta_learners_box_plots(meta_learners_results, 'testing f1', output_path)
+    show_meta_learners_box_plots(meta_learners_results, 'testing true positives', output_path)
+    show_meta_learners_box_plots(meta_learners_results, 'testing true negatives', output_path)
+    show_meta_learners_box_plots(meta_learners_results, 'testing false positives', output_path)
+    show_meta_learners_box_plots(meta_learners_results, 'testing false negatives', output_path)
+
+
+def show_meta_learners_box_plots(meta_learners_results, metric_column_name, output_path):
     sns.set_style("darkgrid")
 
     techniques = list(meta_learners_results['technique'].unique())
@@ -254,37 +261,38 @@ def calculate_meta_learners_stats():
     for idx, technique in enumerate(techniques):
         group = meta_learners_results[meta_learners_results['technique'] == technique]
 
-        for accuracy_col in ['testing accuracies', 'training accuracies']:
-            if accuracy_col not in group.columns:
-                continue
-            group_exp = group[['model type', accuracy_col]].reset_index(drop=True)
-            group_exp = explode_accuracies(group_exp, accuracy_col)
-            group_exp[accuracy_col] = group_exp[accuracy_col].astype(float)
+        if metric_column_name not in group.columns:
+            continue
+        group_exp = group[['model type', metric_column_name]].reset_index(drop=True)
+        group_exp = explode_accuracies(group_exp, metric_column_name)
+        group_exp[metric_column_name] = group_exp[metric_column_name].astype(float)
 
-            stats = group_exp.groupby('model type')[accuracy_col].agg(['mean', 'min', 'max', 'std'])
-            print(f"\nModel type: {technique} - {accuracy_col.capitalize()} statistics:")
-            print(stats)
+        stats = group_exp.groupby('model type')[metric_column_name].agg(['mean', 'min', 'max', 'std'])
+        print(f"\nModel type: {technique} - {metric_column_name.capitalize()} statistics:")
+        print(stats)
 
         # Plotting boxplot for testing accuracies
-        if 'testing accuracies' in group.columns:
-            group_plot = group[['model type', 'testing accuracies']].reset_index(drop=True)
-            group_plot = explode_accuracies(group_plot, 'testing accuracies')
-            group_plot['testing accuracies'] = group_plot['testing accuracies'].astype(float)
+        group_plot = group[['model type', metric_column_name]].reset_index(drop=True)
+        group_plot = explode_accuracies(group_plot, metric_column_name)
+        group_plot[metric_column_name] = group_plot[metric_column_name].astype(float)
 
-            ax = axes[idx]
-            sns.boxplot(x='model type', y='testing accuracies', data=group_plot, ax=ax)
-            ax.set_title(f'{technique}')
-            ax.set_ylabel('Testing Accuracies')
-            ax.set_xlabel('Model type')
-            ax.tick_params(axis='x', rotation=90)
+        ax = axes[idx]
+        sns.boxplot(x='model type', y=metric_column_name, data=group_plot, ax=ax)
+        ax.set_title(f'{technique}')
+        ax.set_ylabel(metric_column_name)
+        ax.set_xlabel('Model type')
+        ax.tick_params(axis='x', rotation=90)
 
     # Hide any unused subplots
     for j in range(idx + 1, len(axes)):
         fig.delaxes(axes[j])
 
-    plt.suptitle('Boxplot of Testing Accuracies by Model Type for Each Technique', fontsize=16)
+    plt.suptitle(f'Boxplot of {metric_column_name} by Model Type for Each Technique', fontsize=16)
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    file_path = f"{output_path}\\{metric_column_name.replace(" ","_")}_box_plot.png"
+    plt.savefig(file_path, dpi=300)
     plt.show()
+    print(f'Saved {metric_column_name}\'s box plot to {file_path}')
 
 def explode_accuracies(df, accuracy_col):
     df = df.copy()
