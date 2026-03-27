@@ -239,33 +239,29 @@ def calculate_meta_learners_stats():
     meta_learners_results = load_results_csv()
     output_path = input("Enter the path of the Output stats folder: ")
 
-    print("Meta Learners Results Correlation:")
-    show_meta_learners_box_plots(meta_learners_results, 'testing accuracies', output_path)
-    show_meta_learners_box_plots(meta_learners_results, 'testing f1', output_path)
+    print("Making the f1 training box plots:")
+    show_meta_learners_box_plots(meta_learners_results, 'training f1', output_path)
 
+    print("Making the confusion matrix:")
     create_confusion_matrix(meta_learners_results, output_path)
+
+    print("Making the f1 testing bar chart")
+    create_meta_learners_bar_charts(meta_learners_results, 'testing f1', output_path)
 
 def create_confusion_matrix(dataset, output_path):
     required_cols = [
         "model type",
         "technique",
-        "testing true positives",
-        "testing true negatives",
-        "testing false positives",
-        "testing false negatives",
+        "testing true positive",
+        "testing true negative",
+        "testing false positive",
+        "testing false negative",
     ]
     missing = [c for c in required_cols if c not in dataset.columns]
     if missing:
         raise ValueError(f"Missing required columns: {missing}")
 
     df =dataset.copy()
-
-    # Parse list-like strings to Python lists
-    for column in required_cols[2:]:
-        df[column] = df[column].apply(_parse_list_cell)
-
-    # Explode all four metric columns together so folds stay aligned
-    df = df.explode(required_cols[2:], ignore_index=True)
 
     # Convert to numeric
     for c in required_cols[2:]:
@@ -290,10 +286,10 @@ def create_confusion_matrix(dataset, output_path):
             module_df = technique_df[technique_df["model type"] == model_type]
 
             # Get the mean of the folds
-            tp = module_df["testing true positives"].mean().round(0)
-            tn = module_df["testing true negatives"].mean().round(0)
-            fp = module_df["testing false positives"].mean().round(0)
-            fn = module_df["testing false negatives"].mean().round(0)
+            tp = float(module_df["testing true positive"].iloc[0])
+            tn = float(module_df["testing true negative"].iloc[0])
+            fp = float(module_df["testing false positive"].iloc[0])
+            fn = float(module_df["testing false negative"].iloc[0])
 
             confusion_matrix = np.array([[tn, fp], [fn, tp]])
 
@@ -314,12 +310,42 @@ def create_confusion_matrix(dataset, output_path):
 
         print(f"Saved confusion matrices for technique '{technique}' to {file_path}")
 
+def create_meta_learners_bar_charts(meta_learners_results, metric_column_name, output_path):
+    df = meta_learners_results.copy()
 
+    # Ensure numeric y values
+    df[metric_column_name] = pd.to_numeric(df[metric_column_name], errors="coerce")
+    df = df.dropna(subset=[metric_column_name, "technique", "model type"])
 
-def _parse_list_cell(x):
-    if isinstance(x, str):
-        return eval(x)  # your file already uses eval; safer alternative is ast.literal_eval
-    return x
+    sns.set_style("darkgrid")
+
+    techniques = list(df["technique"].unique())
+
+    for technique in techniques:
+        tdf = df[df["technique"] == technique].copy()
+
+        tdf = tdf.sort_values("model type", ascending=False)
+
+        plt.figure(figsize=(10, 5))
+        ax = sns.barplot(
+            data=tdf,
+            x="model type",
+            y=metric_column_name,
+            errorbar=None,
+            color="steelblue",
+        )
+
+        ax.set_title(f"{metric_column_name} by model type — Technique: {technique}")
+        ax.set_xlabel("Model type")
+        ax.set_ylabel(metric_column_name)
+        ax.tick_params(axis="x", rotation=90)
+
+        plt.tight_layout()
+
+    file_path = f"{output_path}\\{metric_column_name.replace(" ","_")}_bar_chart.png"
+    plt.savefig(file_path, dpi=300)
+    plt.show()
+
 
 def show_meta_learners_box_plots(meta_learners_results, metric_column_name, output_path):
     sns.set_style("darkgrid")
