@@ -302,7 +302,7 @@ def create_confusion_matrix(dataset, output_path):
         for counter in range(len(model_types), len(axes)):
             fig.delaxes(axes[counter])
 
-        fig.suptitle(f"Confusion Matrices (mean of folds) — Technique: {technique}", fontsize=16)
+        fig.suptitle(f"Confusion Matrices — Technique: {technique}", fontsize=16)
         fig.tight_layout(rect=[0, 0.03, 1, 0.95])
         file_path = f"{output_path}\\confusion_matrices_{str(technique).replace(' ', '_')}.png"
         fig.savefig(file_path, dpi=300)
@@ -319,31 +319,47 @@ def create_meta_learners_bar_charts(meta_learners_results, metric_column_name, o
 
     sns.set_style("darkgrid")
 
-    techniques = list(df["technique"].unique())
+    techniques = list(df["technique"].dropna().unique())
+    if len(techniques) == 0:
+        raise ValueError("No techniques found after filtering; cannot plot bar charts.")
 
-    for technique in techniques:
+    # Make a grid of subplots (one subplot per technique)
+    ncols = 3
+    nrows = int(np.ceil(len(techniques) / ncols))
+    fig, axes = plt.subplots(nrows, ncols, figsize=(16, nrows * 5))
+    axes = np.array(axes).reshape(-1)  # safe even if nrows/ncols == 1
+
+    for i, technique in enumerate(techniques):
+        ax = axes[i]
         tdf = df[df["technique"] == technique].copy()
 
+        # Optional: stable ordering
         tdf = tdf.sort_values("model type", ascending=False)
 
-        plt.figure(figsize=(10, 5))
-        ax = sns.barplot(
+        sns.barplot(
             data=tdf,
             x="model type",
             y=metric_column_name,
             errorbar=None,
             color="steelblue",
+            ax=ax,
         )
 
-        ax.set_title(f"{metric_column_name} by model type — Technique: {technique}")
+        ax.set_title(f"Technique: {technique}")
         ax.set_xlabel("Model type")
         ax.set_ylabel(metric_column_name)
         ax.tick_params(axis="x", rotation=90)
 
-        plt.tight_layout()
+    # Remove/hide unused subplots
+    for j in range(len(techniques), len(axes)):
+        fig.delaxes(axes[j])
 
-    file_path = f"{output_path}\\{metric_column_name.replace(" ","_")}_bar_chart.png"
-    plt.savefig(file_path, dpi=300)
+    fig.suptitle(f"{metric_column_name} by model type (all techniques)", fontsize=16)
+    fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+
+    safe_metric = metric_column_name.replace(" ", "_")
+    file_path = f"{output_path}\\{safe_metric}_bar_chart.png"
+    fig.savefig(file_path, dpi=300)
     plt.show()
 
 
@@ -388,7 +404,7 @@ def show_meta_learners_box_plots(meta_learners_results, metric_column_name, outp
 
     plt.suptitle(f'Boxplot of {metric_column_name} by Model Type for Each Technique', fontsize=16)
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-    file_path = f"{output_path}\\{metric_column_name.replace("testing ","")}_box_plot.png"
+    file_path = f"{output_path}\\{metric_column_name.replace(" ","_")}_box_plot.png"
     plt.savefig(file_path, dpi=300)
     plt.show()
     print(f'Saved {metric_column_name}\'s box plot to {file_path}')
