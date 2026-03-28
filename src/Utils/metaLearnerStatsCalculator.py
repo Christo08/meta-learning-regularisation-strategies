@@ -3,7 +3,7 @@ from sklearn.metrics import mean_squared_error, f1_score, accuracy_score
 from src.Utils.statsCalculator import tp_tn_fp_fn
 
 
-class TrainingMetaLearnerStats:
+class MetaLearnerStats:
 
     def __init__(self):
         self.training_mses = []
@@ -41,27 +41,3 @@ class TrainingMetaLearnerStats:
         "testing false positives": self.testing_false_positive,
         "testing false negatives": self.testing_false_negative
     }
-
-class TestingMetaLearnerStats:
-    def __init__(self):
-        self.f1 = 0
-        self.accuracy = 0
-        self.true_negative = 0
-        self.false_negative = 0
-        self.true_positive = 0
-        self.false_positive = 0
-
-    def update_stats(self, y_testing, y_testing_pred):
-        self.f1 = f1_score(y_testing, y_testing_pred, average='weighted')
-        self.accuracy = accuracy_score(y_testing, y_testing_pred) * 100
-        self.true_positive, self.true_negative, self.false_positive, self.false_negative = tp_tn_fp_fn(y_testing, y_testing_pred)
-
-    def get_stats_json_object(self):
-        return {
-            "testing f1": self.f1,
-            "testing accuracies": self.accuracy,
-            "testing true positive": self.true_positive,
-            "testing true negative": self.true_negative,
-            "testing false positive": self.false_positive,
-            "testing false negative": self.false_negative
-        }

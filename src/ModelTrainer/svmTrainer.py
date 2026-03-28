@@ -9,7 +9,7 @@ from sklearn.svm import SVC
 from src.Utils.constants import *
 from src.Utils.datasetHandler import prepared_meta_feature_dataset
 from src.Utils.fileHandler import load_settings, folder_maker
-from src.Utils.metaLearnerStatsCalculator import TrainingMetaLearnerStats, TestingMetaLearnerStats
+from src.Utils.metaLearnerStatsCalculator import MetaLearnerStats
 
 
 def training_meta_support_vector_machines(settings_file_path, training_set, testing_set, seed, kFold =5):
@@ -37,8 +37,16 @@ def training_meta_support_vector_machines(settings_file_path, training_set, test
         result = {
             "model type": "svm",
             "technique": target_column.replace("_"," "),
-            **training_result,
-            **testing_result
+            "training loses": training_result["training loses"],
+            "training accuracies": training_result["training accuracies"],
+            "training f1": training_result["training f1"],
+            "testing loses": testing_result["testing loses"],
+            "testing accuracies": testing_result["testing accuracies"],
+            "testing f1": testing_result["testing f1"],
+            "testing true positives": testing_result["testing true positives"],
+            "testing true negatives": testing_result["testing true negatives"],
+            "testing false positives": testing_result["testing false positives"],
+            "testing false negatives": testing_result["testing false negatives"],
         }
         results.append(result)
     return results
@@ -48,6 +56,8 @@ def train_meta_support_vector_machines(params, training_set, testing_set, seed, 
     training_y = np.argmax(np.asarray(training_set[1]), axis=1)
     testing_x = testing_set[0]
     testing_y = np.argmax(np.asarray(testing_set[1]), axis=1)
+
+    svm_stats = MetaLearnerStats()
 
     svm_params = params.copy()
     if svm_params.get("kernel") != "poly" and "degree" in svm_params:
@@ -60,20 +70,18 @@ def train_meta_support_vector_machines(params, training_set, testing_set, seed, 
         folder_maker(folder_path)
 
     if kFold == 0:
-        svm_stats = TestingMetaLearnerStats()
-
         svm = SVC(**svm_params)
         svm.fit(training_x, training_y)
+
+        y_train_pred = svm.predict(training_x)
         y_test_pred = svm.predict(testing_x)
 
-        svm_stats.update_stats(testing_y, y_test_pred)
+        svm_stats.update_stats(training_y, y_train_pred, testing_y, y_test_pred)
 
         if target_column != 'na':
             joblib.dump(svm, f'{folder_path}\\{target_column}.pkl')
     else:
         kf = KFold(n_splits=kFold, shuffle=True, random_state=seed)
-
-        svm_stats = TrainingMetaLearnerStats()
 
         counter = 1
 

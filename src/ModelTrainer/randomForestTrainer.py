@@ -8,7 +8,7 @@ from sklearn.model_selection import KFold
 from src.Utils.constants import *
 from src.Utils.datasetHandler import prepared_meta_feature_dataset
 from src.Utils.fileHandler import load_settings, folder_maker
-from src.Utils.metaLearnerStatsCalculator import TrainingMetaLearnerStats, TestingMetaLearnerStats
+from src.Utils.metaLearnerStatsCalculator import MetaLearnerStats
 
 
 def training_meta_random_forests(settings_file_path, training_set, testing_set, seed, kFold =5):
@@ -36,8 +36,16 @@ def training_meta_random_forests(settings_file_path, training_set, testing_set, 
         result = {
             "model type": "Random forest",
             "technique": target_column.replace("_"," "),
-            **training_result,
-            **testing_result
+            "training loses": training_result["training loses"],
+            "training accuracies": training_result["training accuracies"],
+            "training f1": training_result["training f1"],
+            "testing loses": testing_result["testing loses"],
+            "testing accuracies": testing_result["testing accuracies"],
+            "testing f1": testing_result["testing f1"],
+            "testing true positives": testing_result["testing true positives"],
+            "testing true negatives": testing_result["testing true negatives"],
+            "testing false positives": testing_result["testing false positives"],
+            "testing false negatives": testing_result["testing false negatives"],
         }
         results.append(result)
     return results
@@ -48,6 +56,8 @@ def train_meta_random_forest(params, training_set, testing_set, seed, target_col
     testing_x = testing_set[0]
     testing_y = testing_set[1]
 
+    random_forests_stats = MetaLearnerStats()
+
     if target_column != 'na':
         folder_path = f"{MODULE_PATH}RandomForest\\{datetime.now().strftime("%Y%m%d_%h")}"
         folder_maker(folder_path)
@@ -57,20 +67,18 @@ def train_meta_random_forest(params, training_set, testing_set, seed, target_col
         rf_params["max_samples"] = None
 
     if kFold == 0:
-        random_forests_stats = TestingMetaLearnerStats()
-
         forest = RandomForestClassifier(random_state=seed, **rf_params)
         forest.fit(training_x, training_y)
+
+        y_train_pred = forest.predict(training_x)
         y_test_pred = forest.predict(testing_x)
 
-        random_forests_stats.update_stats(testing_y, y_test_pred)
+        random_forests_stats.update_stats(training_y, y_train_pred, testing_y, y_test_pred)
 
         if target_column != 'na':
             joblib.dump(forest, f'{folder_path}\\{target_column}.pkl')
     else:
         kf = KFold(n_splits=kFold, shuffle=True, random_state=seed)
-
-        random_forests_stats = TrainingMetaLearnerStats()
 
         counter = 1
 

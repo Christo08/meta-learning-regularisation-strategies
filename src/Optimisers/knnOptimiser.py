@@ -1,7 +1,6 @@
 import random
 from datetime import datetime
 
-import numpy as np
 import pyhopper
 
 from src.ModelTrainer.knnTrainer import train_meta_k_nearest_neighbors
@@ -50,12 +49,12 @@ def optimise_k_nearest_neighbors(dataset, selected_metrics, direction):
 def train_k_nearest_neighbors_warp(params):
     global training_set, validation_set, selected_metric
     seed = random.randint(0, 4294967295)
-    loses = train_meta_k_nearest_neighbors(params, training_set, validation_set, seed)
+    loses = train_meta_k_nearest_neighbors(params, training_set, validation_set, seed,kFold=0)
     if selected_metric == OPTIMED_METRIC_OPTIONS[0]:
-        return np.mean(loses["testing accuracies"])
+        return loses["testing accuracies"]
     elif selected_metric == OPTIMED_METRIC_OPTIONS[1]:
-        return np.mean(loses["testing f1"])
+        return loses["testing f1"]
     elif selected_metric == OPTIMED_METRIC_OPTIONS[2]:
-        return np.mean(loses["testing loses"])
+        return loses["testing loses"]
     else:
-        return np.mean(loses["testing true positives"])
+        return loses["testing true positives"]/(loses["testing true positives"]+loses["testing false positives"])

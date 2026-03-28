@@ -13,7 +13,7 @@ from src.Models.NN.network import Network
 from src.Utils.constants import META_LEANER_TARGET_COLUMNS, MODULE_PATH
 from src.Utils.datasetHandler import apply_smote, prepared_meta_feature_dataset
 from src.Utils.fileHandler import load_settings, folder_maker
-from src.Utils.metaLearnerStatsCalculator import TrainingMetaLearnerStats, TestingMetaLearnerStats
+from src.Utils.metaLearnerStatsCalculator import MetaLearnerStats
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -224,8 +224,16 @@ def training_meta_nns(settings_file_path, training_set, testing_set, seed, kFold
         result = {
             "model type": "Neural Network",
             "technique": target_column.replace("_"," "),
-            **training_result,
-            **testing_result
+            "training loses": training_result["training loses"],
+            "training accuracies": training_result["training accuracies"],
+            "training f1": training_result["training f1"],
+            "testing loses": testing_result["testing loses"],
+            "testing accuracies": testing_result["testing accuracies"],
+            "testing f1": testing_result["testing f1"],
+            "testing true positives": testing_result["testing true positives"],
+            "testing true negatives": testing_result["testing true negatives"],
+            "testing false positives": testing_result["testing false positives"],
+            "testing false negatives": testing_result["testing false negatives"],
         }
         results.append(result)
     return results
@@ -237,29 +245,35 @@ def train_meta_nn_loop(params, training_set, testing_set, seed, target_column ='
     testing_x = testing_set[0]
     testing_y = testing_set[1].to_numpy()
 
+    nn_stats = MetaLearnerStats()
+
     if target_column != 'na':
         folder_path = f"{MODULE_PATH}NN\\{datetime.now().strftime("%Y%m%d_%H")}"
         folder_maker(folder_path)
 
     if kFold == 0:
-        nn_stats = TestingMetaLearnerStats()
-
         nn = train_nn((training_x, training_y), params)
 
+        x_training = torch.tensor(training_x, dtype=torch.float32)
+        y_training = torch.tensor(training_y, dtype=torch.float32)
         x_testing = torch.tensor(testing_x, dtype=torch.float32)
         y_testing = torch.tensor(testing_y, dtype=torch.float32)
 
         if torch.cuda.is_available():
+            x_training = x_training.to(device)
+            y_training = y_training.to(device)
             x_testing = x_testing.to(device)
             y_testing = y_testing.to(device)
 
         with torch.no_grad():
+            y_train_pred = nn(x_training)
             y_test_pred = nn(x_testing)
-
+        y_training_cpu = output_cleaner(y_training.detach().cpu().numpy())
+        y_train_pred_cpu = output_cleaner(y_train_pred.detach().cpu().numpy())
         y_testing_cpu = output_cleaner(y_testing.detach().cpu().numpy())
         y_test_pred_cpu = output_cleaner(y_test_pred.detach().cpu().numpy())
 
-        nn_stats.update_stats(y_testing_cpu, y_test_pred_cpu)
+        nn_stats.update_stats(y_training_cpu, y_train_pred_cpu, y_testing_cpu, y_test_pred_cpu)
 
         if target_column != 'na':
             checkpoint = {
@@ -275,8 +289,6 @@ def train_meta_nn_loop(params, training_set, testing_set, seed, target_column ='
             torch.save(checkpoint, f'{folder_path}\\{target_column}.pt')
     else:
         kf = KFold(n_splits=kFold, shuffle=True, random_state=seed)
-
-        nn_stats = TrainingMetaLearnerStats()
 
         counter = 1
         for train_idx, test_idx in kf.split(training_x):

@@ -49,7 +49,8 @@ STATS_OPTIONS = ["All",
                  "Back"]
 OPTIMED_METRIC_OPTIONS = ["Accuracies",
                           "f1 scores",
-                          "MSE"]
+                          "MSE",
+                          "Precision"]
 
 #SUBSET CREATION
 MIN_CLASSES_REQUIRED = 2
