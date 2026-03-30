@@ -35,10 +35,15 @@ def train_basic_nns(settings, technique, training_set, testing_set, seed, catego
 
         counter =0
 
-        for train_idx, _ in kf.split(training_set[0]):
+        X_full = training_set[0]
+        y_full = training_set[1]
+
+        for train_idx, _ in kf.split(X_full):
+            training_set_x = X_full.iloc[train_idx]
+            training_set_y = y_full.iloc[train_idx]
+
             counter+=1
-            training_set_x = training_set[0].iloc[train_idx]
-            training_set_y = training_set[1].iloc[train_idx]
+
             training_set = (training_set_x, training_set_y)
             training_loss_value, training_accuracy_value, testing_loss_value, testing_accuracy_value = training_basic_loop(training_set,
                                                                                                                            testing_set,

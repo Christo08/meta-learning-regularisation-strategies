@@ -252,10 +252,10 @@ def create_confusion_matrix(dataset, output_path):
     required_cols = [
         "model type",
         "technique",
-        "testing true positive",
-        "testing true negative",
-        "testing false positive",
-        "testing false negative",
+        "testing true positives",
+        "testing true negatives",
+        "testing false positives",
+        "testing false negatives",
     ]
     missing = [c for c in required_cols if c not in dataset.columns]
     if missing:
@@ -286,10 +286,10 @@ def create_confusion_matrix(dataset, output_path):
             module_df = technique_df[technique_df["model type"] == model_type]
 
             # Get the mean of the folds
-            tp = float(module_df["testing true positive"].iloc[0])
-            tn = float(module_df["testing true negative"].iloc[0])
-            fp = float(module_df["testing false positive"].iloc[0])
-            fn = float(module_df["testing false negative"].iloc[0])
+            tp = float(module_df["testing true positives"].iloc[0])
+            tn = float(module_df["testing true negatives"].iloc[0])
+            fp = float(module_df["testing false positives"].iloc[0])
+            fn = float(module_df["testing false negatives"].iloc[0])
 
             confusion_matrix = np.array([[tn, fp], [fn, tp]])
 

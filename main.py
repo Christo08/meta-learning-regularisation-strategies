@@ -56,7 +56,7 @@ def main():
                                                  dataset_settings)
         elif process == PROCESS_OPTIONS[2]:
             if input("Do you have a meta-feature file? (y/n): ").lower() == "y":
-                dataset = load_meta_feature_dataset(need_subsets_info = True, should_ask_for_apply_z_scoring = False, should_ask_rank_techniques = False)
+                dataset = load_meta_feature_dataset(need_datasets_info= True, should_ask_for_apply_z_scoring = False, should_ask_rank_techniques = False)
                 names =[]
                 number_of_instances = int(input("How many Subsets do you want to create per dataset? "))
                 recreate_subsets(dataset, number_of_instances, datasets_settings, names)
@@ -83,7 +83,7 @@ def main():
         elif process == PROCESS_OPTIONS[3]:
             names = show_dataset_menu(datasets_settings)
             if names:
-                subset_dataset = load_meta_feature_dataset(need_subsets_info=True, should_ask_for_apply_z_scoring = False, should_ask_rank_techniques = False)
+                subset_dataset = load_meta_feature_dataset(need_datasets_info=True, should_ask_for_apply_z_scoring = False, should_ask_rank_techniques = False, need_subsets_info = True)
                 output_path = input("Enter the path of the Output dataset file or folder: ")
                 number_of_folds = int(input("How many folds do you want to use per instance? "))
                 index_to_create = input("Enter the indexes to recreate (separated by commas): ").replace(' ', '').split(",")
@@ -104,6 +104,10 @@ def main():
             training_set = load_meta_feature_dataset(type = "training set", should_cover_to_binary = True, should_ask_rank_techniques = False, should_ask_for_apply_z_scoring=True, should_add_params=False)
             testing_set = load_meta_feature_dataset(type = "testing set", should_cover_to_binary = True, should_ask_rank_techniques = False, should_ask_for_apply_z_scoring=True, should_add_params=False)
             train_meta_learners(training_set, testing_set)
+            # drop SMOTE
+            # changes weithg of f1
+            # look a f1 score and HuberLoss
+            # bins for outliers, log-traformts scales and sqrt scales
         elif process == PROCESS_OPTIONS[8]:
             calculate_meta_learners_stats()
         else:

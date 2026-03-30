@@ -64,7 +64,7 @@ REGULARISATION_TECHNIQUES = [
     {"name": "batchNormalisation", "param": "batchNormalisation", "fileName": "batch_normalisation"},
     {"name": "dropout", "param": "dropout", "fileName": "dropout"},
     {"name": "layerNormalisation", "param": "layerNormalisation", "fileName": "layer_normalisation"},
-    {"name": "SMOTE", "param": "SMOTE", "fileName": "SMOTE"},
+    # {"name": "SMOTE", "param": "SMOTE", "fileName": "SMOTE"},
     {"name": "prune", "param": "prune", "fileName": "prune"},
     {"name": "weightDecay", "param": "weightDecay", "fileName": "weight_decay"},
     {"name": "weightNormalisation", "param": "weightNormalisation", "fileName": "weight_normalisation"},

@@ -66,12 +66,12 @@ def split_dataset(dataset):
     testing_set_stats_df = testing_set_stats_df[['column name', 'count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max']]
     save_data_frame(testing_set_stats_df, f"{stats_output_path}\\testing_set_stats_{timestamp}.csv")
 
-def load_meta_feature_dataset(need_subsets_info = False, type ="", should_cover_to_binary = False, should_ask_for_apply_z_scoring = True, should_ask_rank_techniques = True, should_add_params = False):
+def load_meta_feature_dataset(need_datasets_info = False, type ="", should_cover_to_binary = False, should_ask_for_apply_z_scoring = True, should_ask_rank_techniques = True, should_add_params = False, need_subsets_info = False):
     should_rank_techniques = input("Is the dataset raw? (y/n): ").lower() == "y" if should_ask_rank_techniques else False
     dataset = load_meta_features_csv(type)
     if should_add_params:
         dataset = append_hyperparameters(dataset)
-    dataset = clean_dataset(dataset)
+    dataset = clean_dataset(dataset, need_subsets_info)
     for target_column in TARGET_COLUMNS:
         if target_column not in dataset.columns:
             raise ValueError(f"Missing target column: {target_column}")
@@ -91,14 +91,14 @@ def load_meta_feature_dataset(need_subsets_info = False, type ="", should_cover_
     if should_cover_to_binary:
         dataset = dataset.drop(columns=["dataset_name", "SMOTE"], errors="ignore", inplace=False)
         dataset = apply_z_scoring(dataset, should_ask_for_apply_z_scoring)
-        if not need_subsets_info:
+        if not need_datasets_info:
             dataset.drop(columns=["dataset_name"], errors="ignore", inplace=True)
         for column in TARGET_COLUMNS:
             if column in dataset.columns:
                 dataset[column] = dataset[column].apply(lambda x: 1 if x == 1 else 0)
     return dataset
 
-def clean_dataset(dataset):
+def clean_dataset(dataset, need_subsets_info):
     columns_to_drop = [
         "baseline_training_loss", "baseline_validation_loss", "batch_normalisation_training_loss",
         "batch_normalisation_validation_loss", "dropout_training_loss", "dropout_validation_loss",
@@ -113,8 +113,12 @@ def clean_dataset(dataset):
         "SMOTE_testing_accuracies","prune_training_accuracies","prune_testing_accuracies",
         "weight_decay_training_accuracies","weight_decay_testing_accuracies","weight_normalisation_training_accuracies",
         "weight_normalisation_testing_accuracies","weight_perturbation_training_accuracies",
-        "weight_perturbation_testing_accuracies", "seed", "file_name", "subset_type"
+        "weight_perturbation_testing_accuracies"
     ]
+    if not need_subsets_info:
+        columns_to_drop.append("seed")
+        columns_to_drop.append("file_name")
+        columns_to_drop.append("subset_type")
 
     dataset.drop(columns=columns_to_drop, errors="ignore", inplace=True)
 
@@ -127,7 +131,7 @@ def clean_dataset(dataset):
     dataset.rename(columns=rename_map, inplace=True)
 
     for column in dataset.columns:
-        if not(column in TARGET_COLUMNS) and column != "dataset_name":
+        if not(column in TARGET_COLUMNS) and not (column in ["dataset_name", "seed", "file_name", "subset_type"]):
             dataset[column] = dataset[column].values.astype(np.float64)
 
     return dataset

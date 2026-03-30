@@ -1,3 +1,4 @@
+import json
 import random
 import time
 from datetime import datetime
@@ -106,7 +107,15 @@ def recreate_dataset(subset_dataset, dataset_names, indexes, output_path, number
                     "seed": row['seed'],
                     "subsetType": row['subset_type'],
                     "file_path": row["file_name"],
-                    "index": index
+                    "index": index,
+                    "baseline": _to_list(row["baseline"]),
+                    "batch_normalisation": _to_list(row["batch_normalisation"]),
+                    "dropout": _to_list(row["dropout"]),
+                    "layer_normalisation": _to_list(row["layer_normalisation"]),
+                    "prune": _to_list(row["prune"]),
+                    "weight_decay": _to_list(row["weight_decay"]),
+                    "weight_normalisation": _to_list(row["weight_normalisation"]),
+                    "weight_perturbation": _to_list(row["weight_perturbation"])
                 })
             seeds.append(seed)
     total_duration = 0
@@ -121,6 +130,13 @@ def recreate_dataset(subset_dataset, dataset_names, indexes, output_path, number
             instance, duration = create_instance(seed["name"], seed["nn_settings"], number_of_folds, training_set,
                                                  testing_set, meta_feature, row, subset_category_columns,
                                                  row["file_path"])
+            for technique in REGULARISATION_TECHNIQUES:
+                print(technique)
+                field_name = technique['fileName'] + "_training_loss"
+                instance.at[0, field_name] = _to_list(instance.at[0, field_name]) + row[technique['fileName']]
+                field_name = technique['fileName'] + "_testing_loss"
+                instance.at[0, field_name] = _to_list(instance.at[0, field_name]) + row[technique['fileName'] ]
+            print(instance)
             total_duration += duration
             dataset = pd.concat([dataset, instance], ignore_index=True)
             save_data_frame(dataset, output_path)
@@ -129,6 +145,29 @@ def recreate_dataset(subset_dataset, dataset_names, indexes, output_path, number
                   f"It took {format_duration(total_duration)}/{format_duration(predicted_duration)}")
             counter += 1
 
+
+def _to_list(value):
+    if value is None or (isinstance(value, float) and np.isnan(value)):
+        return []
+    if isinstance(value, list):
+        return value
+    if isinstance(value, (tuple, np.ndarray, pd.Series)):
+        return list(value)
+    if isinstance(value, str):
+        s = value.strip()
+        if s == "":
+            return []
+        # Try JSON first, then Python literal, else fallback to scalar-in-list
+        try:
+            parsed = json.loads(s)
+            return parsed if isinstance(parsed, list) else [parsed]
+        except Exception:
+            try:
+                parsed = ast.literal_eval(s)
+                return parsed if isinstance(parsed, list) else [parsed]
+            except Exception:
+                return [s]
+    return [value]
 
 def create_dataset(database_name, output_path, number_of_instances, number_of_folds, dataset_settings):
     dataset, output_path = load_meta_features_dataset(output_path)
