@@ -170,6 +170,8 @@ def create_pair_plot(features, targets, output_path):
 def create_heatmap(features, targets, output_path):
     if not targets.empty:
         features = pd.concat([features, targets], axis=1)
+        if "dataset_name" in features.columns:
+            features.drop("dataset_name", axis=1, inplace=True)
 
         print("Making correlation heatmap")
         plt.figure(figsize=(25, 20))

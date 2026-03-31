@@ -69,8 +69,6 @@ def prepare_meta_feature_dataset_for_states():
         options = "normaled_"
         features = apply_normalization(features=features)
 
-    dataset = pd.concat([features, targets], axis=1)
-
     targets = rank_techniques(targets)
     should_cover_to_binary = input("Do you want to convert the ranks to binary (1 for best technique, 0 for others)? (y/n): ").lower() == "y"
     if should_cover_to_binary:
@@ -78,6 +76,8 @@ def prepare_meta_feature_dataset_for_states():
         for column in TARGET_COLUMNS:
             if column in targets.columns:
                 targets[column] = targets[column].apply(lambda x: 1 if x == 1 else 0)
+
+    dataset = pd.concat([features, targets], axis=1)
 
     should_save_dataset = input("Do you want to save the prepared dataset? (y/n): ").lower() == "y"
     if should_save_dataset:
