@@ -131,12 +131,10 @@ def recreate_dataset(subset_dataset, dataset_names, indexes, output_path, number
                                                  testing_set, meta_feature, row, subset_category_columns,
                                                  row["file_path"])
             for technique in REGULARISATION_TECHNIQUES:
-                print(technique)
                 field_name = technique['fileName'] + "_training_loss"
                 instance.at[0, field_name] = _to_list(instance.at[0, field_name]) + row[technique['fileName']]
                 field_name = technique['fileName'] + "_testing_loss"
                 instance.at[0, field_name] = _to_list(instance.at[0, field_name]) + row[technique['fileName'] ]
-            print(instance)
             total_duration += duration
             dataset = pd.concat([dataset, instance], ignore_index=True)
             save_data_frame(dataset, output_path)
