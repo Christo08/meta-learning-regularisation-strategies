@@ -183,8 +183,7 @@ def create_heatmap(features, targets, output_path):
 
 
 def calculate_dataset_stats(full_dataset):
-    dataset_without_datasets_names = full_dataset.drop(columns=["dataset_name"], errors="ignore")
-    features, targets = spilt_dataset_and_targets(dataset_without_datasets_names)
+    features, targets = spilt_dataset_and_targets(full_dataset)
     has_target = not targets.empty
     output_path = input("Enter the path of the Output stats folder: ")
 

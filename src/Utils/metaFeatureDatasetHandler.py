@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import ttest_ind, zscore
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import PowerTransformer
 
 from src.Utils.constants import TARGET_COLUMNS
 from src.Utils.fileHandler import load_meta_features_csv, save_data_frame, get_latest_settings
@@ -42,63 +43,92 @@ def split_dataset(dataset):
                                    stratify=rankings_per_dataset["bin"],
                                    random_state = seed)
 
-    set_output_path = input("Enter the path to folder to which the set should be saved: ")
-    stats_output_path = input("Enter the path of the output stats folder: ")
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    train_datasets_name = train["dataset_name"].tolist()
+    test_datasets_name = test["dataset_name"].tolist()
 
     print("Train datasets:")
-    train_datasets_name = train["dataset_name"].tolist()
     print(train_datasets_name)
-    training_set = dataset[dataset["dataset_name"].isin(train_datasets_name)]
-    save_data_frame(training_set, f"{set_output_path}\\training_set_{timestamp}.csv")
-    training_set_stats_df = training_set.describe().T
-    training_set_stats_df = training_set_stats_df.reset_index().rename(columns={'index': 'column name'})
-    training_set_stats_df = training_set_stats_df[['column name', 'count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max']]
-    save_data_frame(training_set_stats_df, f"{stats_output_path}\\training_set_stats_{timestamp}.csv")
 
     print("Test datasets:")
-    test_datasets_name = test["dataset_name"].tolist()
     print(test_datasets_name)
+    training_set = dataset[dataset["dataset_name"].isin(train_datasets_name)]
     testing_set = dataset[dataset["dataset_name"].isin(test_datasets_name)]
-    save_data_frame(testing_set, f"{set_output_path}\\testing_set_{timestamp}.csv")
-    testing_set_stats_df = testing_set.describe().T
-    testing_set_stats_df = testing_set_stats_df.reset_index().rename(columns={'index': 'column name'})
-    testing_set_stats_df = testing_set_stats_df[['column name', 'count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max']]
-    save_data_frame(testing_set_stats_df, f"{stats_output_path}\\testing_set_stats_{timestamp}.csv")
 
-def load_meta_feature_dataset(need_datasets_info = False, type ="", should_cover_to_binary = False, should_ask_for_apply_z_scoring = True, should_ask_rank_techniques = True, should_add_params = False, need_subsets_info = False):
-    should_rank_techniques = input("Is the dataset raw? (y/n): ").lower() == "y" if should_ask_rank_techniques else False
-    dataset = load_meta_features_csv(type)
-    if should_add_params:
-        dataset = append_hyperparameters(dataset)
-    dataset = clean_dataset(dataset, need_subsets_info)
-    for target_column in TARGET_COLUMNS:
-        if target_column not in dataset.columns:
-            raise ValueError(f"Missing target column: {target_column}")
-    if should_rank_techniques:
+    return training_set, testing_set
+
+def prepare_meta_feature_dataset_for_states():
+    dataset = load_meta_features_csv("")
+    dataset = clean_dataset(dataset, False)
+
+    targets = dataset[TARGET_COLUMNS]
+    features = dataset.drop(TARGET_COLUMNS, axis=1)
+
+    options = ""
+    should_normalise= input("Do you want to normalise the dataset? (y/n): ").lower() == "y"
+    if should_normalise:
+        options = "normaled_"
+        features = apply_normalization(features=features)
+
+    dataset = pd.concat([features, targets], axis=1)
+
+    targets = rank_techniques(targets)
+    should_cover_to_binary = input("Do you want to convert the ranks to binary (1 for best technique, 0 for others)? (y/n): ").lower() == "y"
+    if should_cover_to_binary:
+        options = options+"binary_"
+        for column in TARGET_COLUMNS:
+            if column in targets.columns:
+                targets[column] = targets[column].apply(lambda x: 1 if x == 1 else 0)
+
+    should_save_dataset = input("Do you want to save the prepared dataset? (y/n): ").lower() == "y"
+    if should_save_dataset:
+        output_path = input("Enter the path of the output dataset folder: ")
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        file_name = f"regularisation_meta_learning_{options}{timestamp}.csv"
+        file_path = output_path + "\\" + file_name
+        save_data_frame(dataset, file_path)
+
+def prepare_meta_feature_sets():
+    was_processed = input("Has the dataset be processed before, note normalise should not have been applied? (y/n): ").lower() == "y"
+    dataset = load_meta_features_csv("")
+    if not was_processed:
+        dataset = clean_dataset(dataset, True)
+
         targets = dataset[TARGET_COLUMNS]
         dataset = dataset.drop(TARGET_COLUMNS, axis=1)
 
         targets = rank_techniques(targets)
+        for column in TARGET_COLUMNS:
+            if column in targets.columns:
+                targets[column] = targets[column].apply(lambda x: 1 if x == 1 else 0)
 
         dataset = pd.concat([dataset, targets], axis=1)
+    training_set, testing_set = split_dataset(dataset)
 
-        output_path = input("Enter the path of the Output dataset folder: ")
+    training_targets = training_set[TARGET_COLUMNS]
+    training_features = training_set.drop(TARGET_COLUMNS, axis=1)
+
+    testing_targets = testing_set[TARGET_COLUMNS]
+    testing_features = testing_set.drop(TARGET_COLUMNS, axis=1)
+
+    training_features, testing_features = apply_normalization(training_features = training_features, testing_features = testing_features)
+
+    training_set = pd.concat([training_features, training_targets], axis=1)
+    testing_set = pd.concat([testing_features, testing_targets], axis=1)
+
+    should_save_dataset = input("Do you want to save the prepared dataset? (y/n): ").lower() == "y"
+    if should_save_dataset:
+        output_path = input("Enter the path of the output dataset folder: ")
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        file_name = f"regularisation_meta_learning_{timestamp}.csv"
+        file_name = f"regularisation_meta_learning_testing_set_{timestamp}.csv"
         file_path = output_path + "\\" + file_name
-        save_data_frame(dataset, file_path)
-    if should_cover_to_binary:
-        dataset = dataset.drop(columns=["dataset_name", "SMOTE"], errors="ignore", inplace=False)
-        dataset = apply_z_scoring(dataset, should_ask_for_apply_z_scoring)
-        if not need_datasets_info:
-            dataset.drop(columns=["dataset_name"], errors="ignore", inplace=True)
-        for column in TARGET_COLUMNS:
-            if column in dataset.columns:
-                dataset[column] = dataset[column].apply(lambda x: 1 if x == 1 else 0)
-    return dataset
+        save_data_frame(testing_set, file_path)
+        file_name = f"regularisation_meta_learning_training_set_{timestamp}.csv"
+        file_path = output_path + "\\" + file_name
+        save_data_frame(training_set, file_path)
 
-def clean_dataset(dataset, need_subsets_info):
+    return training_set, testing_set
+
+def clean_dataset(dataset, should_drop_dataset_name = True):
     columns_to_drop = [
         "baseline_training_loss", "baseline_validation_loss", "batch_normalisation_training_loss",
         "batch_normalisation_validation_loss", "dropout_training_loss", "dropout_validation_loss",
@@ -113,12 +143,10 @@ def clean_dataset(dataset, need_subsets_info):
         "SMOTE_testing_accuracies","prune_training_accuracies","prune_testing_accuracies",
         "weight_decay_training_accuracies","weight_decay_testing_accuracies","weight_normalisation_training_accuracies",
         "weight_normalisation_testing_accuracies","weight_perturbation_training_accuracies",
-        "weight_perturbation_testing_accuracies"
+        "weight_perturbation_testing_accuracies", "seed","file_name", "subset_type", "SMOTE_testing_loss"
     ]
-    if not need_subsets_info:
-        columns_to_drop.append("seed")
-        columns_to_drop.append("file_name")
-        columns_to_drop.append("subset_type")
+    if should_drop_dataset_name:
+        columns_to_drop = columns_to_drop + ["dataset_name"]
 
     dataset.drop(columns=columns_to_drop, errors="ignore", inplace=True)
 
@@ -151,39 +179,71 @@ def append_hyperparameters(dataset):
         dataset.loc[index, "max_number_of_neurons"] = np.max(number_of_neurons)
     return dataset
 
-def apply_z_scoring(dataset, should_ask_for_apply_z_scoring):
-    should_apply_z_scoring = input("Apply Z scoring? (y/n): ").lower() == "y" if should_ask_for_apply_z_scoring else False
-    if should_apply_z_scoring:
-        max_float = np.finfo(np.float32).max
-        for column in dataset.columns:
-            if not(column in TARGET_COLUMNS) and column != "dataset_name":
-                column_data = dataset[column].values.astype(np.float64)
-                finite_mask = np.isfinite(column_data)
+def apply_normalization(features=None, training_features=None, testing_features=None):
+    transformer = PowerTransformer(method="yeo-johnson")
 
-                z_column = np.empty_like(column_data)
-                z_column[:] = column_data
-                z_column[finite_mask] = zscore(column_data[finite_mask])
+    def _split_numeric_non_numeric(df: pd.DataFrame):
+        numeric_df = df.select_dtypes(include=[np.number])
+        non_numeric_df = df.drop(columns=numeric_df.columns)
+        return numeric_df, non_numeric_df
 
-                z_column = np.where(z_column == np.inf, max_float, z_column)
+    def _recombine(numeric_df: pd.DataFrame, non_numeric_df: pd.DataFrame):
+        # Preserve original column order
+        combined = pd.concat([numeric_df, non_numeric_df], axis=1)
+        return combined.loc[:, list(numeric_df.columns) + list(non_numeric_df.columns)]
 
-                dataset[column] = z_column
-    return dataset
+    if features is not None:
+        if not isinstance(features, pd.DataFrame):
+            transformer.fit(features)
+            return transformer.transform(features)
 
-def rank_techniques(dataset):
-    assert dataset.shape[1] >= 2, "Need at least two techniques to compare."
+        numeric_df, non_numeric_df = _split_numeric_non_numeric(features)
+        if numeric_df.shape[1] == 0:
+            return features  # nothing to normalize
+
+        transformer.fit(numeric_df)
+        transformed = transformer.transform(numeric_df)
+        numeric_out = pd.DataFrame(transformed, index=features.index, columns=numeric_df.columns)
+        return _recombine(numeric_out, non_numeric_df)
+    elif training_features is not None and testing_features is not None:
+        transformer.fit(training_features)
+        training_transformed = transformer.transform(training_features)
+        testing_transformed = transformer.transform(testing_features)
+        if isinstance(training_features, pd.DataFrame):
+            training_features = pd.DataFrame(
+                training_transformed,
+                index=training_features.index,
+                columns=training_features.columns,
+            )
+        else:
+            training_features = training_transformed
+        if isinstance(testing_features, pd.DataFrame):
+            testing_features = pd.DataFrame(
+                testing_transformed,
+                index=testing_features.index,
+                columns=testing_features.columns,
+            )
+        else:
+            testing_features = testing_transformed
+        return training_features, testing_features
+    else:
+        assert False, "Either dataset or both training_set and testing_set must be provided."
+
+def rank_techniques(targets):
+    assert targets.shape[1] >= 2, "Need at least two techniques to compare."
 
     # apply hypothesis test
     def row_wise_pval_matrix(row):
         return pd.DataFrame({
-            col1: [apply_ttest(row[col1], row[col2]) for col2 in dataset.columns]
-            for col1 in dataset.columns
-        }, index=dataset.columns)
+            col1: [apply_ttest(row[col1], row[col2]) for col2 in targets.columns]
+            for col1 in targets.columns
+        }, index=targets.columns)
 
     print("Calculating the pvals of each cell.")
-    pvals_matrices = dataset.apply(row_wise_pval_matrix, axis=1)
+    pvals_matrices = targets.apply(row_wise_pval_matrix, axis=1)
     # calculate mean
     print("Calculating the mean of each cell.")
-    means_dataset = dataset.applymap(calculate_mean)
+    means_dataset = targets.applymap(calculate_mean)
 
     # Apply custom ranking with equivalence (pval >= 0.5 means not significantly different)
     ranked_rows = []

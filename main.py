@@ -6,10 +6,10 @@ from src.Optimisers.metaLearnersOptimiser import optimise_meta_learners
 from src.Optimisers.nnOptimiser import optimise_basic_nn
 from src.Utils.constants import *
 from src.Utils.statsCalculator import calculate_meta_learners_stats, calculate_dataset_stats
-from src.Utils.fileHandler import load_json_file, load_settings
+from src.Utils.fileHandler import load_json_file, load_settings, load_meta_features_csv
 from src.Utils.instanceCreator import create_dataset, recreate_subsets, recreate_dataset
 from src.Utils.menus import show_dataset_menu, show_menu
-from src.Utils.metaFeatureDatasetHandler import load_meta_feature_dataset, split_dataset
+from src.Utils.metaFeatureDatasetHandler import prepare_meta_feature_dataset_for_states, prepare_meta_feature_sets
 
 
 def main():
@@ -56,7 +56,7 @@ def main():
                                                  dataset_settings)
         elif process == PROCESS_OPTIONS[2]:
             if input("Do you have a meta-feature file? (y/n): ").lower() == "y":
-                dataset = load_meta_feature_dataset(need_datasets_info= True, should_ask_for_apply_z_scoring = False, should_ask_rank_techniques = False)
+                dataset = load_meta_features_csv("")
                 names =[]
                 number_of_instances = int(input("How many Subsets do you want to create per dataset? "))
                 recreate_subsets(dataset, number_of_instances, datasets_settings, names)
@@ -71,7 +71,7 @@ def main():
                                                 "baseline_testing_loss","batch_normalisation_training_loss",
                                                 "batch_normalisation_testing_loss","dropout_training_loss","dropout_testing_loss",
                                                 "layer_normalisation_training_loss","layer_normalisation_testing_loss",
-                                                "SMOTE_training_loss","SMOTE_testing_loss","prune_training_loss","prune_testing_loss",
+                                                "prune_training_loss","prune_testing_loss",
                                                 "weight_decay_training_loss","weight_decay_testing_loss","weight_normalisation_training_loss",
                                                 "weight_normalisation_testing_loss","weight_perturbation_training_loss",
                                                 "weight_perturbation_testing_loss","best_training_technique","best_testing_technique",
@@ -83,32 +83,39 @@ def main():
         elif process == PROCESS_OPTIONS[3]:
             names = show_dataset_menu(datasets_settings)
             if names:
-                subset_dataset = load_meta_feature_dataset(need_datasets_info=True, should_ask_for_apply_z_scoring = False, should_ask_rank_techniques = False, need_subsets_info = True)
+                subset_dataset = load_meta_features_csv("")
                 output_path = input("Enter the path of the Output dataset file or folder: ")
                 number_of_folds = int(input("How many folds do you want to use per instance? "))
                 index_to_create = input("Enter the indexes to recreate (separated by commas): ").replace(' ', '').split(",")
                 index_to_create = [int(index) for index in index_to_create]
                 recreate_dataset(subset_dataset, names, index_to_create, output_path, number_of_folds, datasets_settings)
         elif process == PROCESS_OPTIONS[4]:
-            dataset = load_meta_feature_dataset()
+            was_processed= input("Has the dataset been processed before? (y/n): ").lower() == "y"
+            if was_processed:
+                dataset = load_meta_features_csv("")
+            else:
+                dataset = prepare_meta_feature_dataset_for_states()
             calculate_dataset_stats(dataset)
         elif process == PROCESS_OPTIONS[5]:
-            dataset = load_meta_feature_dataset(should_ask_for_apply_z_scoring = True)
-            split_dataset(dataset)
-        elif process == PROCESS_OPTIONS[6]:
-            # should_add_params = input("Do you to add the NN's meta-features to the dataset? (y/n): ").lower() == "y"
-            training_set = load_meta_feature_dataset(type = "training set", should_cover_to_binary = True, should_ask_rank_techniques = False, should_ask_for_apply_z_scoring=True, should_add_params=False)
+            has_sets= input("Do you have training and testing sets? (y/n): ").lower() == "y"
+            if has_sets:
+                training_set = load_meta_features_csv("training")
+            else:
+                training_set, _ = prepare_meta_feature_sets()
             optimise_meta_learners(training_set)
-        elif process == PROCESS_OPTIONS[7]:
-            # should_add_params = input("Do you to add the NN's meta-features to the datasets? (y/n): ").lower() == "y"
-            training_set = load_meta_feature_dataset(type = "training set", should_cover_to_binary = True, should_ask_rank_techniques = False, should_ask_for_apply_z_scoring=True, should_add_params=False)
-            testing_set = load_meta_feature_dataset(type = "testing set", should_cover_to_binary = True, should_ask_rank_techniques = False, should_ask_for_apply_z_scoring=True, should_add_params=False)
+        elif process == PROCESS_OPTIONS[6]:
+            has_sets= input("Do you have training and testing sets? (y/n): ").lower() == "y"
+            if has_sets:
+                training_set = load_meta_features_csv("training")
+                testing_set = load_meta_features_csv("testing")
+            else:
+                training_set, testing_set = prepare_meta_feature_sets()
             train_meta_learners(training_set, testing_set)
             # drop SMOTE
-            # changes weithg of f1
+            # changes weight of f1
             # look a f1 score and HuberLoss
             # bins for outliers, log-traformts scales and sqrt scales
-        elif process == PROCESS_OPTIONS[8]:
+        elif process == PROCESS_OPTIONS[7]:
             calculate_meta_learners_stats()
         else:
             break

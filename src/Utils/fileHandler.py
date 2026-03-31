@@ -32,9 +32,9 @@ def save_data_frame(data_frame, file_path):
 
 def load_meta_features_csv(type):
     if type == "":
-        path = input(f"Enter the path of the meta features dataset file:")
+        path = input(f"Enter the path of the meta features dataset file: ")
     else:
-        path = input(f"Enter the path of the {type} meta features dataset file or folder:")
+        path = input(f"Enter the path of the {type} meta features dataset file: ")
     if os.path.exists(path) and os.path.isfile(path):
         return pd.read_csv(path, sep=",", quotechar='"')
     else:

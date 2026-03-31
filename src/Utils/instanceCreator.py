@@ -108,14 +108,38 @@ def recreate_dataset(subset_dataset, dataset_names, indexes, output_path, number
                     "subsetType": row['subset_type'],
                     "file_path": row["file_name"],
                     "index": index,
-                    "baseline": _to_list(row["baseline"]),
-                    "batch_normalisation": _to_list(row["batch_normalisation"]),
-                    "dropout": _to_list(row["dropout"]),
-                    "layer_normalisation": _to_list(row["layer_normalisation"]),
-                    "prune": _to_list(row["prune"]),
-                    "weight_decay": _to_list(row["weight_decay"]),
-                    "weight_normalisation": _to_list(row["weight_normalisation"]),
-                    "weight_perturbation": _to_list(row["weight_perturbation"])
+                    "baseline_training_loss": _to_list(row["baseline_training_loss"]),
+                    "batch_normalisation_training_loss": _to_list(row["batch_normalisation_training_loss"]),
+                    "dropout_training_loss": _to_list(row["dropout_training_loss"]),
+                    "layer_normalisation_training_loss": _to_list(row["layer_normalisation_training_loss"]),
+                    "prune_training_loss": _to_list(row["prune_training_loss"]),
+                    "weight_decay_training_loss": _to_list(row["weight_decay_training_loss"]),
+                    "weight_normalisation_training_loss": _to_list(row["weight_normalisation_training_loss"]),
+                    "weight_perturbation_training_loss": _to_list(row["weight_perturbation_training_loss"]),
+                    "baseline_testing_loss": _to_list(row["baseline_testing_loss"]),
+                    "batch_normalisation_testing_loss": _to_list(row["batch_normalisation_testing_loss"]),
+                    "dropout_testing_loss": _to_list(row["dropout_testing_loss"]),
+                    "layer_normalisation_testing_loss": _to_list(row["layer_normalisation_testing_loss"]),
+                    "prune_testing_loss": _to_list(row["prune_testing_loss"]),
+                    "weight_decay_testing_loss": _to_list(row["weight_decay_testing_loss"]),
+                    "weight_normalisation_testing_loss": _to_list(row["weight_normalisation_testing_loss"]),
+                    "weight_perturbation_testing_loss": _to_list(row["weight_perturbation_testing_loss"]),
+                    "baseline_training_accuracies": _to_list(row["baseline_training_accuracies"]),
+                    "batch_normalisation_training_accuracies": _to_list(row["batch_normalisation_training_accuracies"]),
+                    "dropout_training_accuracies": _to_list(row["dropout_training_accuracies"]),
+                    "layer_normalisation_training_accuracies": _to_list(row["layer_normalisation_training_accuracies"]),
+                    "prune_training_accuracies": _to_list(row["prune_training_accuracies"]),
+                    "weight_decay_training_accuracies": _to_list(row["weight_decay_training_accuracies"]),
+                    "weight_normalisation_training_accuracies": _to_list(row["weight_normalisation_training_accuracies"]),
+                    "weight_perturbation_training_accuracies": _to_list(row["weight_perturbation_training_accuracies"]),
+                    "baseline_testing_accuracies": _to_list(row["baseline_testing_accuracies"]),
+                    "batch_normalisation_testing_accuracies": _to_list(row["batch_normalisation_testing_accuracies"]),
+                    "dropout_testing_accuracies": _to_list(row["dropout_testing_accuracies"]),
+                    "layer_normalisation_testing_accuracies": _to_list(row["layer_normalisation_testing_accuracies"]),
+                    "prune_testing_accuracies": _to_list(row["prune_testing_accuracies"]),
+                    "weight_decay_testing_accuracies": _to_list(row["weight_decay_testing_accuracies"]),
+                    "weight_normalisation_testing_accuracies": _to_list(row["weight_normalisation_testing_accuracies"]),
+                    "weight_perturbation_testing_accuracies": _to_list(row["weight_perturbation_testing_accuracies"])
                 })
             seeds.append(seed)
     total_duration = 0
@@ -132,9 +156,13 @@ def recreate_dataset(subset_dataset, dataset_names, indexes, output_path, number
                                                  row["file_path"])
             for technique in REGULARISATION_TECHNIQUES:
                 field_name = technique['fileName'] + "_training_loss"
-                instance.at[0, field_name] = _to_list(instance.at[0, field_name]) + row[technique['fileName']]
+                instance.at[0, field_name] = _to_list(instance.at[0, field_name]) + row[field_name]
                 field_name = technique['fileName'] + "_testing_loss"
-                instance.at[0, field_name] = _to_list(instance.at[0, field_name]) + row[technique['fileName'] ]
+                instance.at[0, field_name] = _to_list(instance.at[0, field_name]) + row[field_name]
+                field_name = technique['fileName'] + "_training_accuracies"
+                instance.at[0, field_name] = _to_list(instance.at[0, field_name]) + row[field_name]
+                field_name = technique['fileName'] + "_testing_accuracies"
+                instance.at[0, field_name] = _to_list(instance.at[0, field_name]) + row[field_name]
             total_duration += duration
             dataset = pd.concat([dataset, instance], ignore_index=True)
             save_data_frame(dataset, output_path)
