@@ -90,7 +90,7 @@ def main():
                 index_to_create = [int(index) for index in index_to_create]
                 recreate_dataset(subset_dataset, names, index_to_create, output_path, number_of_folds, datasets_settings)
         elif process == PROCESS_OPTIONS[4]:
-            dataset = load_meta_feature_dataset(should_ask_for_apply_z_scoring = False)
+            dataset = load_meta_feature_dataset()
             calculate_dataset_stats(dataset)
         elif process == PROCESS_OPTIONS[5]:
             dataset = load_meta_feature_dataset(should_ask_for_apply_z_scoring = True)
