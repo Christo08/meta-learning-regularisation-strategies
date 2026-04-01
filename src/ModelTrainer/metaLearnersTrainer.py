@@ -14,6 +14,8 @@ from src.Utils.menus import show_meta_leaner_type_menu
 
 
 def train_meta_learners(training_dataset, testing_dataset):
+    training_dataset.drop(columns=["dataset_name"], inplace=True)
+    testing_dataset.drop(columns=["dataset_name"], inplace=True)
     selected_meta_learn_types = show_meta_leaner_type_menu()
     number_of_folds = int(input("How many folds do you want the meta-learner to getrained? "))
     results = pd.DataFrame(columns=["model type", "technique",  "training loses", "testing loses"])

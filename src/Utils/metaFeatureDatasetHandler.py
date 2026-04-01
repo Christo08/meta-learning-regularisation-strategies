@@ -91,17 +91,15 @@ def prepare_meta_feature_sets():
     was_processed = input("Has the dataset be processed before, note normalise should not have been applied? (y/n): ").lower() == "y"
     dataset = load_meta_features_csv("")
     if not was_processed:
-        dataset = clean_dataset(dataset, True)
-
+        dataset = clean_dataset(dataset, False)
         targets = dataset[TARGET_COLUMNS]
-        dataset = dataset.drop(TARGET_COLUMNS, axis=1)
-
+        features = dataset.drop(TARGET_COLUMNS, axis=1)
         targets = rank_techniques(targets)
         for column in TARGET_COLUMNS:
             if column in targets.columns:
                 targets[column] = targets[column].apply(lambda x: 1 if x == 1 else 0)
+        dataset = pd.concat([features, targets], axis=1)
 
-        dataset = pd.concat([dataset, targets], axis=1)
     training_set, testing_set = split_dataset(dataset)
 
     training_targets = training_set[TARGET_COLUMNS]
@@ -206,26 +204,22 @@ def apply_normalization(features=None, training_features=None, testing_features=
         numeric_out = pd.DataFrame(transformed, index=features.index, columns=numeric_df.columns)
         return _recombine(numeric_out, non_numeric_df)
     elif training_features is not None and testing_features is not None:
-        transformer.fit(training_features)
-        training_transformed = transformer.transform(training_features)
-        testing_transformed = transformer.transform(testing_features)
-        if isinstance(training_features, pd.DataFrame):
-            training_features = pd.DataFrame(
-                training_transformed,
-                index=training_features.index,
-                columns=training_features.columns,
-            )
-        else:
-            training_features = training_transformed
-        if isinstance(testing_features, pd.DataFrame):
-            testing_features = pd.DataFrame(
-                testing_transformed,
-                index=testing_features.index,
-                columns=testing_features.columns,
-            )
-        else:
-            testing_features = testing_transformed
-        return training_features, testing_features
+        if not isinstance(training_features, pd.DataFrame) and not isinstance(testing_features, pd.DataFrame):
+            transformer.fit(training_features)
+            return transformer.transform(training_features), transformer.transform(testing_features)
+
+        training_numeric_df, training_non_numeric_df = _split_numeric_non_numeric(training_features)
+        testing_numeric_df, testing_non_numeric_df = _split_numeric_non_numeric(testing_features)
+        if training_numeric_df.shape[1] == 0 or testing_numeric_df.shape[1] == 0:
+            return training_numeric_df, testing_numeric_df  # nothing to normalize
+
+        transformer.fit(training_numeric_df)
+        training_transformed = transformer.transform(training_numeric_df)
+        training_numeric_out = pd.DataFrame(training_transformed, index=training_features.index, columns=training_numeric_df.columns)
+        testing_transformed = transformer.transform(testing_numeric_df)
+        testing_numeric_out = pd.DataFrame(testing_transformed, index=testing_features.index, columns=testing_numeric_df.columns)
+
+        return _recombine(training_numeric_out, training_non_numeric_df),  _recombine(testing_numeric_out, testing_non_numeric_df)
     else:
         assert False, "Either dataset or both training_set and testing_set must be provided."
 

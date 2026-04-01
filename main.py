@@ -97,7 +97,7 @@ def main():
                 dataset = prepare_meta_feature_dataset_for_states()
             calculate_dataset_stats(dataset)
         elif process == PROCESS_OPTIONS[5]:
-            has_sets= input("Do you have training and testing sets? (y/n): ").lower() == "y"
+            has_sets= input("Do you have training sets? (y/n): ").lower() == "y"
             if has_sets:
                 training_set = load_meta_features_csv("training")
             else:
