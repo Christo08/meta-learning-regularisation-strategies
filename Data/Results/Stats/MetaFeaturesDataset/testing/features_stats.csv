@@ -1,0 +1,15 @@
+column name,count,mean,std,min,25%,50%,75%,max
+number_of_features,135.0,0.075,0.653,-1.565,-0.472,0.072,0.566,1.164
+proportion_of_numeric_features,135.0,0.344,0.726,-1.342,-0.104,0.81,0.81,0.81
+number_of_instances,135.0,-0.011,1.075,-2.048,-0.939,0.028,0.858,1.677
+number_of_classes,135.0,0.063,0.956,-1.126,-1.126,-0.282,0.903,1.643
+ratio_of_instances_to_features,135.0,-0.078,1.082,-2.266,-1.066,0.031,0.917,1.691
+ratio_of_classes_to_features,135.0,-0.051,0.96,-1.439,-0.749,-0.234,0.673,2.041
+ratio_of_instances_to_classes,135.0,-0.038,1.095,-2.283,-1.092,-0.193,0.838,1.924
+ratio_of_min_to_max_instances_per_class,135.0,0.474,0.882,-1.29,-0.182,0.886,1.173,1.297
+proportion_of_features_with_outliers,135.0,0.167,0.82,-1.208,-0.547,0.203,0.899,1.233
+average_mutual_information,135.0,0.528,1.033,-1.308,-0.34,0.622,1.513,1.995
+minimum_mutual_information,135.0,0.702,1.344,-0.672,-0.672,0.402,2.23,2.346
+maximum_mutual_information,135.0,0.414,0.992,-1.405,-0.639,0.737,1.407,1.801
+equivalent_number_of_features,135.0,0.54,1.066,-1.22,-0.385,0.558,1.566,2.131
+noise_to_signal_ratio_of_features,135.0,-0.546,0.743,-1.629,-1.123,-0.833,0.048,1.788
