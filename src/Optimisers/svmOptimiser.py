@@ -11,7 +11,7 @@ from src.Utils.fileHandler import folder_maker
 number_of_steps = 400
 parameter_group = {
     "kernel": pyhopper.choice(["linear", "poly", "rbf", "sigmoid"]),
-    "C": pyhopper.float(0.1, 100.0, "0.4f"),
+    "C": pyhopper.float(0.1, 10.0, "0.4f"),
     "gamma": pyhopper.choice(["scale", "auto"]),
     "degree": pyhopper.int(2, 5),  # Only used for 'poly' kernel
     "coef0": pyhopper.float(0.0, 1.0, "0.4f")  # Used for 'poly' and 'sigmoid'

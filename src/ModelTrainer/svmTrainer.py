@@ -60,17 +60,19 @@ def train_meta_support_vector_machines(params, training_set, testing_set, seed, 
     svm_stats = MetaLearnerStats()
 
     svm_params = params.copy()
+
     if svm_params.get("kernel") != "poly" and "degree" in svm_params:
         del svm_params["degree"]
     if svm_params.get("kernel") not in ["poly", "sigmoid"] and "coef0" in svm_params:
         del svm_params["coef0"]
+
 
     if target_column != 'na':
         folder_path = f"{MODULE_PATH}SVM\\{datetime.now().strftime("%Y%m%d_%h")}"
         folder_maker(folder_path)
 
     if kFold == 0:
-        svm = SVC(**svm_params)
+        svm = SVC(**svm_params, max_iter=100000)
         svm.fit(training_x, training_y)
 
         y_train_pred = svm.predict(training_x)
