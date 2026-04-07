@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from scipy.stats import pointbiserialr
 from sklearn.metrics import confusion_matrix
 
 from src.Utils.constants import TARGET_COLUMNS, STATS_OPTIONS
@@ -169,14 +170,21 @@ def create_pair_plot(features, targets, output_path):
 
 def create_heatmap(features, targets, output_path):
     if not targets.empty:
-        features = pd.concat([features, targets], axis=1)
         if "dataset_name" in features.columns:
             features.drop("dataset_name", axis=1, inplace=True)
+
+        correlations_matrix = features.corr()
+
+        for target_column in targets.columns:
+            for feature_column in features.columns:
+                correlation,_ = pointbiserialr(targets[target_column], features[feature_column])
+                correlations_matrix.loc[feature_column, target_column] = correlation
+                correlations_matrix.loc[target_column, feature_column] = correlation
 
         print("Making correlation heatmap")
         plt.figure(figsize=(25, 20))
 
-        sns.heatmap(features.corr(), annot=True, fmt='.2f', cmap='Greys', linewidths=2)
+        sns.heatmap(correlations_matrix, annot=True, fmt='.2f', cmap='Greys', linewidths=2)
 
         plt.title('Correlation Heatmap')
         plt.savefig(f"{output_path}\\correlation_heatmap.png")
