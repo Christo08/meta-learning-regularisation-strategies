@@ -1,9 +1,0 @@
-technique,average_rank,best_count,best_count_percent,worst_count,worst_count_percent,can_not_be_used_count,can_not_be_used_percent
-baseline,0.207,28,20.741,28,20.741,0,0.0
-batch_normalisation,0.148,20,14.815,17,12.593,0,0.0
-dropout,0.148,20,14.815,11,8.148,0,0.0
-layer_normalisation,0.393,53,39.259,43,31.852,0,0.0
-prune,0.267,36,26.667,19,14.074,0,0.0
-weight_normalisation,0.311,42,31.111,12,8.889,0,0.0
-weight_decay,0.281,38,28.148,4,2.963,0,0.0
-weight_perturbation,0.259,35,25.926,1,0.741,0,0.0
