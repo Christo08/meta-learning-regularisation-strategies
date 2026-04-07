@@ -35,8 +35,8 @@ def split_dataset(dataset):
 
     rankings_per_dataset["mean_loss"] = rankings_per_dataset[targets].mean(axis=1)
     rankings_per_dataset["bin"] = pd.qcut(rankings_per_dataset["mean_loss"], q=4, labels=False)
-
-    seed = 5830 #random.randint(1, 10000)
+#5830
+    seed = random.randint(1, 10000)
     print("Seed:", seed)
     train, test = train_test_split(rankings_per_dataset,
                                    test_size=0.25,
@@ -161,7 +161,10 @@ def prepare_meta_feature_sets():
         options = options+"yeo_johnson_"
         training_features, testing_features  = apply_yeo_johnson(training_features = training_features, testing_features = testing_features)
 
-    training_features, testing_features = apply_normalization(training_features = training_features, testing_features = testing_features, are_there_bins= should_create_bins)
+    should_apply_z_scoring = input("Do you want to apply z-scoring? (y/n): ").lower() == "y"
+    if should_apply_z_scoring:
+        options = options+"z_scoring_"
+        training_features, testing_features = apply_normalization(training_features = training_features, testing_features = testing_features, are_there_bins= should_create_bins)
 
     training_set = pd.concat([training_features, training_targets], axis=1)
     testing_set = pd.concat([testing_features, testing_targets], axis=1)
@@ -232,42 +235,41 @@ def append_hyperparameters(dataset):
 
 def apply_yeo_johnson(features=None, training_features=None, testing_features=None):
         transformer = PowerTransformer(method="yeo-johnson")
+        skewed_features = [
+            'average_mutual_information',
+            'maximum_mutual_information',
+            'equivalent_number_of_features',
+            'minimum_mutual_information',
+            'ratio_of_classes_to_features',
+            'ratio_of_instances_to_features',
+            'proportion_of_numeric_features'
+        ]
 
         if features is not None:
             features = features.copy()
-            non_numeric_cols = features.select_dtypes(exclude=np.number).columns
-            numeric_features = features.drop(columns=non_numeric_cols)
+            cols_to_transform = [col for col in skewed_features if col in features.columns]
+            if cols_to_transform:
+                transformer.fit(features[cols_to_transform])
+                features[cols_to_transform] = transformer.transform(features[cols_to_transform])
 
-            transformer.fit(numeric_features)
+            transformer.fit(features)
 
-            transformed = transformer.transform(numeric_features)
-            transformed_df = pd.DataFrame(transformed, index=numeric_features.index, columns=numeric_features.columns)
-
-            for column in non_numeric_cols:
-                transformed_df[column] = features[column]
+            transformed = transformer.transform(features)
+            transformed_df = pd.DataFrame(transformed, index=features.index, columns=features.columns)
 
             return transformed_df
         elif training_features is not None and testing_features is not None:
             training_features = training_features.copy()
             testing_features = testing_features.copy()
 
-            non_numeric_cols = training_features.select_dtypes(exclude=np.number).columns
-            numeric_training_features = training_features.drop(columns=non_numeric_cols)
-            numeric_testing_features = testing_features.drop(columns=non_numeric_cols)
+            cols_to_transform = [col for col in skewed_features if col in training_features.columns]
 
-            transformer.fit(numeric_training_features)
+            if cols_to_transform:
+                transformer.fit(training_features[cols_to_transform])
+                training_features[cols_to_transform] = transformer.transform(training_features[cols_to_transform])
+                testing_features[cols_to_transform] = transformer.transform(testing_features[cols_to_transform])
 
-            training_transformed = transformer.transform(numeric_training_features)
-            training_transformed_df = pd.DataFrame(training_transformed, index=numeric_training_features.index, columns=numeric_training_features.columns)
-
-            testing_transformed = transformer.transform(numeric_testing_features)
-            testing_transformed_df = pd.DataFrame(testing_transformed, index=numeric_testing_features.index, columns=numeric_testing_features.columns)
-
-            for column in non_numeric_cols:
-                training_transformed_df[column] = training_features[column]
-                testing_transformed_df[column] = testing_features[column]
-
-            return training_transformed_df, testing_transformed_df
+            return training_features, testing_features
         else:
             assert False, "Either dataset or both training_set and testing_set must be provided."
 
@@ -280,8 +282,10 @@ def apply_normalization(features=None, training_features=None, testing_features=
         'average_mutual_information',
         'maximum_mutual_information',
         'equivalent_number_of_features',
-        'minimum_mutual_information',
-        'ratio_of_classes_to_features'
+        'ratio_of_instances_to_features',
+        'proportion_of_numeric_features',
+		'minimum_mutual_information',
+		'ratio_of_classes_to_features'
     ] if are_there_bins else []
     if features is not None:
         features = features.copy()
@@ -401,7 +405,9 @@ def fit_binning(dataset: pd.DataFrame):
     quantile_features = [
         'average_mutual_information',
         'maximum_mutual_information',
-        'equivalent_number_of_features'
+        'equivalent_number_of_features',
+        'ratio_of_instances_to_features',
+        'proportion_of_numeric_features'
     ]
 
     for col in quantile_features:
