@@ -5,13 +5,12 @@ from datetime import datetime
 
 import numpy as np
 import pandas as pd
-from scipy.stats import ttest_ind, zscore
+from scipy.stats import ttest_ind
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import PowerTransformer, StandardScaler
 
 from src.Utils.constants import TARGET_COLUMNS
 from src.Utils.fileHandler import load_meta_features_csv, save_data_frame, get_latest_settings
-from src.Utils.menus import show_menu
 
 
 def spilt_dataset_and_targets(dataset):
@@ -57,8 +56,7 @@ def split_dataset(dataset):
 
     return training_set, testing_set
 
-
-def addHyperparameters(dataset):
+def add_hyperparameters(dataset):
     for index, row in dataset.iterrows():
         settings = get_latest_settings(row["dataset_name"])
         if not settings:
@@ -73,7 +71,6 @@ def addHyperparameters(dataset):
         dataset.loc[index,"max_number_of_neurons"] = np.max(number_of_neurons)
     return dataset
 
-
 def prepare_meta_feature_dataset_for_states():
     dataset = load_meta_features_csv("")
 
@@ -81,7 +78,7 @@ def prepare_meta_feature_dataset_for_states():
     should_add_hyperparameters = input("Do you want to add hyperparameters (y/n): ").lower() == "y"
     if should_add_hyperparameters:
         options = "hyperparameters_"
-        dataset = addHyperparameters(dataset)
+        dataset = add_hyperparameters(dataset)
     
     dataset = clean_dataset(dataset, False)
 
@@ -143,7 +140,7 @@ def prepare_meta_feature_sets():
     should_add_hyperparameters = input("Do you want to add hyperparameters (y/n): ").lower() == "y"
     if should_add_hyperparameters:
         options = "hyperparameters_"
-        dataset = addHyperparameters(dataset)
+        dataset = add_hyperparameters(dataset)
     training_set, testing_set = split_dataset(dataset)
 
     should_create_bins = input("Do you want to create bins? (y/n): ").lower() == "y"
