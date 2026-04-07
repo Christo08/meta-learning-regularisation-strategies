@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import ttest_ind, zscore
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import PowerTransformer
+from sklearn.preprocessing import PowerTransformer, StandardScaler
 
 from src.Utils.constants import TARGET_COLUMNS
 from src.Utils.fileHandler import load_meta_features_csv, save_data_frame, get_latest_settings
@@ -94,9 +94,14 @@ def prepare_meta_feature_dataset_for_states():
     targets = dataset[TARGET_COLUMNS]
     features = dataset.drop(TARGET_COLUMNS, axis=1)
 
+    should_apply_yeo_johnson = input("Do you want to apply Yeo-Johnson transformation? (y/n): ").lower() == "y"
+    if should_apply_yeo_johnson:
+        options = options+"yeo_johnson_"
+        features = apply_yeo_johnson(features = features)
+
     should_normalise= input("Do you want to normalise the dataset? (y/n): ").lower() == "y"
     if should_normalise:
-        options = options+"normaled_"
+        options = options+"normalised_"
         features = apply_normalization(features=features)
 
     targets = rank_techniques(targets)
@@ -223,8 +228,27 @@ def append_hyperparameters(dataset):
         dataset.loc[index, "max_number_of_neurons"] = np.max(number_of_neurons)
     return dataset
 
+def apply_yeo_johnson(features=None, training_features=None, testing_features=None):
+        transformer = PowerTransformer(method="yeo-johnson")
+
+        if features is not None:
+            transformer.fit(features)
+            transformed = transformer.transform(features)
+            features = pd.DataFrame(transformed, index=features.index, columns=features.columns)
+            return features
+
+        elif training_features is not None and testing_features is not None:
+            transformer.fit(training_features)
+            training_transformed = transformer.transform(training_features)
+            training_transformed = pd.DataFrame(training_transformed, index=training_features.index, columns=training_features.columns)
+            testing_transformed = transformer.transform(testing_features)
+            testing_transformed = pd.DataFrame(testing_transformed, index=testing_features.index, columns=testing_features.columns)
+
+            return training_transformed, testing_transformed
+        else:
+            assert False, "Either dataset or both training_set and testing_set must be provided."
+
 def apply_normalization(features=None, training_features=None, testing_features=None, are_there_bins = False):
-    type = show_menu("Select the normalization technique to apply:", ["PowerTransformer (Yeo-Johnson)", "z-scoring"])
     bins_columns = [
         'number_of_instances',
         'ratio_of_instances_to_features',
@@ -236,104 +260,26 @@ def apply_normalization(features=None, training_features=None, testing_features=
         'minimum_mutual_information',
         'ratio_of_classes_to_features'
     ] if are_there_bins else []
-    if type == "z-scoring":
-        max_float = np.finfo(np.float32).max
-        if features is not None:
-            for column in features.columns:
-                if column not in bins_columns and column != "dataset_name":
-                    column_data = features[column].values.astype(np.float64)
-                    finite_mask = np.isfinite(column_data)
-
-                    z_column = np.empty_like(column_data)
-                    z_column[:] = column_data
-                    z_column[finite_mask] = zscore(column_data[finite_mask])
-
-                    z_column = np.where(z_column == np.inf, max_float, z_column)
-
-                    features[column] = z_column
-            return features
-        elif training_features is not None and testing_features is not None:
-            # Calculate mean and std from training set only
-            for column in training_features.columns:
-                if column not in bins_columns and column != "dataset_name":
-                    train_column_data = training_features[column].values.astype(np.float64)
-                    finite_mask = np.isfinite(train_column_data)
-
-                    # Calculate mean and std from training data only
-                    train_mean = np.mean(train_column_data[finite_mask])
-                    train_std = np.std(train_column_data[finite_mask], ddof=0)
-
-                    # Apply z-scoring to training features
-                    z_train = np.empty_like(train_column_data)
-                    z_train[:] = train_column_data
-                    if train_std != 0:
-                        z_train[finite_mask] = (train_column_data[finite_mask] - train_mean) / train_std
-                    else:
-                        z_train[finite_mask] = 0
-                    z_train = np.where(z_train == np.inf, max_float, z_train)
-                    training_features[column] = z_train
-
-                    # Apply same transformation (using training mean/std) to testing features
-                    test_column_data = testing_features[column].values.astype(np.float64)
-                    test_finite_mask = np.isfinite(test_column_data)
-
-                    z_test = np.empty_like(test_column_data)
-                    z_test[:] = test_column_data
-                    if train_std != 0:
-                        z_test[test_finite_mask] = (test_column_data[test_finite_mask] - train_mean) / train_std
-                    else:
-                        z_test[test_finite_mask] = 0
-                    z_test = np.where(z_test == np.inf, max_float, z_test)
-                    testing_features[column] = z_test
-
-            return training_features, testing_features
-        else:
-            assert False, "Either dataset or both training_set and testing_set must be provided."
+    if features is not None:
+        features = features.copy()
+        for column in features.columns:
+            if column not in bins_columns and column != "dataset_name":
+                scaler = StandardScaler()
+                features[column] = scaler.fit_transform(features[column].values.reshape(-1, 1)).flatten()
+        return features
+    elif training_features is not None and testing_features is not None:
+        if set(training_features.columns) != set(testing_features.columns):
+            raise ValueError("Training and testing features must have the same columns")
+        training_features = training_features.copy()
+        testing_features = testing_features.copy()
+        for column in training_features.columns:
+            if column not in bins_columns and column != "dataset_name":
+                scaler = StandardScaler()
+                training_features[column] = scaler.fit_transform(training_features[column].values.reshape(-1, 1)).flatten()
+                testing_features[column] = scaler.transform(testing_features[column].values.reshape(-1, 1)).flatten()
+        return training_features, testing_features
     else:
-        transformer = PowerTransformer(method="yeo-johnson")
-
-        def _split_numeric_non_numeric(df: pd.DataFrame, category_columns):
-            numeric_df = df.select_dtypes(include=[np.number]).drop(columns=[c for c in category_columns if c in df.columns], errors='ignore')
-            non_numeric_df = df.drop(columns=numeric_df.columns)
-            return numeric_df, non_numeric_df
-
-        def _recombine(numeric_df: pd.DataFrame, non_numeric_df: pd.DataFrame):
-            # Preserve original column order
-            combined = pd.concat([numeric_df, non_numeric_df], axis=1)
-            return combined.loc[:, list(numeric_df.columns) + list(non_numeric_df.columns)]
-
-        if features is not None:
-            if not isinstance(features, pd.DataFrame):
-                transformer.fit(features)
-                return transformer.transform(features)
-
-            numeric_df, non_numeric_df = _split_numeric_non_numeric(features, bins_columns)
-            if numeric_df.shape[1] == 0:
-                return features  # nothing to normalize
-
-            transformer.fit(numeric_df)
-            transformed = transformer.transform(numeric_df)
-            numeric_out = pd.DataFrame(transformed, index=features.index, columns=numeric_df.columns)
-            return _recombine(numeric_out, non_numeric_df)
-        elif training_features is not None and testing_features is not None:
-            if not isinstance(training_features, pd.DataFrame) and not isinstance(testing_features, pd.DataFrame):
-                transformer.fit(training_features)
-                return transformer.transform(training_features), transformer.transform(testing_features)
-
-            training_numeric_df, training_non_numeric_df = _split_numeric_non_numeric(training_features, bins_columns)
-            testing_numeric_df, testing_non_numeric_df = _split_numeric_non_numeric(testing_features, bins_columns)
-            if training_numeric_df.shape[1] == 0 or testing_numeric_df.shape[1] == 0:
-                return training_numeric_df, testing_numeric_df  # nothing to normalize
-
-            transformer.fit(training_numeric_df)
-            training_transformed = transformer.transform(training_numeric_df)
-            training_numeric_out = pd.DataFrame(training_transformed, index=training_features.index, columns=training_numeric_df.columns)
-            testing_transformed = transformer.transform(testing_numeric_df)
-            testing_numeric_out = pd.DataFrame(testing_transformed, index=testing_features.index, columns=testing_numeric_df.columns)
-
-            return _recombine(training_numeric_out, training_non_numeric_df),  _recombine(testing_numeric_out, testing_non_numeric_df)
-        else:
-            assert False, "Either dataset or both training_set and testing_set must be provided."
+        raise ValueError("Either dataset or both training_set and testing_set must be provided.")
 
 def rank_techniques(targets):
     assert targets.shape[1] >= 2, "Need at least two techniques to compare."
