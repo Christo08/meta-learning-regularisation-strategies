@@ -36,7 +36,7 @@ def split_dataset(dataset):
     rankings_per_dataset["mean_loss"] = rankings_per_dataset[targets].mean(axis=1)
     rankings_per_dataset["bin"] = pd.qcut(rankings_per_dataset["mean_loss"], q=4, labels=False)
 
-    seed = random.randint(1, 10000)
+    seed = 5830 #random.randint(1, 10000)
     print("Seed:", seed)
     train, test = train_test_split(rankings_per_dataset,
                                    test_size=0.25,
@@ -156,6 +156,11 @@ def prepare_meta_feature_sets():
     testing_targets = testing_set[TARGET_COLUMNS]
     testing_features = testing_set.drop(TARGET_COLUMNS, axis=1)
 
+    should_apply_yeo_johnson = input("Do you want to apply Yeo-Johnson transformation? (y/n): ").lower() == "y" if not should_create_bins else False
+    if should_apply_yeo_johnson:
+        options = options+"yeo_johnson_"
+        training_features, testing_features  = apply_yeo_johnson(training_features = training_features, testing_features = testing_features)
+
     training_features, testing_features = apply_normalization(training_features = training_features, testing_features = testing_features, are_there_bins= should_create_bins)
 
     training_set = pd.concat([training_features, training_targets], axis=1)
@@ -166,10 +171,10 @@ def prepare_meta_feature_sets():
         output_path = input("Enter the path of the output dataset folder: ")
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         file_name = f"regularisation_meta_learning_testing_set_{options}{timestamp}.csv"
-        file_path = output_path + "\\" + file_name
+        file_path = output_path + "\\TestingSets\\" + file_name
         save_data_frame(testing_set, file_path)
         file_name = f"regularisation_meta_learning_training_set_{options}{timestamp}.csv"
-        file_path = output_path + "\\" + file_name
+        file_path = output_path + "\\TrainingSets\\" + file_name
         save_data_frame(training_set, file_path)
 
     return training_set, testing_set
@@ -229,19 +234,40 @@ def apply_yeo_johnson(features=None, training_features=None, testing_features=No
         transformer = PowerTransformer(method="yeo-johnson")
 
         if features is not None:
-            transformer.fit(features)
-            transformed = transformer.transform(features)
-            features = pd.DataFrame(transformed, index=features.index, columns=features.columns)
-            return features
+            features = features.copy()
+            non_numeric_cols = features.select_dtypes(exclude=np.number).columns
+            numeric_features = features.drop(columns=non_numeric_cols)
 
+            transformer.fit(numeric_features)
+
+            transformed = transformer.transform(numeric_features)
+            transformed_df = pd.DataFrame(transformed, index=numeric_features.index, columns=numeric_features.columns)
+
+            for column in non_numeric_cols:
+                transformed_df[column] = features[column]
+
+            return transformed_df
         elif training_features is not None and testing_features is not None:
-            transformer.fit(training_features)
-            training_transformed = transformer.transform(training_features)
-            training_transformed = pd.DataFrame(training_transformed, index=training_features.index, columns=training_features.columns)
-            testing_transformed = transformer.transform(testing_features)
-            testing_transformed = pd.DataFrame(testing_transformed, index=testing_features.index, columns=testing_features.columns)
+            training_features = training_features.copy()
+            testing_features = testing_features.copy()
 
-            return training_transformed, testing_transformed
+            non_numeric_cols = training_features.select_dtypes(exclude=np.number).columns
+            numeric_training_features = training_features.drop(columns=non_numeric_cols)
+            numeric_testing_features = testing_features.drop(columns=non_numeric_cols)
+
+            transformer.fit(numeric_training_features)
+
+            training_transformed = transformer.transform(numeric_training_features)
+            training_transformed_df = pd.DataFrame(training_transformed, index=numeric_training_features.index, columns=numeric_training_features.columns)
+
+            testing_transformed = transformer.transform(numeric_testing_features)
+            testing_transformed_df = pd.DataFrame(testing_transformed, index=numeric_testing_features.index, columns=numeric_testing_features.columns)
+
+            for column in non_numeric_cols:
+                training_transformed_df[column] = training_features[column]
+                testing_transformed_df[column] = testing_features[column]
+
+            return training_transformed_df, testing_transformed_df
         else:
             assert False, "Either dataset or both training_set and testing_set must be provided."
 

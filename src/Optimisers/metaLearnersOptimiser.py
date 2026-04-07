@@ -15,6 +15,8 @@ from src.Utils.menus import show_meta_leaner_type_menu
 def optimise_meta_learners(dataset):
     dataset.drop(columns=["dataset_name"], inplace=True)
     selected_meta_learn_types = show_meta_leaner_type_menu()
+    if len(selected_meta_learn_types) == 0:
+        return
     selected_metrics = show_menu("Select the metric which will be optimed by entering its number: ", OPTIMED_METRIC_OPTIONS)
     direction = "min" if selected_metrics == OPTIMED_METRIC_OPTIONS[2] else "max"
     setting_indexes = {}
