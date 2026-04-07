@@ -206,7 +206,7 @@ def calculate_dataset_stats(full_dataset):
         print("Enter the datasets' numbers separated by a comma:")
         select_dataset_indexes = input().replace(' ', '').split(",")
         for select_dataset_index in select_dataset_indexes:
-            selected_processes.append(processes_option[int(select_dataset_index) - 1])
+            selected_processes.append(STATS_OPTIONS[int(select_dataset_index) - 1])
     elif processes_option == STATS_OPTIONS[len(STATS_OPTIONS) - 1]:
         return
     else:
