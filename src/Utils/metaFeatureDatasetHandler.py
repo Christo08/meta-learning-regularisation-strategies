@@ -57,22 +57,46 @@ def split_dataset(dataset):
 
     return training_set, testing_set
 
+
+def addHyperparameters(dataset):
+    for index, row in dataset.iterrows():
+        settings = get_latest_settings(row["dataset_name"])
+        if not settings:
+            raise ValueError(f"Missing setting: {row}")
+        dataset.loc[index,"batch_size"] = settings["batch_size"]
+        dataset.loc[index,"learning_rate"] = settings["learning_rate"]
+        dataset.loc[index,"number_of_epochs"] = settings["number_of_epochs"]
+        dataset.loc[index,"number_of_hidden_layers"] = settings["number_of_hidden_layers"]
+        number_of_neurons = settings["number_of_neurons_in_layers"][:settings["number_of_hidden_layers"]]
+        dataset.loc[index,"avg_number_of_neurons"] = np.average(number_of_neurons)
+        dataset.loc[index,"min_number_of_neurons"] = np.min(number_of_neurons)
+        dataset.loc[index,"max_number_of_neurons"] = np.max(number_of_neurons)
+    return dataset
+
+
 def prepare_meta_feature_dataset_for_states():
     dataset = load_meta_features_csv("")
+
+    options = ""
+    should_add_hyperparameters = input("Do you want to add hyperparameters (y/n): ").lower() == "y"
+    if should_add_hyperparameters:
+        options = "hyperparameters_"
+        dataset = addHyperparameters(dataset)
+    
     dataset = clean_dataset(dataset, False)
 
     should_create_bins = input("Do you want to create bins? (y/n): ").lower() == "y"
     if should_create_bins:
+        options = options+"bins_"
         bin_config = fit_binning(dataset)
         dataset = apply_binning(dataset, bin_config)
 
     targets = dataset[TARGET_COLUMNS]
     features = dataset.drop(TARGET_COLUMNS, axis=1)
 
-    options = ""
     should_normalise= input("Do you want to normalise the dataset? (y/n): ").lower() == "y"
     if should_normalise:
-        options = "normaled_"
+        options = options+"normaled_"
         features = apply_normalization(features=features)
 
     targets = rank_techniques(targets)
@@ -103,15 +127,23 @@ def prepare_meta_feature_sets():
         targets = dataset[TARGET_COLUMNS]
         features = dataset.drop(TARGET_COLUMNS, axis=1)
         targets = rank_techniques(targets)
-        for column in TARGET_COLUMNS:
-            if column in targets.columns:
-                targets[column] = targets[column].apply(lambda x: 1 if x == 1 else 0)
+        should_cover_to_binary = input("Do you want to convert the ranks to binary (1 for best technique, 0 for others)? (y/n): ").lower() == "y"
+        if should_cover_to_binary:
+            for column in TARGET_COLUMNS:
+                if column in targets.columns:
+                    targets[column] = targets[column].apply(lambda x: 1 if x == 1 else 0)
         dataset = pd.concat([features, targets], axis=1)
 
+    options = ""
+    should_add_hyperparameters = input("Do you want to add hyperparameters (y/n): ").lower() == "y"
+    if should_add_hyperparameters:
+        options = "hyperparameters_"
+        dataset = addHyperparameters(dataset)
     training_set, testing_set = split_dataset(dataset)
 
     should_create_bins = input("Do you want to create bins? (y/n): ").lower() == "y"
     if should_create_bins:
+        options = options+"bins_"
         bin_config = fit_binning(training_set)
         training_set = apply_binning(training_set, bin_config)
         testing_set = apply_binning(testing_set, bin_config)
@@ -131,10 +163,10 @@ def prepare_meta_feature_sets():
     if should_save_dataset:
         output_path = input("Enter the path of the output dataset folder: ")
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        file_name = f"regularisation_meta_learning_testing_set_{timestamp}.csv"
+        file_name = f"regularisation_meta_learning_testing_set_{options}{timestamp}.csv"
         file_path = output_path + "\\" + file_name
         save_data_frame(testing_set, file_path)
-        file_name = f"regularisation_meta_learning_training_set_{timestamp}.csv"
+        file_name = f"regularisation_meta_learning_training_set_{options}{timestamp}.csv"
         file_path = output_path + "\\" + file_name
         save_data_frame(training_set, file_path)
 
@@ -206,7 +238,7 @@ def apply_normalization(features=None, training_features=None, testing_features=
     ] if are_there_bins else []
     if type == "z-scoring":
         max_float = np.finfo(np.float32).max
-        if features != None:
+        if features is not None:
             for column in features.columns:
                 if column not in bins_columns and column != "dataset_name":
                     column_data = features[column].values.astype(np.float64)
