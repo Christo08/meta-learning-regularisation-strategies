@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from sklearn.metrics import mean_squared_error, f1_score, accuracy_score
 
-from src.Utils.statsCalculator import tp_tn_fp_fn
+from src.Utils.statsCalculator import calculated_confusion_matrix
 
 
 class MetaLearnerStats:
@@ -32,7 +32,7 @@ class MetaLearnerStats:
         single_column_y_testing_pred = revert_encoding(y_test_pred)
         self.testing_f1.append(f1_score(single_column_y_testing, single_column_y_testing_pred, average='binary', pos_label=1))
         self.testing_accuracy.append(accuracy_score(y_testing, y_test_pred)*100)
-        tp, tn, fp, fn = tp_tn_fp_fn(y_testing, y_test_pred)
+        tp, tn, fp, fn = calculated_confusion_matrix(single_column_y_testing, single_column_y_testing_pred)
         self.testing_true_positive.append(tp)
         self.testing_true_negative.append(tn)
         self.testing_false_positive.append(fp)

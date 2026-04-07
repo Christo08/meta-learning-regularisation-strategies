@@ -111,10 +111,6 @@ def main():
             else:
                 training_set, testing_set = prepare_meta_feature_sets()
             train_meta_learners(training_set, testing_set)
-            # drop SMOTE
-            # changes weight of f1
-            # look a f1 score and HuberLoss
-            # bins for outliers, log-traformts scales and sqrt scales
         elif process == PROCESS_OPTIONS[7]:
             calculate_meta_learners_stats()
         else:
