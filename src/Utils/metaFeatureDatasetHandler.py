@@ -250,12 +250,14 @@ def create_bins(features=None, training_features=None, testing_features=None):
             training_features['proportion_of_numeric_features'] = pd.cut(
                 training_features['proportion_of_numeric_features'],
                 bins=[0, 0.5, 0.8, 0.95, 1.0],
-                labels=False
+                labels=False,
+                include_lowest=True
             )
             testing_features['proportion_of_numeric_features'] = pd.cut(
                 testing_features['proportion_of_numeric_features'],
                 bins=[0, 0.5, 0.8, 0.95, 1.0],
-                labels=False
+                labels=False,
+                include_lowest=True
             )
         #convert minimum_mutual_information to binary classes where 1 is that minimum_mutual_information == 0
         if 'minimum_mutual_information' in training_features:
