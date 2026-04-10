@@ -88,7 +88,7 @@ def create_feature_density_plots(features, output_path):
     num_rows = int(np.ceil(len(numerical_columns) / num_cols))
 
     plt.figure(figsize=(12, num_rows * 3))
-    plt.suptitle('Density plot of meta features', y=0.51)  # Changed from plt.title() to plt.suptitle() with y parameter
+    plt.suptitle('Density plot of meta features', y=1)  # Changed from plt.title() to plt.suptitle() with y parameter
 
     for idx, feature in enumerate(numerical_columns, 1):
         plt.subplot(num_rows, num_cols, idx)
@@ -131,9 +131,8 @@ def create_box_plots(full_dataset, output_path):
 
     num_cols = 3
     num_rows = int(np.ceil(len(features) / num_cols))
-    height_per_row = 5
-    plt.figure(figsize=(12, num_rows * height_per_row))
-    plt.title('Box plots of features vs techniques')
+    plt.figure(figsize=(18, num_rows * 6))  # Changed from num_rows * 5 to num_rows * 3
+    plt.suptitle('Box plots of features vs techniques', y=1)
     for idx, feature in enumerate(features, 1):
         plt.subplot(num_rows, num_cols, idx)
         df_f = plot_df[plot_df["feature"] == feature]
@@ -147,8 +146,8 @@ def create_box_plots(full_dataset, output_path):
         plt.title(f"{feature}")
         plt.xticks(rotation=90)
 
-    plt.tight_layout()
-    plt.savefig(f"{output_path}\\features_box_plots.png")
+    plt.tight_layout(rect=[0, 0, 1, 0.98])
+    plt.savefig(f"{output_path}\\features_box_plots.png", bbox_inches='tight')  # Added bbox_inches
     plt.show()
     print(f"The features box plots was save to {output_path}\\features_box_plots.png")
 
