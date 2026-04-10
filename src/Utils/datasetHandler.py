@@ -157,7 +157,7 @@ def load_dataset(dataset_settings):
 
     return [training_set], [testing_set], [meta_features], [seed], [dataset_category_columns]
 
-def load_optimiser_dataset(seed, dataset_settings):
+def load_full_dataset(seed, dataset_settings):
     dataset = load_raw_dataset(dataset_settings)
     dataset = clean_dataset(dataset)
 

@@ -245,6 +245,7 @@ def calculate_dataset_stats(full_dataset):
 
 def calculate_meta_learners_stats():
     meta_learners_results = load_results_csv()
+    meta_learners_results.drop(columns=["model path"], inplace=True, errors='ignore')
     output_path = input("Enter the path of the Output stats folder: ")
 
     print("Making the f1 training box plots:")

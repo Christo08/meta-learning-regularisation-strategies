@@ -5,7 +5,7 @@ import pyhopper
 
 from src.ModelTrainer.nnTrainer import train_basic_nns, train_meta_nn_loop
 from src.Utils.constants import PARAMETER_GROUPS, CHECK_POINTS_PATH, OPTIMED_METRIC_OPTIONS, META_LEANER_TARGET_COLUMNS
-from src.Utils.datasetHandler import load_optimiser_dataset, prepared_meta_feature_dataset
+from src.Utils.datasetHandler import load_full_dataset, prepared_meta_feature_dataset
 from src.Utils.fileHandler import save_nn_settings, load_settings, folder_maker
 
 MAX_NUMBER_OF_LAYERS = 6
@@ -70,7 +70,7 @@ def optimise_basic_nn(dataset_name, dataset_settings, parameter_group, basic_set
 
     if parameter_group == PARAMETER_GROUPS[len(PARAMETER_GROUPS) - 1]:
         return True
-    sets, category_columns = load_optimiser_dataset(seed, dataset_settings)
+    sets, category_columns = load_full_dataset(seed, dataset_settings)
     training_set = sets[0]
     validation_set = sets[1]
     if parameter_group == PARAMETER_GROUPS[0]:

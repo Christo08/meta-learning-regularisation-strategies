@@ -1,7 +1,7 @@
 import pandas as pd
 import torch
 
-from src.ModelTrainer.metaLearnersTrainer import train_meta_learners
+from src.ModelTrainer.metaLearnersTrainer import train_meta_learners, test_meta_learner
 from src.Optimisers.metaLearnersOptimiser import optimise_meta_learners
 from src.Optimisers.nnOptimiser import optimise_basic_nn
 from src.Utils.constants import *
@@ -113,6 +113,13 @@ def main():
             train_meta_learners(training_set, testing_set)
         elif process == PROCESS_OPTIONS[7]:
             calculate_meta_learners_stats()
+        elif process == PROCESS_OPTIONS[8]:
+            names = show_dataset_menu(datasets_settings)
+            if not names:
+                break
+            for name in names:
+                dataset_settings = next((item for item in datasets_settings if item["name"] == name), None)
+                test_meta_learner(name, dataset_settings)
         else:
             break
 
