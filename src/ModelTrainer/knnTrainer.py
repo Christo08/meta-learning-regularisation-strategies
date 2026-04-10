@@ -19,14 +19,14 @@ def training_meta_k_nearest_neighbors(settings_file_path, training_set, testing_
         print(f"Training knn for { target_column.replace("_"," ")}...")
         cleaned_training_set = prepared_meta_feature_dataset(training_set,target_column,False)
         cleaned_testing_set = prepared_meta_feature_dataset(testing_set,target_column,False)
-        training_result = train_meta_k_nearest_neighbors(settings[target_column],
+        training_result, _ = train_meta_k_nearest_neighbors(settings[target_column],
                                                          cleaned_training_set,
                                                          cleaned_testing_set,
                                                          seed,
                                                          "n.a",
                                                          kFold)
         seed = random.randint(0, 4294967295)
-        testing_result = train_meta_k_nearest_neighbors(settings[target_column],
+        testing_result, path_to_module = train_meta_k_nearest_neighbors(settings[target_column],
                                                         cleaned_training_set,
                                                         cleaned_testing_set,
                                                         seed,
@@ -35,6 +35,7 @@ def training_meta_k_nearest_neighbors(settings_file_path, training_set, testing_
         seed = random.randint(0, 4294967295)
         result = {
             "model type": "KNN",
+            "model path": path_to_module,
             "technique": target_column.replace("_"," "),
             "training loses": training_result["training loses"],
             "training accuracies": training_result["training accuracies"],
@@ -58,6 +59,7 @@ def train_meta_k_nearest_neighbors(params, training_set, testing_set, seed, targ
 
     knn_stats = MetaLearnerStats()
 
+    path_to_module = ""
     if target_column != 'na':
         folder_path = f"{MODULE_PATH}KNN\\{datetime.now().strftime("%Y%m%d_%h")}"
         folder_maker(folder_path)
@@ -71,7 +73,8 @@ def train_meta_k_nearest_neighbors(params, training_set, testing_set, seed, targ
         knn_stats.update_stats(training_y, y_train_pred, testing_y, y_test_pred)
 
         if target_column != 'na':
-            joblib.dump(knn, f'{folder_path}\\{target_column}.pkl')
+            path_to_module = f'{folder_path}\\{target_column}.pkl'
+            joblib.dump(knn, path_to_module)
     else:
         kf = KFold(n_splits=kFold, shuffle=True, random_state=seed)
 
@@ -90,8 +93,9 @@ def train_meta_k_nearest_neighbors(params, training_set, testing_set, seed, targ
             knn_stats.update_stats(y_train, y_train_pred, testing_y, y_test_pred)
 
             if target_column != 'na':
-                joblib.dump(knn, f'{folder_path}\\{target_column}_fold_{counter}.pkl')
+                path_to_module = f'{folder_path}\\{target_column}_fold_{counter}.pkl'
+                joblib.dump(knn, path_to_module)
 
             counter = counter + 1
 
-    return knn_stats.get_stats_json_object()
+    return knn_stats.get_stats_json_object(), path_to_module

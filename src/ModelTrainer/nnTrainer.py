@@ -212,14 +212,14 @@ def training_meta_nns(settings_file_path, training_set, testing_set, seed, kFold
         print(f"Training nn for { target_column.replace("_"," ")}...")
         cleaned_training_set = prepared_meta_feature_dataset(training_set,target_column,False)
         cleaned_testing_set = prepared_meta_feature_dataset(testing_set,target_column,False)
-        training_result = train_meta_nn_loop(settings[target_column],
+        training_result, _ = train_meta_nn_loop(settings[target_column],
                                           cleaned_training_set,
                                           cleaned_testing_set,
                                           seed,
                                           "n.a",
                                           kFold)
         seed = random.randint(0, 4294967295)
-        testing_result = train_meta_nn_loop(settings[target_column],
+        testing_result, path_to_module = train_meta_nn_loop(settings[target_column],
                                                   cleaned_training_set,
                                                   cleaned_testing_set,
                                                   seed,
@@ -228,6 +228,7 @@ def training_meta_nns(settings_file_path, training_set, testing_set, seed, kFold
         seed = random.randint(0, 4294967295)
         result = {
             "model type": "Neural Network",
+            "model path": path_to_module,
             "technique": target_column.replace("_"," "),
             "training loses": training_result["training loses"],
             "training accuracies": training_result["training accuracies"],
@@ -252,6 +253,7 @@ def train_meta_nn_loop(params, training_set, testing_set, seed, target_column ='
 
     nn_stats = MetaLearnerStats()
 
+    path_to_module = ""
     if target_column != 'na':
         folder_path = f"{MODULE_PATH}NN\\{datetime.now().strftime("%Y%m%d_%H")}"
         folder_maker(folder_path)
@@ -291,7 +293,8 @@ def train_meta_nn_loop(params, training_set, testing_set, seed, target_column ='
                 },
                 "state_dict": nn.state_dict(),
             }
-            torch.save(checkpoint, f'{folder_path}\\{target_column}.pt')
+            path_to_module = f'{folder_path}\\{target_column}.pt'
+            torch.save(checkpoint, path_to_module)
     else:
         kf = KFold(n_splits=kFold, shuffle=True, random_state=seed)
 
@@ -334,9 +337,10 @@ def train_meta_nn_loop(params, training_set, testing_set, seed, target_column ='
                     },
                     "state_dict": nn.state_dict(),
                 }
-                torch.save(checkpoint, f'{folder_path}\\{target_column}_fold_{counter}.pt')
+                path_to_module = f'{folder_path}\\{target_column}_fold_{counter}.pt'
+                torch.save(checkpoint, path_to_module)
             counter = counter + 1
-    return nn_stats.get_stats_json_object()
+    return nn_stats.get_stats_json_object(), path_to_module
 
 def train_nn(training_set, settings):
     global device
