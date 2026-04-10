@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import ttest_ind
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import PowerTransformer, StandardScaler
+from sklearn.preprocessing import PowerTransformer, StandardScaler, FunctionTransformer
 
 from src.Utils.constants import TARGET_COLUMNS
 from src.Utils.fileHandler import load_meta_features_csv, save_data_frame, get_latest_settings
@@ -36,7 +36,7 @@ def split_dataset(dataset):
     rankings_per_dataset["mean_loss"] = rankings_per_dataset[targets].mean(axis=1)
     rankings_per_dataset["bin"] = pd.qcut(rankings_per_dataset["mean_loss"], q=4, labels=False)
 #5830
-    seed = random.randint(1, 10000)
+    seed = 5830#random.randint(1, 10000)
     print("Seed:", seed)
     train, test = train_test_split(rankings_per_dataset,
                                    test_size=0.25,
@@ -82,24 +82,21 @@ def prepare_meta_feature_dataset_for_states():
     
     dataset = clean_dataset(dataset, False)
 
-    should_create_bins = input("Do you want to create bins? (y/n): ").lower() == "y"
-    if should_create_bins:
-        options = options+"bins_"
-        bin_config = fit_binning(dataset)
-        dataset = apply_binning(dataset, bin_config)
-
     targets = dataset[TARGET_COLUMNS]
     features = dataset.drop(TARGET_COLUMNS, axis=1)
+    ignore_columns = ["dataset_name"]
 
-    should_apply_yeo_johnson = input("Do you want to apply Yeo-Johnson transformation? (y/n): ").lower() == "y"
-    if should_apply_yeo_johnson:
-        options = options+"yeo_johnson_"
-        features = apply_yeo_johnson(features = features)
+    should_apply_transformers = input("Do you want to apply transformers? (y/n): ").lower() == "y"
+    if should_apply_transformers:
+        options = options+"transformers_"
+        features = apply_transformers(features = features)
+        features = create_bins(features = features)
+        ignore_columns = ignore_columns + ['proportion_of_numeric_features', 'minimum_mutual_information']
 
     should_normalise= input("Do you want to normalise the dataset? (y/n): ").lower() == "y"
     if should_normalise:
         options = options+"normalised_"
-        features = apply_normalization(features=features)
+        features = apply_normalization(features=features, ignore_columns = ignore_columns)
 
     targets = rank_techniques(targets)
     should_cover_to_binary = input("Do you want to convert the ranks to binary (1 for best technique, 0 for others)? (y/n): ").lower() == "y"
@@ -137,18 +134,12 @@ def prepare_meta_feature_sets():
         dataset = pd.concat([features, targets], axis=1)
 
     options = ""
+    ignore_columns = ["dataset_name"]
     should_add_hyperparameters = input("Do you want to add hyperparameters (y/n): ").lower() == "y"
     if should_add_hyperparameters:
         options = "hyperparameters_"
         dataset = add_hyperparameters(dataset)
     training_set, testing_set = split_dataset(dataset)
-
-    should_create_bins = input("Do you want to create bins? (y/n): ").lower() == "y"
-    if should_create_bins:
-        options = options+"bins_"
-        bin_config = fit_binning(training_set)
-        training_set = apply_binning(training_set, bin_config)
-        testing_set = apply_binning(testing_set, bin_config)
 
     training_targets = training_set[TARGET_COLUMNS]
     training_features = training_set.drop(TARGET_COLUMNS, axis=1)
@@ -156,15 +147,17 @@ def prepare_meta_feature_sets():
     testing_targets = testing_set[TARGET_COLUMNS]
     testing_features = testing_set.drop(TARGET_COLUMNS, axis=1)
 
-    should_apply_yeo_johnson = input("Do you want to apply Yeo-Johnson transformation? (y/n): ").lower() == "y" if not should_create_bins else False
-    if should_apply_yeo_johnson:
-        options = options+"yeo_johnson_"
-        training_features, testing_features  = apply_yeo_johnson(training_features = training_features, testing_features = testing_features)
+    should_apply_transformers = input("Do you want to apply transformers? (y/n): ").lower() == "y"
+    if should_apply_transformers:
+        options = options+"transformers_"
+        training_features, testing_features = apply_transformers(training_features = training_features, testing_features = testing_features)
+        training_features, testing_features = create_bins(training_features = training_features, testing_features = testing_features)
+        ignore_columns = ignore_columns + ['proportion_of_numeric_features', 'minimum_mutual_information']
 
     should_apply_z_scoring = input("Do you want to apply z-scoring? (y/n): ").lower() == "y"
     if should_apply_z_scoring:
         options = options+"z_scoring_"
-        training_features, testing_features = apply_normalization(training_features = training_features, testing_features = testing_features, are_there_bins= should_create_bins)
+        training_features, testing_features = apply_normalization(training_features = training_features, testing_features = testing_features, ignore_columns = ignore_columns)
 
     training_set = pd.concat([training_features, training_targets], axis=1)
     testing_set = pd.concat([testing_features, testing_targets], axis=1)
@@ -233,64 +226,96 @@ def append_hyperparameters(dataset):
         dataset.loc[index, "max_number_of_neurons"] = np.max(number_of_neurons)
     return dataset
 
-def apply_yeo_johnson(features=None, training_features=None, testing_features=None):
-        transformer = PowerTransformer(method="yeo-johnson")
-        skewed_features = [
+def create_bins(features=None, training_features=None, testing_features=None):
+    if features is not None:
+        features = features.copy()
+        #convert proportion_of_numeric_features to multi classes
+        if 'proportion_of_numeric_features' in features.columns:
+            features['proportion_of_numeric_features'] = pd.cut(
+                features['proportion_of_numeric_features'],
+                bins=[0, 0.5, 0.8, 0.95, 1.0],
+                labels=False,
+                include_lowest=True
+            )
+        #convert minimum_mutual_information to binary classes where 1 is that minimum_mutual_information == 0
+        if 'minimum_mutual_information' in features:
+            features['minimum_mutual_information'] = (features['minimum_mutual_information'] == 0).astype(int)
+        return features
+    elif training_features is not None and testing_features is not None:
+        training_features = training_features.copy()
+        testing_features = testing_features.copy()
+
+        #convert proportion_of_numeric_features to multi classes
+        if 'proportion_of_numeric_features' in training_features.columns:
+            training_features['proportion_of_numeric_features'] = pd.cut(
+                training_features['proportion_of_numeric_features'],
+                bins=[0, 0.5, 0.8, 0.95, 1.0],
+                labels=False
+            )
+            testing_features['proportion_of_numeric_features'] = pd.cut(
+                testing_features['proportion_of_numeric_features'],
+                bins=[0, 0.5, 0.8, 0.95, 1.0],
+                labels=False
+            )
+        #convert minimum_mutual_information to binary classes where 1 is that minimum_mutual_information == 0
+        if 'minimum_mutual_information' in training_features:
+            training_features['minimum_mutual_information'] = (training_features['minimum_mutual_information'] == 0).astype(int)
+            testing_features['minimum_mutual_information'] = (testing_features['minimum_mutual_information'] == 0).astype(int)
+
+        return training_features, testing_features
+    else:
+        assert False, "Either dataset or both training_set and testing_set must be provided."
+
+def apply_transformers(features=None, training_features=None, testing_features=None):
+        yeo_johnson_transformer = PowerTransformer(method="yeo-johnson")
+
+        yeo_johnson_features = [
+            'number_of_instances',
+            'number_of_classes',
+            'ratio_of_instances_to_features',
+            'ratio_of_classes_to_features',
+            'ratio_of_instances_to_classes',
             'average_mutual_information',
             'maximum_mutual_information',
-            'equivalent_number_of_features',
-            'minimum_mutual_information',
-            'ratio_of_classes_to_features',
-            'ratio_of_instances_to_features',
-            'proportion_of_numeric_features'
+            'noise_to_signal_ratio_of_features'
         ]
 
         if features is not None:
             features = features.copy()
-            cols_to_transform = [col for col in skewed_features if col in features.columns]
-            if cols_to_transform:
-                transformer.fit(features[cols_to_transform])
-                features[cols_to_transform] = transformer.transform(features[cols_to_transform])
 
-            transformer.fit(features)
+            yeo_johnson_cols_to_transform = [col for col in yeo_johnson_features if col in features.columns]
+            if yeo_johnson_cols_to_transform:
+                features[yeo_johnson_cols_to_transform] = yeo_johnson_transformer.fit_transform(features[yeo_johnson_cols_to_transform])
 
-            transformed = transformer.transform(features)
-            transformed_df = pd.DataFrame(transformed, index=features.index, columns=features.columns)
+            if 'equivalent_number_of_features' in features.columns:
+                x = features['equivalent_number_of_features']
+                features['equivalent_number_of_features'] = np.log(x - 1 + 1e-6)
 
-            return transformed_df
+            return features
         elif training_features is not None and testing_features is not None:
             training_features = training_features.copy()
             testing_features = testing_features.copy()
 
-            cols_to_transform = [col for col in skewed_features if col in training_features.columns]
+            yeo_johnson_cols_to_transform = [col for col in yeo_johnson_features if col in training_features.columns]
 
-            if cols_to_transform:
-                transformer.fit(training_features[cols_to_transform])
-                training_features[cols_to_transform] = transformer.transform(training_features[cols_to_transform])
-                testing_features[cols_to_transform] = transformer.transform(testing_features[cols_to_transform])
+            if yeo_johnson_cols_to_transform:
+                training_features[yeo_johnson_cols_to_transform] = yeo_johnson_transformer.fit_transform(training_features[yeo_johnson_cols_to_transform])
+                testing_features[yeo_johnson_cols_to_transform] = yeo_johnson_transformer.transform(testing_features[yeo_johnson_cols_to_transform])
+
+            if 'equivalent_number_of_features' in training_features.columns:
+                training_features['equivalent_number_of_features'] = np.log(training_features['equivalent_number_of_features'] - 1 + 1e-6)
+                testing_features['equivalent_number_of_features'] = np.log(testing_features['equivalent_number_of_features'] - 1 + 1e-6)
+
 
             return training_features, testing_features
         else:
             assert False, "Either dataset or both training_set and testing_set must be provided."
 
-def apply_normalization(features=None, training_features=None, testing_features=None, are_there_bins = False):
-    bins_columns = [
-        'number_of_instances',
-        'ratio_of_instances_to_features',
-        'ratio_of_instances_to_classes',
-        'noise_to_signal_ratio_of_features',
-        'average_mutual_information',
-        'maximum_mutual_information',
-        'equivalent_number_of_features',
-        'ratio_of_instances_to_features',
-        'proportion_of_numeric_features',
-		'minimum_mutual_information',
-		'ratio_of_classes_to_features'
-    ] if are_there_bins else []
+def apply_normalization(features=None, training_features=None, testing_features=None, ignore_columns = []):
     if features is not None:
         features = features.copy()
         for column in features.columns:
-            if column not in bins_columns and column != "dataset_name":
+            if column not in ignore_columns:
                 scaler = StandardScaler()
                 features[column] = scaler.fit_transform(features[column].values.reshape(-1, 1)).flatten()
         return features
@@ -300,7 +325,7 @@ def apply_normalization(features=None, training_features=None, testing_features=
         training_features = training_features.copy()
         testing_features = testing_features.copy()
         for column in training_features.columns:
-            if column not in bins_columns and column != "dataset_name":
+            if column not in ignore_columns:
                 scaler = StandardScaler()
                 training_features[column] = scaler.fit_transform(training_features[column].values.reshape(-1, 1)).flatten()
                 testing_features[column] = scaler.transform(testing_features[column].values.reshape(-1, 1)).flatten()
@@ -380,79 +405,3 @@ def apply_ttest(cell1, cell2):
 def calculate_mean(cell):
     values = cell_parse(cell)
     return sum(values) / len(values)
-
-def fit_binning(dataset: pd.DataFrame):
-    bin_config = {}
-
-    log_features = [
-        'number_of_instances',
-        'ratio_of_instances_to_features',
-        'ratio_of_instances_to_classes',
-        'noise_to_signal_ratio_of_features'
-    ]
-
-    for col in log_features:
-        x = dataset[col].copy()
-
-        x = x[x > 0]
-
-        min_val = x.min()
-        max_val = x.max()
-
-        edges = np.logspace(np.log10(min_val), np.log10(max_val), 6)
-        bin_config[col] = edges
-
-    quantile_features = [
-        'average_mutual_information',
-        'maximum_mutual_information',
-        'equivalent_number_of_features',
-        'ratio_of_instances_to_features',
-        'proportion_of_numeric_features'
-    ]
-
-    for col in quantile_features:
-        edges = np.quantile(dataset[col], q=[0, 0.25, 0.5, 0.75, 1.0])
-        bin_config[col] = np.unique(edges)
-
-    col = 'minimum_mutual_information'
-    non_zero = dataset[col][dataset[col] > 0]
-
-    if len(non_zero) > 0:
-        edges_non_zero = np.quantile(non_zero, q=[0, 0.33, 0.66, 1.0])
-        bin_config[col] = {
-            'zero_bin': True,
-            'edges': np.unique(edges_non_zero)
-        }
-
-    bin_config['ratio_of_classes_to_features'] = np.array([0, 0.2, 0.5, 1, 2, np.inf])
-
-    return bin_config
-
-def apply_binning(dataset: pd.DataFrame, bin_config: dict):
-    binned_df = dataset.copy()
-
-    for col, config in bin_config.items():
-
-        if isinstance(config, dict) and config.get('zero_bin', False):
-            binned = np.zeros(len(dataset))
-
-            non_zero_mask = dataset[col] > 0
-            binned[non_zero_mask] = pd.cut(
-                dataset.loc[non_zero_mask, col],
-                bins=config['edges'],
-                labels=False,
-                include_lowest=True
-            ).fillna(0) + 1  # shift because 0 is reserved
-
-            binned_df[col] = binned.astype(int)
-            continue
-
-        # --- normal binning ---
-        binned_df[col] = pd.cut(
-            dataset[col],
-            bins=config,
-            labels=False,
-            include_lowest=True
-        ).fillna(0)
-
-    return binned_df

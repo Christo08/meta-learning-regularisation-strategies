@@ -88,7 +88,7 @@ def create_feature_density_plots(features, output_path):
     num_rows = int(np.ceil(len(numerical_columns) / num_cols))
 
     plt.figure(figsize=(12, num_rows * 3))
-    plt.title('Density plot of meta features')
+    plt.suptitle('Density plot of meta features', y=0.51)  # Changed from plt.title() to plt.suptitle() with y parameter
 
     for idx, feature in enumerate(numerical_columns, 1):
         plt.subplot(num_rows, num_cols, idx)
@@ -96,8 +96,8 @@ def create_feature_density_plots(features, output_path):
         sns.histplot(clean_data, kde=True)
         plt.title(f"{feature}\nSkewness: {round(features[feature].skew(), 2)}")
 
-    plt.tight_layout()
-    plt.savefig(f"{output_path}\\features_density_plots.png")
+    plt.tight_layout(rect=[0, 0, 1, 0.98])  # Add rect parameter to leave room for suptitle
+    plt.savefig(f"{output_path}\\features_density_plots.png", bbox_inches='tight')  # Add bbox_inches to include the title
     plt.show()
     print(f"The features density plot was save to {output_path}\\features_density_plots.png")
 
