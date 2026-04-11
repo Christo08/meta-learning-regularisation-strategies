@@ -23,7 +23,7 @@ def training_meta_k_nearest_neighbors(settings_file_path, training_set, testing_
                                                          cleaned_training_set,
                                                          cleaned_testing_set,
                                                          seed,
-                                                         "n.a",
+                                                         "na",
                                                          kFold)
         seed = random.randint(0, 4294967295)
         testing_result, path_to_module = train_meta_k_nearest_neighbors(settings[target_column],

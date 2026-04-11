@@ -216,7 +216,7 @@ def training_meta_nns(settings_file_path, training_set, testing_set, seed, kFold
                                           cleaned_training_set,
                                           cleaned_testing_set,
                                           seed,
-                                          "n.a",
+                                          "na",
                                           kFold)
         seed = random.randint(0, 4294967295)
         testing_result, path_to_module = train_meta_nn_loop(settings[target_column],
