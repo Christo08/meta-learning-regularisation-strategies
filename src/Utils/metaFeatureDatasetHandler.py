@@ -8,6 +8,7 @@ import pandas as pd
 from scipy.stats import ttest_ind
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import PowerTransformer, StandardScaler, FunctionTransformer
+from joblib import dump, load
 
 from src.Utils.constants import TARGET_COLUMNS
 from src.Utils.fileHandler import load_meta_features_csv, save_data_frame, get_latest_settings
@@ -87,9 +88,10 @@ def prepare_meta_feature_dataset_for_states():
     ignore_columns = ["dataset_name"]
 
     should_apply_transformers = input("Do you want to apply transformers? (y/n): ").lower() == "y"
+    transformer = None
     if should_apply_transformers:
         options = options+"transformers_"
-        features = apply_transformers(features = features)
+        features, transformer = apply_transformers(features = features)
         features = create_bins(features = features)
         ignore_columns = ignore_columns + ['proportion_of_numeric_features', 'minimum_mutual_information']
 
@@ -115,8 +117,22 @@ def prepare_meta_feature_dataset_for_states():
         file_name = f"regularisation_meta_learning_{options}{timestamp}.csv"
         file_path = output_path + "\\" + file_name
         save_data_frame(dataset, file_path)
+        dump({"transformer": transformer, "scaler": scaler}, f"Models/Settings/DataPipeline/pipeline_{timestamp}.joblib")
 
     return dataset
+
+def prepare_meta_feature_full_dataset_for_states(meta_features, path_to_data_pipeline):
+    obj = load(path_to_data_pipeline)
+    transformer = obj["transformer"]
+    scaler = obj["scaler"]
+
+    meta_features = clean_dataset(meta_features, True)
+    meta_features, _ = apply_transformers(features = meta_features, transformer = transformer)
+    meta_features = create_bins(features = meta_features)
+    ignore_columns = ['proportion_of_numeric_features', 'minimum_mutual_information']
+    meta_features, _ = apply_normalization(features = meta_features, ignore_columns = ignore_columns, scaler = scaler)
+    return meta_features
+
 
 def prepare_meta_feature_sets():
     was_processed = input("Has the dataset be processed before, note normalise and bins should not have been applied? (y/n): ").lower() == "y"
@@ -148,16 +164,18 @@ def prepare_meta_feature_sets():
     testing_features = testing_set.drop(TARGET_COLUMNS, axis=1)
 
     should_apply_transformers = input("Do you want to apply transformers? (y/n): ").lower() == "y"
+    transformer = None
     if should_apply_transformers:
         options = options+"transformers_"
-        training_features, testing_features = apply_transformers(training_features = training_features, testing_features = testing_features)
+        training_features, testing_features, transformer = apply_transformers(training_features = training_features, testing_features = testing_features)
         training_features, testing_features = create_bins(training_features = training_features, testing_features = testing_features)
         ignore_columns = ignore_columns + ['proportion_of_numeric_features', 'minimum_mutual_information']
 
     should_apply_z_scoring = input("Do you want to apply z-scoring? (y/n): ").lower() == "y"
+    scaler = None
     if should_apply_z_scoring:
         options = options+"z_scoring_"
-        training_features, testing_features = apply_normalization(training_features = training_features, testing_features = testing_features, ignore_columns = ignore_columns)
+        training_features, testing_features, scaler = apply_normalization(training_features = training_features, testing_features = testing_features, ignore_columns = ignore_columns)
 
     training_set = pd.concat([training_features, training_targets], axis=1)
     testing_set = pd.concat([testing_features, testing_targets], axis=1)
@@ -172,6 +190,7 @@ def prepare_meta_feature_sets():
         file_name = f"regularisation_meta_learning_training_set_{options}{timestamp}.csv"
         file_path = output_path + "\\TrainingSets\\" + file_name
         save_data_frame(training_set, file_path)
+        dump({"transformer": transformer, "scaler": scaler}, f"Models/Settings/DataPipeline/pipeline_{timestamp}.joblib")
 
     return training_set, testing_set
 
@@ -268,8 +287,11 @@ def create_bins(features=None, training_features=None, testing_features=None):
     else:
         assert False, "Either dataset or both training_set and testing_set must be provided."
 
-def apply_transformers(features=None, training_features=None, testing_features=None):
-        yeo_johnson_transformer = PowerTransformer(method="yeo-johnson")
+def apply_transformers(features = None, training_features = None, testing_features = None, transformer = None):
+        if transformer == None:
+            yeo_johnson_transformer = PowerTransformer(method="yeo-johnson")
+        else:
+            yeo_johnson_transformer = transformer
 
         yeo_johnson_features = [
             'number_of_instances',
@@ -287,13 +309,15 @@ def apply_transformers(features=None, training_features=None, testing_features=N
 
             yeo_johnson_cols_to_transform = [col for col in yeo_johnson_features if col in features.columns]
             if yeo_johnson_cols_to_transform:
-                features[yeo_johnson_cols_to_transform] = yeo_johnson_transformer.fit_transform(features[yeo_johnson_cols_to_transform])
+                if transformer != None:
+                    features[yeo_johnson_cols_to_transform] = yeo_johnson_transformer.transform(features[yeo_johnson_cols_to_transform])
+                else:
+                    features[yeo_johnson_cols_to_transform] = yeo_johnson_transformer.fit_transform(features[yeo_johnson_cols_to_transform])
 
             if 'equivalent_number_of_features' in features.columns:
                 x = features['equivalent_number_of_features']
                 features['equivalent_number_of_features'] = np.log(x - 1 + 1e-6)
-
-            return features
+            return features, yeo_johnson_transformer
         elif training_features is not None and testing_features is not None:
             training_features = training_features.copy()
             testing_features = testing_features.copy()
@@ -301,26 +325,34 @@ def apply_transformers(features=None, training_features=None, testing_features=N
             yeo_johnson_cols_to_transform = [col for col in yeo_johnson_features if col in training_features.columns]
 
             if yeo_johnson_cols_to_transform:
-                training_features[yeo_johnson_cols_to_transform] = yeo_johnson_transformer.fit_transform(training_features[yeo_johnson_cols_to_transform])
+                if transformer != None:
+                    training_features[yeo_johnson_cols_to_transform] = yeo_johnson_transformer.transform(training_features[yeo_johnson_cols_to_transform])
+                else:
+                    training_features[yeo_johnson_cols_to_transform] = yeo_johnson_transformer.fit_transform(training_features[yeo_johnson_cols_to_transform])
                 testing_features[yeo_johnson_cols_to_transform] = yeo_johnson_transformer.transform(testing_features[yeo_johnson_cols_to_transform])
 
             if 'equivalent_number_of_features' in training_features.columns:
                 training_features['equivalent_number_of_features'] = np.log(training_features['equivalent_number_of_features'] - 1 + 1e-6)
                 testing_features['equivalent_number_of_features'] = np.log(testing_features['equivalent_number_of_features'] - 1 + 1e-6)
 
-
-            return training_features, testing_features
+            return training_features, testing_features, yeo_johnson_transformer
         else:
             assert False, "Either dataset or both training_set and testing_set must be provided."
 
-def apply_normalization(features=None, training_features=None, testing_features=None, ignore_columns = []):
+def apply_normalization(features=None, training_features=None, testing_features=None, ignore_columns = [], scaler = None):
+    if scaler is None:
+        z_scoring_scaler = StandardScaler()
+    else:
+        z_scoring_scaler = scaler
     if features is not None:
         features = features.copy()
         for column in features.columns:
             if column not in ignore_columns:
-                scaler = StandardScaler()
-                features[column] = scaler.fit_transform(features[column].values.reshape(-1, 1)).flatten()
-        return features
+                if scaler is not None:
+                    features[column] = z_scoring_scaler.transform(features[column].values.reshape(-1, 1)).flatten()
+                else:
+                    features[column] = z_scoring_scaler.fit_transform(features[column].values.reshape(-1, 1)).flatten()
+        return features, z_scoring_scaler
     elif training_features is not None and testing_features is not None:
         if set(training_features.columns) != set(testing_features.columns):
             raise ValueError("Training and testing features must have the same columns")
@@ -328,10 +360,12 @@ def apply_normalization(features=None, training_features=None, testing_features=
         testing_features = testing_features.copy()
         for column in training_features.columns:
             if column not in ignore_columns:
-                scaler = StandardScaler()
-                training_features[column] = scaler.fit_transform(training_features[column].values.reshape(-1, 1)).flatten()
-                testing_features[column] = scaler.transform(testing_features[column].values.reshape(-1, 1)).flatten()
-        return training_features, testing_features
+                if scaler is not None:
+                    training_features[column] = z_scoring_scaler.transform(training_features[column].values.reshape(-1, 1)).flatten()
+                else:
+                    training_features[column] = z_scoring_scaler.fit_transform(training_features[column].values.reshape(-1, 1)).flatten()
+                testing_features[column] = z_scoring_scaler.transform(testing_features[column].values.reshape(-1, 1)).flatten()
+        return training_features, testing_features, z_scoring_scaler
     else:
         raise ValueError("Either dataset or both training_set and testing_set must be provided.")
 
