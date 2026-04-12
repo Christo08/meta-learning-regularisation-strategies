@@ -157,15 +157,17 @@ def load_dataset(dataset_settings):
 
     return [training_set], [testing_set], [meta_features], [seed], [dataset_category_columns]
 
-def load_full_dataset(seed, dataset_settings):
+def load_full_dataset(seed, dataset_settings, split_sets = True):
     dataset = load_raw_dataset(dataset_settings)
     dataset = clean_dataset(dataset)
 
     target_columns = [col for col in dataset.columns if 'target' in col]
     dataset = normalise(dataset, dataset_settings['category_columns'], target_columns)
     dataset, category_columns  = encode_categories_features(dataset, dataset_settings['category_columns'])
-
-    return splitSet(dataset, seed), category_columns
+    if split_sets:
+        return splitSet(dataset, seed), category_columns
+    else:
+        return dataset, category_columns
 
 def apply_smote(x, y, seed, number_of_neighbors, category_columns):
     if isinstance(y, pd.DataFrame):
