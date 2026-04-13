@@ -1,5 +1,6 @@
 import pandas as pd
 import torch
+from datetime import datetime
 
 from src.ModelTrainer.metaLearnersTrainer import train_meta_learners, test_meta_learner
 from src.Optimisers.metaLearnersOptimiser import optimise_meta_learners
@@ -91,10 +92,25 @@ def main():
                 recreate_dataset(subset_dataset, names, index_to_create, output_path, number_of_folds, datasets_settings)
         elif process == PROCESS_OPTIONS[4]:
             was_processed= input("Has the dataset been processed before? (y/n): ").lower() == "y"
-            if was_processed:
-                dataset = load_meta_features_csv("")
+            set_types = ["Full dataset", "Training dataset", "Testing dataset"]
+            set_type = show_menu("What type of dataset do you want to calculate stats for? ", set_types)
+            if set_type == set_types[0]:
+                if was_processed:
+                    dataset = load_meta_features_csv("")
+                else:
+                    dataset = prepare_meta_feature_dataset_for_states()
             else:
-                dataset = prepare_meta_feature_dataset_for_states()
+                if was_processed:
+                    if set_type == set_types[1]:
+                        dataset = load_meta_features_csv("training")
+                    else:
+                        dataset = load_meta_features_csv("testing")
+                else:
+                    training_set, testing_set = prepare_meta_feature_sets()
+                    if set_type == set_types[1]:
+                        dataset = training_set
+                    else:
+                        dataset = testing_set
             calculate_dataset_stats(dataset)
         elif process == PROCESS_OPTIONS[5]:
             has_sets= input("Do you have training sets? (y/n): ").lower() == "y"
@@ -123,14 +139,14 @@ def main():
             path_to_transformer = input("Enter the path of the pipeline file: ")
             output_path = input("Enter the path of the output dataset folder: ")
             results = pd.DataFrame()
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            file_name = f"meta_learning_testing_results_{timestamp}.csv"
+            file_path = output_path + "\\" + file_name
             for dataset_name in dataset_names:
                 dataset_settings = next((item for item in datasets_settings if item["name"] == dataset_name), None)
                 dataset_result = test_meta_learner(dataset_name, dataset_settings, meta_learners_results, number_of_folds, path_to_transformer)
                 results = pd.concat([results, dataset_result], ignore_index=True)
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            file_name = f"meta_learning_testing_results_{options}{timestamp}.csv"
-            file_path = output_path + "\\" + file_name
-            save_data_frame(results, file_path)
+                save_data_frame(results, file_path)
             print(results)
         else:
             break
