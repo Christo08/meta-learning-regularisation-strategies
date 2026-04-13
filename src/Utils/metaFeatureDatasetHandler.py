@@ -92,8 +92,8 @@ def prepare_meta_feature_dataset_for_states():
     if should_apply_transformers:
         options = options+"transformers_"
         features, transformer = apply_transformers(features = features)
-        features = create_bins(features = features)
-        ignore_columns = ignore_columns + ['proportion_of_numeric_features', 'minimum_mutual_information']
+        # features = create_bins(features = features)
+        # ignore_columns = ignore_columns + ['proportion_of_numeric_features', 'minimum_mutual_information']
 
     should_normalise= input("Do you want to normalise the dataset? (y/n): ").lower() == "y"
     if should_normalise:
@@ -128,9 +128,9 @@ def prepare_meta_feature_full_dataset_for_states(meta_features, path_to_data_pip
 
     meta_features = clean_dataset(meta_features, True)
     meta_features, _ = apply_transformers(features = meta_features, transformer = transformer)
-    meta_features = create_bins(features = meta_features)
-    ignore_columns = ['proportion_of_numeric_features', 'minimum_mutual_information']
-    meta_features, _ = apply_normalization(features = meta_features, ignore_columns = ignore_columns, scaler = scaler)
+    # meta_features = create_bins(features = meta_features)
+    # ignore_columns = ['proportion_of_numeric_features', 'minimum_mutual_information']
+    meta_features, _ = apply_normalization(features = meta_features, ignore_columns = [], scaler = scaler)
     return meta_features
 
 
@@ -168,8 +168,6 @@ def prepare_meta_feature_sets():
     if should_apply_transformers:
         options = options+"transformers_"
         training_features, testing_features, transformer = apply_transformers(training_features = training_features, testing_features = testing_features)
-        training_features, testing_features = create_bins(training_features = training_features, testing_features = testing_features)
-        ignore_columns = ignore_columns + ['proportion_of_numeric_features', 'minimum_mutual_information']
 
     should_apply_z_scoring = input("Do you want to apply z-scoring? (y/n): ").lower() == "y"
     scaler = None
@@ -245,47 +243,47 @@ def append_hyperparameters(dataset):
         dataset.loc[index, "max_number_of_neurons"] = np.max(number_of_neurons)
     return dataset
 
-def create_bins(features=None, training_features=None, testing_features=None):
-    if features is not None:
-        features = features.copy()
-        #convert proportion_of_numeric_features to multi classes
-        if 'proportion_of_numeric_features' in features.columns:
-            features['proportion_of_numeric_features'] = pd.cut(
-                features['proportion_of_numeric_features'],
-                bins=[0, 0.5, 0.8, 0.95, 1.0],
-                labels=False,
-                include_lowest=True
-            )
-        #convert minimum_mutual_information to binary classes where 1 is that minimum_mutual_information == 0
-        if 'minimum_mutual_information' in features:
-            features['minimum_mutual_information'] = (features['minimum_mutual_information'] == 0).astype(int)
-        return features
-    elif training_features is not None and testing_features is not None:
-        training_features = training_features.copy()
-        testing_features = testing_features.copy()
-
-        #convert proportion_of_numeric_features to multi classes
-        if 'proportion_of_numeric_features' in training_features.columns:
-            training_features['proportion_of_numeric_features'] = pd.cut(
-                training_features['proportion_of_numeric_features'],
-                bins=[0, 0.5, 0.8, 0.95, 1.0],
-                labels=False,
-                include_lowest=True
-            )
-            testing_features['proportion_of_numeric_features'] = pd.cut(
-                testing_features['proportion_of_numeric_features'],
-                bins=[0, 0.5, 0.8, 0.95, 1.0],
-                labels=False,
-                include_lowest=True
-            )
-        #convert minimum_mutual_information to binary classes where 1 is that minimum_mutual_information == 0
-        if 'minimum_mutual_information' in training_features:
-            training_features['minimum_mutual_information'] = (training_features['minimum_mutual_information'] == 0).astype(int)
-            testing_features['minimum_mutual_information'] = (testing_features['minimum_mutual_information'] == 0).astype(int)
-
-        return training_features, testing_features
-    else:
-        assert False, "Either dataset or both training_set and testing_set must be provided."
+# def create_bins(features=None, training_features=None, testing_features=None):
+#     if features is not None:
+#         features = features.copy()
+#         #convert proportion_of_numeric_features to multi classes
+#         if 'proportion_of_numeric_features' in features.columns:
+#             features['proportion_of_numeric_features'] = pd.cut(
+#                 features['proportion_of_numeric_features'],
+#                 bins=[0, 0.5, 0.8, 0.95, 1.0],
+#                 labels=False,
+#                 include_lowest=True
+#             )
+#         #convert minimum_mutual_information to binary classes where 1 is that minimum_mutual_information == 0
+#         if 'minimum_mutual_information' in features:
+#             features['minimum_mutual_information'] = (features['minimum_mutual_information'] == 0).astype(int)
+#         return features
+#     elif training_features is not None and testing_features is not None:
+#         training_features = training_features.copy()
+#         testing_features = testing_features.copy()
+#
+#         #convert proportion_of_numeric_features to multi classes
+#         if 'proportion_of_numeric_features' in training_features.columns:
+#             training_features['proportion_of_numeric_features'] = pd.cut(
+#                 training_features['proportion_of_numeric_features'],
+#                 bins=[0, 0.5, 0.8, 0.95, 1.0],
+#                 labels=False,
+#                 include_lowest=True
+#             )
+#             testing_features['proportion_of_numeric_features'] = pd.cut(
+#                 testing_features['proportion_of_numeric_features'],
+#                 bins=[0, 0.5, 0.8, 0.95, 1.0],
+#                 labels=False,
+#                 include_lowest=True
+#             )
+#         #convert minimum_mutual_information to binary classes where 1 is that minimum_mutual_information == 0
+#         if 'minimum_mutual_information' in training_features:
+#             training_features['minimum_mutual_information'] = (training_features['minimum_mutual_information'] == 0).astype(int)
+#             testing_features['minimum_mutual_information'] = (testing_features['minimum_mutual_information'] == 0).astype(int)
+#
+#         return training_features, testing_features
+#     else:
+#         assert False, "Either dataset or both training_set and testing_set must be provided."
 
 def apply_transformers(features = None, training_features = None, testing_features = None, transformer = None):
         if transformer == None:
@@ -301,7 +299,10 @@ def apply_transformers(features = None, training_features = None, testing_featur
             'ratio_of_instances_to_classes',
             'average_mutual_information',
             'maximum_mutual_information',
-            'noise_to_signal_ratio_of_features'
+            'noise_to_signal_ratio_of_features',
+            'proportion_of_numeric_features',
+            'minimum_mutual_information',
+            'equivalent_number_of_features'
         ]
 
         if features is not None:
@@ -314,9 +315,9 @@ def apply_transformers(features = None, training_features = None, testing_featur
                 else:
                     features[yeo_johnson_cols_to_transform] = yeo_johnson_transformer.fit_transform(features[yeo_johnson_cols_to_transform])
 
-            if 'equivalent_number_of_features' in features.columns:
-                x = features['equivalent_number_of_features']
-                features['equivalent_number_of_features'] = np.log(x - 1 + 1e-6)
+            # if 'equivalent_number_of_features' in features.columns:
+            #     x = features['equivalent_number_of_features']
+            #     features['equivalent_number_of_features'] = np.log(x - 1 + 1e-6)
             return features, yeo_johnson_transformer
         elif training_features is not None and testing_features is not None:
             training_features = training_features.copy()
@@ -331,9 +332,9 @@ def apply_transformers(features = None, training_features = None, testing_featur
                     training_features[yeo_johnson_cols_to_transform] = yeo_johnson_transformer.fit_transform(training_features[yeo_johnson_cols_to_transform])
                 testing_features[yeo_johnson_cols_to_transform] = yeo_johnson_transformer.transform(testing_features[yeo_johnson_cols_to_transform])
 
-            if 'equivalent_number_of_features' in training_features.columns:
-                training_features['equivalent_number_of_features'] = np.log(training_features['equivalent_number_of_features'] - 1 + 1e-6)
-                testing_features['equivalent_number_of_features'] = np.log(testing_features['equivalent_number_of_features'] - 1 + 1e-6)
+            # if 'equivalent_number_of_features' in training_features.columns:
+            #     training_features['equivalent_number_of_features'] = np.log(training_features['equivalent_number_of_features'] - 1 + 1e-6)
+            #     testing_features['equivalent_number_of_features'] = np.log(testing_features['equivalent_number_of_features'] - 1 + 1e-6)
 
             return training_features, testing_features, yeo_johnson_transformer
         else:
