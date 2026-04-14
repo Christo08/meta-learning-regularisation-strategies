@@ -20,34 +20,40 @@ def training_meta_support_vector_machines(settings_file_path, training_set, test
         print(f"Training svm for { target_column.replace("_"," ")}...")
         cleaned_training_set = prepared_meta_feature_dataset(training_set,target_column,False)
         cleaned_testing_set = prepared_meta_feature_dataset(testing_set,target_column,False)
-        training_result, _ = train_meta_support_vector_machines(settings[target_column],
-                                                             cleaned_training_set,
-                                                             cleaned_testing_set,
-                                                             seed,
-                                                             'na',
-                                                             kFold)
+        training_result, _, _ = train_meta_support_vector_machines(settings[target_column],
+                                                                   cleaned_training_set,
+                                                                   cleaned_testing_set,
+                                                                   seed,
+                                                                   'na',
+                                                                   kFold)
         seed = random.randint(0, 4294967295)
-        testing_result, path_to_module = train_meta_support_vector_machines(settings[target_column],
-                                                            cleaned_training_set,
-                                                            cleaned_testing_set,
-                                                            seed,
-                                                            target_column,
-                                                            0)
+        single_training_result, testing_result, path_to_module  = train_meta_support_vector_machines(settings[target_column],
+                                                                                                     cleaned_training_set,
+                                                                                                     cleaned_testing_set,
+                                                                                                     seed,
+                                                                                                     target_column,
+                                                                                                     0)
         seed = random.randint(0, 4294967295)
         result = {
             "model type": "svm",
             "model path": path_to_module,
             "technique": target_column.replace("_"," "),
+            
             "training loses": training_result["training loses"],
             "training accuracies": training_result["training accuracies"],
             "training f1": training_result["training f1"],
+            "training true positives": single_training_result["testing true positives"],
+            "training true negatives": single_training_result["testing true negatives"],
+            "training false positives": single_training_result["testing false positives"],
+            "training false negatives": single_training_result["testing false negatives"],
+                        
             "testing loses": testing_result["testing loses"],
             "testing accuracies": testing_result["testing accuracies"],
             "testing f1": testing_result["testing f1"],
             "testing true positives": testing_result["testing true positives"],
             "testing true negatives": testing_result["testing true negatives"],
             "testing false positives": testing_result["testing false positives"],
-            "testing false negatives": testing_result["testing false negatives"],
+            "testing false negatives": testing_result["testing false negatives"]
         }
         results.append(result)
     return results
@@ -79,7 +85,8 @@ def train_meta_support_vector_machines(params, training_set, testing_set, seed, 
         y_train_pred = svm.predict(training_x)
         y_test_pred = svm.predict(testing_x)
 
-        svm_stats.update_stats(training_y, y_train_pred, testing_y, y_test_pred)
+        svm_stats.update_training_stats(training_y, y_train_pred)
+        svm_stats.update_testing_stats(testing_y, y_test_pred)
 
         if target_column != 'na':
             path_to_module = f'{folder_path}\\{target_column}.pkl'
@@ -99,7 +106,8 @@ def train_meta_support_vector_machines(params, training_set, testing_set, seed, 
             y_train_pred = svm.predict(x_train)
             y_test_pred = svm.predict(testing_x)
 
-            svm_stats.update_stats(y_train, y_train_pred, testing_y, y_test_pred)
+            svm_stats.update_training_stats(y_train, y_train_pred)
+            svm_stats.update_testing_stats(testing_y, y_test_pred)
 
             if target_column != 'na':
                 path_to_module = f'{folder_path}\\{target_column}_fold_{counter}.pkl'
@@ -107,4 +115,4 @@ def train_meta_support_vector_machines(params, training_set, testing_set, seed, 
 
             counter = counter + 1
 
-    return svm_stats.get_stats_json_object(), path_to_module
+    return  svm_stats.get_training_stats_json_object(), svm_stats.get_testing_stats_json_object(), path_to_module

@@ -165,12 +165,12 @@ def train_nn_warp(params):
 def train_meta_nn_warp(params):
     global training_set, validation_set, selected_metric
     seed = random.randint(0, 4294967295)
-    loses = train_meta_nn_loop(params, training_set, validation_set, seed, kFold=0)
+    training_loses, testing_loses, _ = train_meta_nn_loop(params, training_set, validation_set, seed, kFold=0)
     if selected_metric == OPTIMED_METRIC_OPTIONS[0]:
-        return loses["testing accuracies"]
+        return testing_loses["testing accuracies"]
     elif selected_metric == OPTIMED_METRIC_OPTIONS[1]:
-        return loses["testing f1"]
+        return testing_loses["testing f1"]
     elif selected_metric == OPTIMED_METRIC_OPTIONS[2]:
-        return loses["testing loses"]
+        return testing_loses["testing loses"]
     else:
-        return loses["testing true positives"]/(loses["testing true positives"]+loses["testing false positives"])
+        return testing_loses["testing true positives"]/(testing_loses["testing true positives"]+testing_loses["testing false positives"])

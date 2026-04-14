@@ -23,7 +23,7 @@ def train_meta_learners(training_dataset, testing_dataset):
     training_dataset.drop(columns=["dataset_name"], inplace=True)
     testing_dataset.drop(columns=["dataset_name"], inplace=True)
     selected_meta_learn_types = show_meta_leaner_type_menu()
-    number_of_folds = int(input("How many folds do you want the meta-learner to getrained? "))
+    number_of_folds = int(input("How many folds do you want the meta-learner to get trained? "))
     results = pd.DataFrame(columns=["model type", "technique",  "training loses", "testing loses"])
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     settings_file_path = input(f"Enter the path of the settings index file: ")
@@ -79,10 +79,10 @@ def predicted_best_techniques(seed, meta_learners_results, dataset, category_col
     techniques = list(meta_learners_results["technique"].dropna().unique())
     model_types = list(meta_learners_results["model type"].dropna().unique())
 
-    techniques_predicted = {technique: [] for technique in techniques}
+    techniques_predicted = {technique.replace(" ", "_") : [] for technique in techniques}
 
     for technique in techniques:
-        meta_learners_results_per_technique= meta_learners_results[meta_learners_results["technique"] == technique]
+        meta_learners_results_per_technique= meta_learners_results[meta_learners_results["technique"].replace(" ", "_") == technique]
         for model in model_types:
             meta_learners_results_per_technique_and_model = meta_learners_results_per_technique[meta_learners_results_per_technique["model type"] == model]
             path = meta_learners_results_per_technique_and_model["model path"].values[0]
@@ -100,17 +100,17 @@ def predicted_best_techniques(seed, meta_learners_results, dataset, category_col
                 with torch.no_grad():
                     is_best = model(input_data)
                     if is_best[0][1] == 1.0:
-                        techniques_predicted[technique].append(meta_learners_results_per_technique_and_model["testing f1"].values[0])
+                        techniques_predicted[technique.replace(" ", "_")].append(meta_learners_results_per_technique_and_model["testing f1"].values[0])
 
             else:
                 module = joblib.load(path)
                 is_best = module.predict(meta_features)
                 if model == "svm":
                     if is_best[0] == 1:
-                        techniques_predicted[technique].append(meta_learners_results_per_technique_and_model["testing f1"].values[0])
+                        techniques_predicted[technique.replace(" ", "_")].append(meta_learners_results_per_technique_and_model["testing f1"].values[0])
                 else:
                     if is_best[0][1]:
-                        techniques_predicted[technique].append(meta_learners_results_per_technique_and_model["testing f1"].values[0])
+                        techniques_predicted[technique.replace(" ", "_")].append(meta_learners_results_per_technique_and_model["testing f1"].values[0])
 
     best_technique = []
     best_count = 0
@@ -130,7 +130,7 @@ def predicted_best_techniques(seed, meta_learners_results, dataset, category_col
         best_technique = []
         best_preforms = 0
         for technique in tied_techniques:
-            preforms_sum = sum(techniques_predicted[technique])
+            preforms_sum = sum(techniques_predicted[technique])/len(techniques_predicted[technique])
             if preforms_sum > best_preforms:
                 best_technique = [technique]
                 best_preforms = preforms_sum

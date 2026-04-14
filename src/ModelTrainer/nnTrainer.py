@@ -212,34 +212,40 @@ def training_meta_nns(settings_file_path, training_set, testing_set, seed, kFold
         print(f"Training nn for { target_column.replace("_"," ")}...")
         cleaned_training_set = prepared_meta_feature_dataset(training_set,target_column,False)
         cleaned_testing_set = prepared_meta_feature_dataset(testing_set,target_column,False)
-        training_result, _ = train_meta_nn_loop(settings[target_column],
-                                          cleaned_training_set,
-                                          cleaned_testing_set,
-                                          seed,
-                                          "na",
-                                          kFold)
+        training_result, _, _ = train_meta_nn_loop(settings[target_column],
+                                                   cleaned_training_set,
+                                                   cleaned_testing_set,
+                                                   seed,
+                                                   "na",
+                                                   kFold)
         seed = random.randint(0, 4294967295)
-        testing_result, path_to_module = train_meta_nn_loop(settings[target_column],
-                                                  cleaned_training_set,
-                                                  cleaned_testing_set,
-                                                  seed,
-                                                  target_column,
-                                                  0)
+        single_training_result, testing_result, path_to_module = train_meta_nn_loop(settings[target_column],
+                                                                                    cleaned_training_set,
+                                                                                    cleaned_testing_set,
+                                                                                    seed,
+                                                                                    target_column,
+                                                                                    0)
         seed = random.randint(0, 4294967295)
         result = {
             "model type": "Neural Network",
             "model path": path_to_module,
             "technique": target_column.replace("_"," "),
+            
             "training loses": training_result["training loses"],
             "training accuracies": training_result["training accuracies"],
             "training f1": training_result["training f1"],
+            "training true positives": single_training_result["testing true positives"],
+            "training true negatives": single_training_result["testing true negatives"],
+            "training false positives": single_training_result["testing false positives"],
+            "training false negatives": single_training_result["testing false negatives"],
+                        
             "testing loses": testing_result["testing loses"],
             "testing accuracies": testing_result["testing accuracies"],
             "testing f1": testing_result["testing f1"],
             "testing true positives": testing_result["testing true positives"],
             "testing true negatives": testing_result["testing true negatives"],
             "testing false positives": testing_result["testing false positives"],
-            "testing false negatives": testing_result["testing false negatives"],
+            "testing false negatives": testing_result["testing false negatives"]
         }
         results.append(result)
     return results
@@ -280,7 +286,8 @@ def train_meta_nn_loop(params, training_set, testing_set, seed, target_column ='
         y_testing_cpu = output_cleaner(y_testing.detach().cpu().numpy())
         y_test_pred_cpu = output_cleaner(y_test_pred.detach().cpu().numpy())
 
-        nn_stats.update_stats(y_training_cpu, y_train_pred_cpu, y_testing_cpu, y_test_pred_cpu)
+        nn_stats.update_training_stats(y_training_cpu, y_train_pred_cpu)
+        nn_stats.update_testing_stats(y_testing_cpu, y_test_pred_cpu)
 
         if target_column != 'na':
             checkpoint = {
@@ -324,7 +331,8 @@ def train_meta_nn_loop(params, training_set, testing_set, seed, target_column ='
             y_testing_cpu = output_cleaner(y_testing.detach().cpu().numpy())
             y_test_pred_cpu = output_cleaner(y_test_pred.detach().cpu().numpy())
 
-            nn_stats.update_stats(y_training_cpu, y_train_pred_cpu, y_testing_cpu, y_test_pred_cpu)
+            nn_stats.update_training_stats(y_training_cpu, y_train_pred_cpu)
+            nn_stats.update_testing_stats(y_testing_cpu, y_test_pred_cpu)
 
             if target_column != 'na':
                 checkpoint = {
@@ -340,7 +348,7 @@ def train_meta_nn_loop(params, training_set, testing_set, seed, target_column ='
                 path_to_module = f'{folder_path}\\{target_column}_fold_{counter}.pt'
                 torch.save(checkpoint, path_to_module)
             counter = counter + 1
-    return nn_stats.get_stats_json_object(), path_to_module
+    return nn_stats.get_training_stats_json_object(), nn_stats.get_testing_stats_json_object(), path_to_module
 
 def train_nn(training_set, settings):
     global device
