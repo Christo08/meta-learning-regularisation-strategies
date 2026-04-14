@@ -1,14 +1,13 @@
 import ast
 import math
-import random
 from datetime import datetime
 
 import numpy as np
 import pandas as pd
+from joblib import dump, load
 from scipy.stats import ttest_ind
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import PowerTransformer, StandardScaler, FunctionTransformer
-from joblib import dump, load
+from sklearn.preprocessing import PowerTransformer, StandardScaler
 
 from src.Utils.constants import TARGET_COLUMNS
 from src.Utils.fileHandler import load_meta_features_csv, save_data_frame, get_latest_settings
@@ -302,7 +301,10 @@ def apply_transformers(features = None, training_features = None, testing_featur
             'noise_to_signal_ratio_of_features',
             'proportion_of_numeric_features',
             'minimum_mutual_information',
-            'equivalent_number_of_features'
+            'equivalent_number_of_features',
+            'learning_rate',
+            'number_of_hidden_layers',
+            'min_number_of_neurons'
         ]
 
         if features is not None:
