@@ -80,13 +80,28 @@ def predicted_best_techniques(seed, meta_learners_results, dataset, category_col
     model_types = list(meta_learners_results["model type"].dropna().unique())
 
     techniques_predicted = {technique.replace(" ", "_") : [] for technique in techniques}
-
+    random.seed(seed)
     for technique in techniques:
-        meta_learners_results_per_technique= meta_learners_results[meta_learners_results["technique"].replace(" ", "_") == technique]
-        for model in model_types:
-            meta_learners_results_per_technique_and_model = meta_learners_results_per_technique[meta_learners_results_per_technique["model type"] == model]
-            path = meta_learners_results_per_technique_and_model["model path"].values[0]
-            if model == "Neural Network":
+        meta_learners_results_per_technique = meta_learners_results[
+            meta_learners_results["technique"].replace(" ", "_") == technique]
+        best_metrix = -1
+        best_model_types = []
+
+        for model_type in model_types:
+            meta_learners_results_per_technique_and_model = meta_learners_results_per_technique[
+                meta_learners_results_per_technique["model type"] == model_type]
+            if not meta_learners_results_per_technique_and_model.empty:
+                metrix = meta_learners_results_per_technique_and_model["testing f1"].iloc[0]
+                if metrix > best_metrix:
+                    best_metrix = metrix
+                    best_model_types = [model_type]
+                elif metrix == best_metrix:
+                    best_model_types.append(model_type)
+        best_model_type = best_model_types[random.randint(0, len(best_model_types) - 1)]
+        best_model_row = meta_learners_results_per_technique[
+            meta_learners_results_per_technique["model type"] == best_model_type]
+        path = best_model_row["model path"].values[0]
+        if best_model_type == "Neural Network":
                 checkpoint = torch.load(path)
                 model = Network(**checkpoint["model_kwargs"])
                 model.load_state_dict(checkpoint["state_dict"])
@@ -100,50 +115,38 @@ def predicted_best_techniques(seed, meta_learners_results, dataset, category_col
                 with torch.no_grad():
                     is_best = model(input_data)
                     if is_best[0][1] == 1.0:
-                        techniques_predicted[technique.replace(" ", "_")].append(meta_learners_results_per_technique_and_model["testing f1"].values[0])
-
+                        techniques_predicted[technique.replace(" ", "_")].append(best_model_row["testing f1"].values[0])
+        else:
+            model = joblib.load(path)
+            is_best = model.predict(meta_features)
+            if best_model_type == "svm":
+                if is_best[0] == 1:
+                    techniques_predicted[technique.replace(" ", "_")].append(best_model_row["testing f1"].values[0])
             else:
-                module = joblib.load(path)
-                is_best = module.predict(meta_features)
-                if model == "svm":
-                    if is_best[0] == 1:
-                        techniques_predicted[technique.replace(" ", "_")].append(meta_learners_results_per_technique_and_model["testing f1"].values[0])
-                else:
-                    if is_best[0][1]:
-                        techniques_predicted[technique.replace(" ", "_")].append(meta_learners_results_per_technique_and_model["testing f1"].values[0])
-
-    best_technique = []
-    best_count = 0
-    for technique, preforms in techniques_predicted.items():
-        count = len(preforms)
-
-        if count > best_count:
-            best_technique = [technique]
-            best_count = count
-        elif count == best_count:
-            best_technique.append(technique)
-
-    if len(best_technique) == 1:
-        return best_technique[0]
-    else:
-        tied_techniques = best_technique.copy()
+                if is_best[0][1]:
+                    techniques_predicted[technique.replace(" ", "_")].append(best_model_row["testing f1"].values[0])
         best_technique = []
-        best_preforms = 0
-        for technique in tied_techniques:
-            preforms_sum = sum(techniques_predicted[technique])/len(techniques_predicted[technique])
-            if preforms_sum > best_preforms:
+        best_count = 0
+        best_f1_score = 0
+        for technique in techniques_predicted:
+            count = len(techniques_predicted[technique])
+            f1_score = max(techniques_predicted[technique])
+            if count > best_count:
+                best_count = count
                 best_technique = [technique]
-                best_preforms = preforms_sum
-            elif preforms_sum == best_preforms:
+                best_f1_score = f1_score
+            elif count == best_count and best_f1_score < f1_score:
+                best_technique = [technique]
+                best_f1_score = f1_score
+            elif count == best_count and best_f1_score == f1_score:
                 best_technique.append(technique)
         if len(best_technique) == 1:
             return best_technique[0]
-        elif "baseline" in best_technique:
+        elif len(best_technique) == 0 or "baseline" in best_technique:
             return "baseline"
         else:
-            random.seed(seed)
-            index = random.randint(0, len(best_technique) - 1)
-            return best_technique[index]
+            return best_technique[random.randint(0, len(best_technique) - 1)]
+
 
 def train_nns(dataset_name, best_technique, seed, training_set, testing_set, category_columns, number_of_folds, nn_settings):
     print("")

@@ -41,18 +41,18 @@ def training_meta_random_forests(settings_file_path, training_set, testing_set, 
             "training loses": training_result["training loses"],
             "training accuracies": training_result["training accuracies"],
             "training f1": training_result["training f1"],
-            "training true positives": single_training_result["testing true positives"],
-            "training true negatives": single_training_result["testing true negatives"],
-            "training false positives": single_training_result["testing false positives"],
-            "training false negatives": single_training_result["testing false negatives"],
-                        
+            "training true positives": single_training_result["training true positives"][0],
+            "training true negatives": single_training_result["training true negatives"][0],
+            "training false positives": single_training_result["training false positives"][0],
+            "training false negatives": single_training_result["training false negatives"][0],
+
             "testing loses": testing_result["testing loses"],
             "testing accuracies": testing_result["testing accuracies"],
             "testing f1": testing_result["testing f1"],
             "testing true positives": testing_result["testing true positives"],
             "testing true negatives": testing_result["testing true negatives"],
             "testing false positives": testing_result["testing false positives"],
-            "testing false negatives": testing_result["testing false negatives"],
+            "testing false negatives": testing_result["testing false negatives"]
         }
         results.append(result)
     return results
