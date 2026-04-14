@@ -24,8 +24,9 @@ def create_feature_stats(features, output_path):
     stats_df = stats_df.round(3)
     stats_df = stats_df.reset_index().rename(columns={'index': 'column name'})
     stats_df = stats_df[['column name', 'count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max']]
-    save_data_frame(stats_df, f"{output_path}\\features_stats.csv")
-    print(f"The feature summary was save to {output_path}\\features_stats.csv")
+    if output_path is not None:
+        save_data_frame(stats_df, f"{output_path}\\features_stats.csv")
+        print(f"The feature summary was save to {output_path}\\features_stats.csv")
 
 
 def create_technique_rankings_stats(targets, output_path):
@@ -44,9 +45,9 @@ def create_technique_rankings_stats(targets, output_path):
         'can_not_be_used_percent': round((can_not_be_applied/targets.shape[0]*100),3)
     })
     summary = summary.reset_index().rename(columns={'index': 'technique'})
-
-    save_data_frame(summary, f"{output_path}\\rankings_stats.csv")
-    print(f"The technique summary was save to {output_path}\\rankings_stats.csv")
+    if output_path is not None:
+        save_data_frame(summary, f"{output_path}\\rankings_stats.csv")
+        print(f"The technique summary was save to {output_path}\\rankings_stats.csv")
 
 
 def create_technique_stack_bar_chart(full_dataset, output_path):
@@ -58,24 +59,26 @@ def create_technique_stack_bar_chart(full_dataset, output_path):
         .apply(lambda x: (x == 1).sum())
         .reset_index()
     )
-    save_data_frame(rankings_per_dataset, f"{output_path}\\rankings_per_dataset.csv")
+
+    number_of_rows = full_dataset.shape[0]
+    percent_of_ones = (subset[TARGET_COLUMNS] == 1).sum() / number_of_rows *100
 
     fig, ax = plt.subplots(figsize=(10, 15))
-
-    rankings_per_dataset.plot(
-        x="dataset_name",
+    percent_of_ones.plot(
         kind="bar",
-        stacked=True,
         ax=ax
     )
 
-    ax.set_title('Stack bar chart of technique rankings')
+    ax.set_title('Percentage of Instances in Which Each Technique Was the Best Performer')
+    ax.set_ylabel('Percentage (%)')
     ax.tick_params(axis='x', labelrotation=90)
 
     fig.tight_layout()
-    fig.savefig(f"{output_path}\\rankings_bar_chart.png", dpi=300)
+    if output_path is not None:
+        save_data_frame(rankings_per_dataset, f"{output_path}\\rankings_per_dataset.csv")
+        fig.savefig(f"{output_path}\\rankings_bar_chart.png", dpi=300)
+        print(f"The technique count bar chart was save to {output_path}\\rankings_bar_chart.png")
     plt.show()
-    print(f"The technique count bar chart was save to {output_path}\\rankings_bar_chart.png")
 
 
 def create_feature_density_plots(features, output_path):
@@ -96,10 +99,11 @@ def create_feature_density_plots(features, output_path):
         sns.histplot(clean_data, kde=True)
         plt.title(f"{feature}\nSkewness: {round(features[feature].skew(), 2)}")
 
-    plt.tight_layout(rect=[0, 0, 1, 0.98])  # Add rect parameter to leave room for suptitle
-    plt.savefig(f"{output_path}\\features_density_plots.png", bbox_inches='tight')  # Add bbox_inches to include the title
+    plt.tight_layout(rect=[0, 0, 1, 0.98])
+    if output_path is not None:# Add rect parameter to leave room for suptitle
+        plt.savefig(f"{output_path}\\features_density_plots.png", bbox_inches='tight')  # Add bbox_inches to include the title
+        print(f"The features density plot was save to {output_path}\\features_density_plots.png")
     plt.show()
-    print(f"The features density plot was save to {output_path}\\features_density_plots.png")
 
 
 def create_box_plots(full_dataset, output_path):
@@ -147,9 +151,10 @@ def create_box_plots(full_dataset, output_path):
         plt.xticks(rotation=90)
 
     plt.tight_layout(rect=[0, 0, 1, 0.98])
-    plt.savefig(f"{output_path}\\features_box_plots.png", bbox_inches='tight')  # Added bbox_inches
+    if output_path is not None:
+        plt.savefig(f"{output_path}\\features_box_plots.png", bbox_inches='tight')
+        print(f"The features box plots was save to {output_path}\\features_box_plots.png")  # Added bbox_inches
     plt.show()
-    print(f"The features box plots was save to {output_path}\\features_box_plots.png")
 
 
 def create_pair_plot(features, targets, output_path):
@@ -162,9 +167,10 @@ def create_pair_plot(features, targets, output_path):
     plot = sns.pairplot(features)
 
     plot.figure.suptitle('Pair Plot of Features vs Techniques')
-    plot.figure.savefig(f"{output_path}\\pair_plot.png")
+    if output_path is not None:
+        plot.figure.savefig(f"{output_path}\\pair_plot.png")
+        print(f"The pair plot was save to {output_path}\\pair_plot.png")
     plot.figure.show()
-    print(f"The pair plot was save to {output_path}\\pair_plot.png")
 
 
 def create_heatmap(features, targets, output_path):
@@ -180,21 +186,34 @@ def create_heatmap(features, targets, output_path):
                 correlations_matrix.loc[feature_column, target_column] = correlation
                 correlations_matrix.loc[target_column, feature_column] = correlation
 
+        for target_column in targets.columns:
+            for target_column_two in targets.columns:
+                correlation,_ = pointbiserialr(targets[target_column], targets[target_column_two])
+                correlations_matrix.loc[target_column_two, target_column] = correlation
+
         print("Making correlation heatmap")
         plt.figure(figsize=(25, 20))
 
         sns.heatmap(correlations_matrix, annot=True, fmt='.2f', cmap='Greys', linewidths=2)
 
         plt.title('Correlation Heatmap')
-        plt.savefig(f"{output_path}\\correlation_heatmap.png")
+        if output_path is not None:
+            plt.savefig(f"{output_path}\\correlation_heatmap.png")
+            print(f"The correlation heatmap was save to {output_path}\\correlation_heatmap.png")
         plt.show()
-        print(f"The correlation heatmap was save to {output_path}\\correlation_heatmap.png")
 
 
 def calculate_dataset_stats(full_dataset):
     features, targets = spilt_dataset_and_targets(full_dataset)
     has_target = not targets.empty
-    output_path = input("Enter the path of the Output stats folder: ")
+    should_save = input("Do you want to save the stats to a file? (y/n): ").lower() == 'y'
+    if should_save:
+        output_path = input("Enter the path of the Output stats folder: ")
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_path = f"{output_path}\\{timestamp}"
+        os.makedirs(output_path, exist_ok=True)
+    else:
+        output_path = None
 
     prompt ="Select the stats to calculate by entering the numbers "+ "" if has_target else "(Options 1,2 and 3 are not available)"
     processes_option = show_menu(prompt, STATS_OPTIONS)
@@ -210,10 +229,6 @@ def calculate_dataset_stats(full_dataset):
         return
     else:
         selected_processes = [processes_option]
-
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_path = f"{output_path}\\{timestamp}"
-    os.makedirs(output_path, exist_ok=True)
 
     pd.set_option("display.max_columns", None)
 
@@ -313,11 +328,12 @@ def create_confusion_matrix(dataset, output_path):
 
         fig.suptitle(f"Confusion Matrices — Technique: {technique}", fontsize=16)
         fig.tight_layout(rect=[0, 0.03, 1, 0.95])
-        file_path = f"{output_path}\\confusion_matrices_{str(technique).replace(' ', '_')}.png"
-        fig.savefig(file_path, dpi=300)
+        if output_path is not None:
+            file_path = f"{output_path}\\confusion_matrices_{str(technique).replace(' ', '_')}.png"
+            fig.savefig(file_path, dpi=300)
+            print(f"Saved confusion matrices for technique '{technique}' to {file_path}")
         plt.show()
 
-        print(f"Saved confusion matrices for technique '{technique}' to {file_path}")
 
 def create_meta_learners_bar_charts(meta_learners_results, metric_column_name, output_path):
     df = meta_learners_results.copy()
@@ -367,8 +383,9 @@ def create_meta_learners_bar_charts(meta_learners_results, metric_column_name, o
     fig.tight_layout(rect=[0, 0.03, 1, 0.95])
 
     safe_metric = metric_column_name.replace(" ", "_")
-    file_path = f"{output_path}\\{safe_metric}_bar_chart.png"
-    fig.savefig(file_path, dpi=300)
+    if output_path is not None:
+        file_path = f"{output_path}\\{safe_metric}_bar_chart.png"
+        fig.savefig(file_path, dpi=300)
     plt.show()
 
 
