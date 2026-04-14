@@ -261,25 +261,35 @@ def calculate_dataset_stats(full_dataset):
 def calculate_meta_learners_stats():
     meta_learners_results = load_results_csv()
     meta_learners_results.drop(columns=["model path"], inplace=True, errors='ignore')
-    output_path = input("Enter the path of the Output stats folder: ")
+    should_save = input("Do you want to save the stats to a file? (y/n): ").lower() == 'y'
+    if should_save:
+        output_path = input("Enter the path of the Output stats folder: ")
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_path = f"{output_path}\\{timestamp}"
+        os.makedirs(output_path, exist_ok=True)
+    else:
+        output_path = None
 
     print("Making the f1 training box plots:")
     show_meta_learners_box_plots(meta_learners_results, 'training f1', output_path)
 
-    print("Making the confusion matrix:")
-    create_confusion_matrix(meta_learners_results, output_path)
-
     print("Making the f1 testing bar chart")
     create_meta_learners_bar_charts(meta_learners_results, 'testing f1', output_path)
 
-def create_confusion_matrix(dataset, output_path):
+    print("Making the training confusion matrix:")
+    create_confusion_matrix(meta_learners_results, output_path, "training")
+
+    print("Making the testing confusion matrix:")
+    create_confusion_matrix(meta_learners_results, output_path, "testing")
+
+def create_confusion_matrix(dataset, output_path, type):
     required_cols = [
         "model type",
         "technique",
-        "testing true positives",
-        "testing true negatives",
-        "testing false positives",
-        "testing false negatives",
+        f"{type} true positives",
+        f"{type} true negatives",
+        f"{type} false positives",
+        f"{type} false negatives",
     ]
     missing = [c for c in required_cols if c not in dataset.columns]
     if missing:
@@ -294,6 +304,9 @@ def create_confusion_matrix(dataset, output_path):
     # Now build one figure per technique; each figure has one subplot per model type
     techniques = list(df["technique"].dropna().unique())
     model_types = list(df["model type"].dropna().unique())
+    if output_path is not None:
+        output_path = f"{output_path}\\{type}"
+        os.makedirs(output_path, exist_ok=True)
 
     for technique in techniques:
         technique_df = df[df["technique"] == technique]
@@ -310,10 +323,10 @@ def create_confusion_matrix(dataset, output_path):
             module_df = technique_df[technique_df["model type"] == model_type]
 
             # Get the mean of the folds
-            tp = float(module_df["testing true positives"].iloc[0])
-            tn = float(module_df["testing true negatives"].iloc[0])
-            fp = float(module_df["testing false positives"].iloc[0])
-            fn = float(module_df["testing false negatives"].iloc[0])
+            tp = float(module_df[f"{type} true positives"].iloc[0])
+            tn = float(module_df[f"{type} true negatives"].iloc[0])
+            fp = float(module_df[f"{type} false positives"].iloc[0])
+            fn = float(module_df[f"{type} false negatives"].iloc[0])
 
             confusion_matrix = np.array([[tn, fp], [fn, tp]])
 
@@ -326,7 +339,7 @@ def create_confusion_matrix(dataset, output_path):
         for counter in range(len(model_types), len(axes)):
             fig.delaxes(axes[counter])
 
-        fig.suptitle(f"Confusion Matrices — Technique: {technique}", fontsize=16)
+        fig.suptitle(f"{type[0].upper()}{type[1:]} Confusion Matrices — Technique: {technique}", fontsize=16)
         fig.tight_layout(rect=[0, 0.03, 1, 0.95])
         if output_path is not None:
             file_path = f"{output_path}\\confusion_matrices_{str(technique).replace(' ', '_')}.png"
@@ -430,10 +443,11 @@ def show_meta_learners_box_plots(meta_learners_results, metric_column_name, outp
 
     plt.suptitle(f'Boxplot of {metric_column_name} by Model Type for Each Technique', fontsize=16)
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-    file_path = f"{output_path}\\{metric_column_name.replace(" ","_")}_box_plot.png"
+    if output_path is not None:
+        file_path = f"{output_path}\\{metric_column_name.replace(" ","_")}_box_plot.png"
+        print(f'Saved {metric_column_name}\'s box plot to {file_path}')
     plt.savefig(file_path, dpi=300)
     plt.show()
-    print(f'Saved {metric_column_name}\'s box plot to {file_path}')
 
 def explode_accuracies(df, accuracy_col):
     df = df.copy()
