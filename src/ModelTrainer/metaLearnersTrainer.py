@@ -2,6 +2,7 @@ import joblib
 import pandas as pd
 import random
 import torch
+import numpy as np
 from datetime import datetime
 
 from src.ModelTrainer.nnTrainer import train_basic_nns
@@ -15,7 +16,7 @@ from src.Utils.datasetHandler import load_full_dataset, splitSet
 from src.Utils.fileHandler import save_data_frame, folder_maker, load_json_file, get_latest_settings
 from src.Utils.menus import show_meta_leaner_type_menu
 from src.Utils.metaFeatureCalculator import calculate_meta_features
-from src.Utils.metaFeatureDatasetHandler import prepare_meta_feature_full_dataset_for_states
+from src.Utils.metaFeatureDatasetHandler import prepare_meta_feature_full_dataset_for_states, add_hyperparameters
 from src.Utils.constants import *
 
 
@@ -64,7 +65,7 @@ def test_meta_learner(dataset_name, dataset_settings, meta_learners_results, num
 
     nn_settings = get_latest_settings(dataset_name)
 
-    meta_learners_performs = predicted_best_techniques(seed, meta_learners_results, dataset, category_columns, path_to_transformer)
+    meta_learners_performs = predict_best_techniques(seed, meta_learners_results, dataset, category_columns, path_to_transformer, nn_settings)
     print(f"The best technique is: {meta_learners_performs}")
 
     instance_json_object = train_nns(dataset_name, meta_learners_performs, seed, training_set, testing_set, category_columns, number_of_folds, nn_settings)
@@ -72,8 +73,9 @@ def test_meta_learner(dataset_name, dataset_settings, meta_learners_results, num
     return pd.DataFrame([instance_json_object])
 
 
-def predicted_best_techniques(seed, meta_learners_results, dataset, category_columns, path_to_transformer):
+def predict_best_techniques(seed, meta_learners_results, dataset, category_columns, path_to_transformer, nn_settings):
     meta_features = pd.DataFrame([calculate_meta_features(dataset, category_columns)])
+    meta_features = add_hyperparameters(meta_features, nn_settings)
     meta_features = prepare_meta_feature_full_dataset_for_states(meta_features, path_to_transformer)
 
     techniques = list(meta_learners_results["technique"].dropna().unique())
@@ -91,7 +93,11 @@ def predicted_best_techniques(seed, meta_learners_results, dataset, category_col
             meta_learners_results_per_technique_and_model = meta_learners_results_per_technique[
                 meta_learners_results_per_technique["model type"] == model_type]
             if not meta_learners_results_per_technique_and_model.empty:
-                metrix = meta_learners_results_per_technique_and_model["testing f1"].iloc[0]
+                trues = (meta_learners_results_per_technique_and_model["training true positives"].iloc[0] +
+                         meta_learners_results_per_technique_and_model["training true negatives"].iloc[0])
+                total = trues + (meta_learners_results_per_technique_and_model["training false positives"].iloc[0]+
+                                meta_learners_results_per_technique_and_model["training false negatives"].iloc[0])
+                metrix = trues/total*100
                 if metrix > best_metrix:
                     best_metrix = metrix
                     best_model_types = [model_type]
@@ -125,27 +131,29 @@ def predicted_best_techniques(seed, meta_learners_results, dataset, category_col
             else:
                 if is_best[0][1]:
                     techniques_predicted[technique.replace(" ", "_")].append(best_model_row["testing f1"].values[0])
-        best_technique = []
-        best_count = 0
-        best_f1_score = 0
-        for technique in techniques_predicted:
-            count = len(techniques_predicted[technique])
+    best_technique = []
+    best_count = 0
+    best_f1_score = 0
+    for technique in techniques_predicted:
+        count = len(techniques_predicted[technique])
+        f1_score = 0
+        if count > 0:
             f1_score = max(techniques_predicted[technique])
-            if count > best_count:
-                best_count = count
-                best_technique = [technique]
-                best_f1_score = f1_score
-            elif count == best_count and best_f1_score < f1_score:
-                best_technique = [technique]
-                best_f1_score = f1_score
-            elif count == best_count and best_f1_score == f1_score:
-                best_technique.append(technique)
-        if len(best_technique) == 1:
-            return best_technique[0]
-        elif len(best_technique) == 0 or "baseline" in best_technique:
-            return "baseline"
-        else:
-            return best_technique[random.randint(0, len(best_technique) - 1)]
+        if count > best_count:
+            best_count = count
+            best_technique = [technique]
+            best_f1_score = f1_score
+        elif count == best_count and best_f1_score < f1_score:
+            best_technique = [technique]
+            best_f1_score = f1_score
+        elif count == best_count and best_f1_score == f1_score:
+            best_technique.append(technique)
+    if len(best_technique) == 1:
+        return best_technique[0]
+    elif len(best_technique) == 0 or "baseline" in best_technique:
+        return "baseline"
+    else:
+        return best_technique[random.randint(0, len(best_technique) - 1)]
 
 
 def train_nns(dataset_name, best_technique, seed, training_set, testing_set, category_columns, number_of_folds, nn_settings):

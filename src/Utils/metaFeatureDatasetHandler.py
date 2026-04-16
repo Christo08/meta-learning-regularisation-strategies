@@ -56,7 +56,7 @@ def split_dataset(dataset):
 
     return training_set, testing_set
 
-def add_hyperparameters(dataset):
+def add_all_hyperparameters(dataset):
     for index, row in dataset.iterrows():
         settings = get_latest_settings(row["dataset_name"])
         if not settings:
@@ -69,6 +69,19 @@ def add_hyperparameters(dataset):
         dataset.loc[index,"avg_number_of_neurons"] = np.average(number_of_neurons)
         dataset.loc[index,"min_number_of_neurons"] = np.min(number_of_neurons)
         dataset.loc[index,"max_number_of_neurons"] = np.max(number_of_neurons)
+        dataset.loc[index,"total_number_of_neurons"] = np.sum(number_of_neurons)
+    return dataset
+
+def add_hyperparameters(dataset, settings):
+    dataset["batch_size"] = settings["batch_size"]
+    dataset["learning_rate"] = settings["learning_rate"]
+    dataset["number_of_epochs"] = settings["number_of_epochs"]
+    dataset["number_of_hidden_layers"] = settings["number_of_hidden_layers"]
+    number_of_neurons = settings["number_of_neurons_in_layers"][:settings["number_of_hidden_layers"]]
+    dataset["avg_number_of_neurons"] = np.average(number_of_neurons)
+    dataset["min_number_of_neurons"] = np.min(number_of_neurons)
+    dataset["max_number_of_neurons"] = np.max(number_of_neurons)
+    dataset["total_number_of_neurons"] = np.sum(number_of_neurons)
     return dataset
 
 def prepare_meta_feature_dataset_for_states():
@@ -78,7 +91,7 @@ def prepare_meta_feature_dataset_for_states():
     should_add_hyperparameters = input("Do you want to add hyperparameters (y/n): ").lower() == "y"
     if should_add_hyperparameters:
         options = "hyperparameters_"
-        dataset = add_hyperparameters(dataset)
+        dataset = add_all_hyperparameters(dataset)
     
     dataset = clean_dataset(dataset, False)
 
@@ -153,7 +166,7 @@ def prepare_meta_feature_sets():
     should_add_hyperparameters = input("Do you want to add hyperparameters (y/n): ").lower() == "y"
     if should_add_hyperparameters:
         options = "hyperparameters_"
-        dataset = add_hyperparameters(dataset)
+        dataset = add_all_hyperparameters(dataset)
     training_set, testing_set = split_dataset(dataset)
 
     training_targets = training_set[TARGET_COLUMNS]
@@ -304,7 +317,8 @@ def apply_transformers(features = None, training_features = None, testing_featur
             'equivalent_number_of_features',
             'learning_rate',
             'number_of_hidden_layers',
-            'min_number_of_neurons'
+            'min_number_of_neurons',
+            'total_number_of_neurons'
         ]
 
         if features is not None:
