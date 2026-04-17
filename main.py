@@ -47,7 +47,7 @@ def main():
                 names = show_dataset_menu(datasets_settings)
                 if not names:
                     break
-                output_path = input("Enter the path of the Output dataset file or folder: ")
+                output_path = input("Enter the path of the output dataset file or folder: ")
                 number_of_instances = int(input("How many Subsets do you want to create per dataset? "))
                 number_of_folds = int(input("How many folds do you want to use per instance? "))
                 for name in names:
@@ -87,7 +87,7 @@ def main():
             names = show_dataset_menu(datasets_settings)
             if names:
                 subset_dataset = load_meta_features_csv("")
-                output_path = input("Enter the path of the Output dataset file or folder: ")
+                output_path = input("Enter the path of the output dataset file or folder: ")
                 number_of_folds = int(input("How many folds do you want to use per instance? "))
                 index_to_create = input("Enter the indexes to recreate (separated by commas): ").replace(' ', '').split(",")
                 index_to_create = [int(index) for index in index_to_create]

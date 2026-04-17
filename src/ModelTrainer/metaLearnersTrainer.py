@@ -27,7 +27,7 @@ def train_meta_learners(training_dataset, testing_dataset):
     results = pd.DataFrame(columns=["model type", "technique",  "training loses", "testing loses"])
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     settings_file_path = input(f"Enter the path of the settings index file: ")
-    output_path = input("Enter the path of the Output stats folder: ")
+    output_path = input("Enter the path of the output stats folder: ")
     settings = load_json_file(settings_file_path)
 
     for selected_meta_learn_type in selected_meta_learn_types:

@@ -208,7 +208,7 @@ def calculate_dataset_stats(full_dataset):
     has_target = not targets.empty
     should_save = input("Do you want to save the stats to a file? (y/n): ").lower() == 'y'
     if should_save:
-        output_path = input("Enter the path of the Output stats folder: ")
+        output_path = input("Enter the path of the output stats folder: ")
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         output_path = f"{output_path}\\{timestamp}"
         os.makedirs(output_path, exist_ok=True)
@@ -263,7 +263,7 @@ def calculate_meta_learners_stats():
     meta_learners_results.drop(columns=["model path"], inplace=True, errors='ignore')
     should_save = input("Do you want to save the stats to a file? (y/n): ").lower() == 'y'
     if should_save:
-        output_path = input("Enter the path of the Output stats folder: ")
+        output_path = input("Enter the path of the output stats folder: ")
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         output_path = f"{output_path}\\{timestamp}"
         os.makedirs(output_path, exist_ok=True)
