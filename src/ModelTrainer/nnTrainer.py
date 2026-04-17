@@ -3,6 +3,7 @@ from datetime import datetime
 
 import numpy as np
 import torch
+from sklearn.metrics import fbeta_score
 from sklearn.model_selection import KFold
 from torch import optim
 from torch.utils.data import DataLoader
@@ -29,9 +30,11 @@ def train_basic_nns(settings, technique, training_set, testing_set, seed, catego
 
         training_mses = []
         training_accuracy = []
+        training_f1_scores = []
 
         testing_mses = []
         testing_accuracy = []
+        testing_f1_scores = []
 
         counter =0
 
@@ -45,20 +48,22 @@ def train_basic_nns(settings, technique, training_set, testing_set, seed, catego
             counter+=1
 
             training_set = (training_set_x, training_set_y)
-            training_loss_value, training_accuracy_value, testing_loss_value, testing_accuracy_value = training_basic_loop(training_set,
-                                                                                                                           testing_set,
-                                                                                                                           settings,
-                                                                                                                           number_of_inputs,
-                                                                                                                           number_of_outputs,
-                                                                                                                           technique,
-                                                                                                                           seed,
-                                                                                                                           all_labels,
-                                                                                                                           category_columns)
-            training_mses.append(training_loss_value)
-            training_accuracy.append(training_accuracy_value)
-            testing_mses.append(testing_loss_value)
-            testing_accuracy.append(testing_accuracy_value)
-        return training_mses, training_accuracy, testing_mses, testing_accuracy
+            matrices = training_basic_loop(training_set, testing_set, settings, number_of_inputs, number_of_outputs,
+                                           technique, seed, all_labels, category_columns)
+            training_mses.append(matrices["training_loss"])
+            training_accuracy.append(matrices["training_accuracies"])
+            training_f1_scores.append(matrices["training_f1_scores"])
+            testing_mses.append(matrices["testing_loss"])
+            testing_accuracy.append(matrices["testing_accuracies"])
+            testing_f1_scores.append(matrices["testing_f1_scores"])
+        return {
+            "training_loss": training_mses,
+            "training_accuracies": training_accuracy,
+            "training_f1_scores": training_f1_scores,
+            "testing_loss": testing_mses,
+            "testing_accuracies": testing_accuracy,
+            "testing_f1_scores": testing_f1_scores
+        }
     else:
         return training_basic_loop(training_set,
                                    testing_set,
@@ -69,67 +74,6 @@ def train_basic_nns(settings, technique, training_set, testing_set, seed, catego
                                    seed,
                                    all_labels,
                                    category_columns)
-
-def train_basic_nns_with_meta_leaner(settings, training_set, testing_set, seed, category_columns, meta_learners_results, transformer_path, fold=None):
-    from src.ModelTrainer.metaLearnersTrainer import predict_best_techniques
-    number_of_inputs = training_set[0].shape[1]
-    number_of_outputs = training_set[1].shape[1]
-
-    all_labels = training_set[1].columns.tolist()
-    if fold is not None and fold >= 3:
-        kf = KFold(n_splits=fold, shuffle=True, random_state=seed)
-
-        training_mses = []
-        training_accuracy = []
-
-        testing_mses = []
-        testing_accuracy = []
-
-        counter =0
-
-        X_full = training_set[0]
-        y_full = training_set[1]
-
-        for train_idx, _ in kf.split(X_full):
-            training_set_x = X_full.iloc[train_idx]
-            training_set_y = y_full.iloc[train_idx]
-
-            fold_set = training_set_x.copy()
-            fold_set['target']  =  training_set_y.idxmax(axis=1)
-
-            technique = predict_best_techniques(meta_learners_results, fold_set, category_columns, transformer_path,
-                                                settings)
-
-            counter+=1
-
-            training_set = (training_set_x, training_set_y)
-            training_loss_value, training_accuracy_value, testing_loss_value, testing_accuracy_value = training_basic_loop(training_set,
-                                                                                                                           testing_set,
-                                                                                                                           settings,
-                                                                                                                           number_of_inputs,
-                                                                                                                           number_of_outputs,
-                                                                                                                           technique,
-                                                                                                                           seed,
-                                                                                                                           all_labels,
-                                                                                                                           category_columns)
-            training_mses.append(training_loss_value)
-            training_accuracy.append(training_accuracy_value)
-            testing_mses.append(testing_loss_value)
-            testing_accuracy.append(testing_accuracy_value)
-        return training_mses, training_accuracy, testing_mses, testing_accuracy
-
-    else:
-        technique = predict_best_techniques(meta_learners_results, training_set, category_columns, transformer_path, settings)
-        return training_basic_loop(training_set,
-                                   testing_set,
-                                   settings,
-                                   number_of_inputs,
-                                   number_of_outputs,
-                                   technique,
-                                   seed,
-                                   all_labels,
-                                   category_columns)
-
 
 def training_basic_loop(training_set, testing_set, settings, number_of_inputs, number_of_outputs, technique, seed, all_labels, category_columns):
     global device
@@ -138,12 +82,26 @@ def training_basic_loop(training_set, testing_set, settings, number_of_inputs, n
     if technique == "SMOTE":
         number_of_neighbors = number_of_outputs - 1
         if number_of_neighbors < 3 or x_training.shape[1] - len(category_columns) < 2:
-            return float('inf'), float(0), float('inf'), float(0)
+            return {
+                "training_loss": float('inf'),
+                "training_accuracies": float(0),
+                "training_f1_scores": float(0),
+                "testing_loss": float('inf'),
+                "testing_accuracies": float(0),
+                "testing_f1_scores": float(0)
+            }
         try:
             x_training, y_training = apply_smote(x_training, y_training, seed, number_of_neighbors, category_columns)
         except Exception as e:
             if "Cannot apply smote." in str(e):
-                return float('inf'), float(0), float('inf'), float(0)
+                return {
+                    "training_loss": float('inf'),
+                    "training_accuracies": float(0),
+                    "training_f1_scores": float(0),
+                    "testing_loss": float('inf'),
+                    "testing_accuracies": float(0),
+                    "testing_f1_scores": float(0)
+                }
             else:
                 raise e
 
@@ -251,19 +209,32 @@ def training_basic_loop(training_set, testing_set, settings, number_of_inputs, n
     with torch.no_grad():
         y_training_pred = network(x_training)
         y_testing_pred = network(x_testing)
-        training_loss_value = loss_function(y_training_pred, y_training).item()
-        testing_loss_value = loss_function(y_testing_pred, y_testing).item()
-        # Classification accuracy: compare predicted class index vs true class index
+
         train_pred_cls = torch.argmax(y_training_pred, dim=1)
         train_true_cls = torch.argmax(y_training, dim=1)
 
         test_pred_cls = torch.argmax(y_testing_pred, dim=1)
         test_true_cls = torch.argmax(y_testing, dim=1)
 
-        training_accuracy = (train_pred_cls == train_true_cls).float().mean().item() * 100.0
-        testing_accuracy = (test_pred_cls == test_true_cls).float().mean().item() * 100.0
+        if number_of_outputs == 2:
+            fbeta_kwargs = {"beta": 1, "average": "binary", "pos_label": 1}
+        else:
+            fbeta_kwargs = {"beta": 1, "average": "weighted"}
 
-    return training_loss_value, training_accuracy, testing_loss_value, testing_accuracy
+        matrices = {
+            "training_loss": loss_function(y_training_pred, y_training).item(),
+            "training_accuracies": (train_pred_cls == train_true_cls).float().mean().item() * 100.0,
+            "training_f1_scores": fbeta_score(train_pred_cls.cpu().numpy(),
+                                            train_true_cls.cpu().numpy(),
+                                            **fbeta_kwargs),
+            "testing_loss": loss_function(y_testing_pred, y_testing).item(),
+            "testing_accuracies": (test_pred_cls == test_true_cls).float().mean().item() * 100.0,
+            "testing_f1_scores": fbeta_score(test_pred_cls.cpu().numpy(),
+                                            test_true_cls.cpu().numpy(),
+                                            **fbeta_kwargs)
+        }
+
+    return matrices
 
 def training_meta_nns(settings_file_path, training_set, testing_set, seed, kFold =5):
     results = []

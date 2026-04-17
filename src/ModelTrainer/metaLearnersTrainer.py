@@ -7,7 +7,7 @@ import torch
 
 from src.ModelTrainer.decisionTreeTrainer import training_meta_decision_trees
 from src.ModelTrainer.knnTrainer import training_meta_k_nearest_neighbors
-from src.ModelTrainer.nnTrainer import train_basic_nns_with_meta_leaner, training_meta_nns, train_basic_nns
+from src.ModelTrainer.nnTrainer import training_meta_nns, train_basic_nns
 from src.ModelTrainer.randomForestTrainer import training_meta_random_forests
 from src.ModelTrainer.svmTrainer import training_meta_support_vector_machines
 from src.Models.NN.network import Network
@@ -55,7 +55,7 @@ def train_meta_learners(training_dataset, testing_dataset):
     file_name = f"{output_path}\\meta_learners_results.csv"
     save_data_frame(results, file_name)
 
-def test_meta_learner(dataset_name, dataset_settings, meta_learners_results, number_of_folds, path_to_transformer):
+def test_meta_learner(dataset_name, dataset_settings, meta_learners_results, number_of_folds, transformer_path):
     seed = random.randint(0, 4294967295)
     random.seed(seed)
     dataset, category_columns = load_full_dataset(seed, dataset_settings, False)
@@ -65,11 +65,25 @@ def test_meta_learner(dataset_name, dataset_settings, meta_learners_results, num
 
     nn_settings = get_latest_settings(dataset_name)
 
-    instance_json_object = train_nns(dataset_name, seed, training_set, testing_set, category_columns, number_of_folds, nn_settings, meta_learners_results, path_to_transformer)
+    best_technique = predict_best_technique(meta_learners_results,
+                                            dataset,
+                                            category_columns,
+                                            transformer_path,
+                                            nn_settings)
+    instance_json_object = train_nns(dataset_name,
+                                     best_technique,
+                                     seed,
+                                     training_set,
+                                     testing_set,
+                                     category_columns,
+                                     number_of_folds,
+                                     nn_settings,
+                                     meta_learners_results,
+                                     transformer_path)
 
     return pd.DataFrame([instance_json_object])
 
-def predict_best_techniques(meta_learners_results, dataset, category_columns, transformer_path, nn_settings):
+def predict_best_technique(meta_learners_results, dataset, category_columns, transformer_path, nn_settings):
     meta_features = pd.DataFrame([calculate_meta_features(dataset, category_columns)])
     meta_features = add_hyperparameters(meta_features, nn_settings)
     meta_features = prepare_meta_feature_full_dataset_for_states(meta_features, transformer_path)
@@ -150,42 +164,34 @@ def predict_best_techniques(meta_learners_results, dataset, category_columns, tr
     else:
         return best_technique[random.randint(0, len(best_technique) - 1)]
 
-def train_nns(dataset_name, seed, training_set, testing_set, category_columns, number_of_folds, nn_settings, meta_learners_results, path_to_transformer):
+def train_nns(dataset_name, best_technique, seed, training_set, testing_set, category_columns, number_of_folds, nn_settings, meta_learners_results, path_to_transformer):
     print("")
     print("Dataset name: " + dataset_name)
     print("Seed: " + str(seed))
+    print("Predict best technique: " +best_technique)
     # Add dataset name, seed and meta feature
     instance_json_object = {
         "dataset_name": dataset_name,
-        "seed": seed
+        "seed": seed,
+        "best_technique": best_technique
     }
     for config in REGULARISATION_TECHNIQUES:
         print(config["param"])
-        training_loss_values, training_accuracies, testing_loss_values, testing_accuracies = train_basic_nns(nn_settings,
-                                                                                                             config["param"],
-                                                                                                             training_set,
-                                                                                                             testing_set,
-                                                                                                             seed,
-                                                                                                             category_columns,
-                                                                                                             number_of_folds)
+        matrices = train_basic_nns(nn_settings, config["param"], training_set, testing_set, seed, category_columns,
+                                   number_of_folds)
 
-        instance_json_object[f"{config['fileName']}_training_loss"] = training_loss_values
-        instance_json_object[f"{config['fileName']}_training_accuracies"] = training_accuracies
-        instance_json_object[f"{config['fileName']}_testing_loss"] = testing_loss_values
-        instance_json_object[f"{config['fileName']}_testing_accuracies"] = testing_accuracies
-    print("meta-learner")
-    training_loss_values, training_accuracies, testing_loss_values, testing_accuracies =  train_basic_nns_with_meta_leaner(nn_settings,
-                                                                                                                           training_set,
-                                                                                                                           testing_set,
-                                                                                                                           seed,
-                                                                                                                           category_columns,
-                                                                                                                           meta_learners_results,
-                                                                                                                           path_to_transformer,
-                                                                                                                           number_of_folds)
+        instance_json_object[f"{config['fileName']}_training_loss"] = matrices["training_loss"]
+        instance_json_object[f"{config['fileName']}_training_accuracies"] = matrices["training_accuracies"]
+        instance_json_object[f"{config['fileName']}_training_f1_scores"] = matrices["training_f1_scores"]
+        instance_json_object[f"{config['fileName']}_testing_loss"] = matrices["testing_loss"]
+        instance_json_object[f"{config['fileName']}_testing_accuracies"] = matrices["testing_accuracies"]
+        instance_json_object[f"{config['fileName']}_testing_f1_scores"] = matrices["testing_f1_scores"]
 
-    instance_json_object["meta_learner_training_loss"] =  training_loss_values
-    instance_json_object["meta_learner_training_accuracies"] = training_accuracies
-    instance_json_object["meta_learner_testing_loss"] = testing_loss_values
-    instance_json_object["meta_learner_testing_accuracies"] = testing_accuracies
+    instance_json_object["meta_learner_training_loss"] =  instance_json_object[f"{best_technique}_training_loss"]
+    instance_json_object["meta_learner_training_accuracies"] = instance_json_object[f"{best_technique}_training_accuracies"]
+    instance_json_object["meta_learner_training_f1_scores"] = instance_json_object[f"{best_technique}_training_f1_scores"]
+    instance_json_object["meta_learner_testing_loss"] = instance_json_object[f"{best_technique}_testing_loss"]
+    instance_json_object["meta_learner_testing_accuracies"] = instance_json_object[f"{best_technique}_testing_accuracies"]
+    instance_json_object["meta_learner_testing_f1_scores"] = instance_json_object[f"{best_technique}_testing_f1_scores"]
 
     return instance_json_object

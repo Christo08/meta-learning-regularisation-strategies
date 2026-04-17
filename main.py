@@ -1,16 +1,18 @@
+from datetime import datetime
+
 import pandas as pd
 import torch
-from datetime import datetime
 
 from src.ModelTrainer.metaLearnersTrainer import train_meta_learners, test_meta_learner
 from src.Optimisers.metaLearnersOptimiser import optimise_meta_learners
 from src.Optimisers.nnOptimiser import optimise_basic_nn
 from src.Utils.constants import *
-from src.Utils.statsCalculator import calculate_meta_learners_stats, calculate_dataset_stats
-from src.Utils.fileHandler import save_data_frame, load_json_file, load_settings, load_meta_features_csv, load_results_csv
+from src.Utils.fileHandler import save_data_frame, load_json_file, load_settings, load_meta_features_csv, \
+    load_results_csv
 from src.Utils.instanceCreator import create_dataset, recreate_subsets, recreate_dataset
 from src.Utils.menus import show_dataset_menu, show_menu
 from src.Utils.metaFeatureDatasetHandler import prepare_meta_feature_dataset_for_states, prepare_meta_feature_sets
+from src.Utils.statsCalculator import calculate_meta_learners_stats, calculate_dataset_stats
 
 
 def main():
@@ -136,7 +138,7 @@ def main():
 
             meta_learners_results = load_results_csv()
             number_of_folds = int(input("How many folds do you want to use per instance? "))
-            path_to_transformer = input("Enter the path of the pipeline file: ")
+            transformer_path = input("Enter the path of the pipeline file: ")
             output_path = input("Enter the path of the output dataset folder: ")
             results = pd.DataFrame()
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -144,7 +146,11 @@ def main():
             file_path = output_path + "\\" + file_name
             for dataset_name in dataset_names:
                 dataset_settings = next((item for item in datasets_settings if item["name"] == dataset_name), None)
-                dataset_result = test_meta_learner(dataset_name, dataset_settings, meta_learners_results, number_of_folds, path_to_transformer)
+                dataset_result = test_meta_learner(dataset_name,
+                                                   dataset_settings,
+                                                   meta_learners_results,
+                                                   number_of_folds,
+                                                   transformer_path)
                 results = pd.concat([results, dataset_result], ignore_index=True)
                 save_data_frame(results, file_path)
             print(results)

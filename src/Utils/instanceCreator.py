@@ -1,3 +1,4 @@
+import ast
 import json
 import random
 import time
@@ -261,26 +262,21 @@ def create_instance(dataset_name, settings, number_of_folds, training_set, testi
     # Perform training for each configuration
     for config in REGULARISATION_TECHNIQUES:
         print(config["param"])
-        training_loss_values, training_accuracies, testing_loss_values, testing_accuracies = train_basic_nns(settings,
-                                                                                                             config[
-                                                                                                                 "param"],
-                                                                                                             training_set,
-                                                                                                             testing_set,
-                                                                                                             seed,
-                                                                                                             category_columns,
-                                                                                                             number_of_folds)
+        matrices = train_basic_nns(settings, config["param"], training_set, testing_set, seed, category_columns, number_of_folds)
 
-        instance_json_object[config['fileName'] + "_training_loss"] = training_loss_values
-        instance_json_object[config['fileName'] + "_training_accuracies"] = training_accuracies
-        instance_json_object[config['fileName'] + "_testing_loss"] = testing_loss_values
-        instance_json_object[config['fileName'] + "_testing_accuracies"] = testing_accuracies
+        instance_json_object[f"{config['fileName']}_training_loss"] = matrices["training_loss"]
+        instance_json_object[f"{config['fileName']}_training_accuracies"] = matrices["training_accuracies"]
+        instance_json_object[f"{config['fileName']}_training_f1_scores"] = matrices["training_f1_scores"]
+        instance_json_object[f"{config['fileName']}_testing_loss"] = matrices["testing_loss"]
+        instance_json_object[f"{config['fileName']}_testing_accuracies"] = matrices["testing_accuracies"]
+        instance_json_object[f"{config['fileName']}_testing_f1_scores"] = matrices["testing_f1_scores"]
 
-        if best_training_loss > np.mean(training_loss_values):
-            best_training_loss = np.mean(training_loss_values)
+        if best_training_loss > np.mean(matrices["training_loss"]):
+            best_training_loss = np.mean(matrices["training_loss"])
             best_training_technique = config['fileName']
 
-        if best_testing_loss > np.mean(testing_loss_values):
-            best_testing_loss = np.mean(testing_loss_values)
+        if best_testing_loss > np.mean(matrices["testing_loss"]):
+            best_testing_loss = np.mean(matrices["testing_loss"])
             best_testing_technique = config['fileName']
 
     instance_json_object["best_training_technique"] = best_training_technique

@@ -148,19 +148,19 @@ def optimise_mate_nn(dataset, selected_metrics, direction):
 def train_nn_warp(params):
     global training_set, validation_set, category_columns
     if "batch_size" in params:
-        training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_basic_nns(params, "", training_set, validation_set, category_columns, seed)
+        matrices = train_basic_nns(params, "", training_set, validation_set, category_columns, seed)
     else:
         settings = {**basic_settings, **params}
         if "dropout_layers" in params:
-            training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_basic_nns(settings, "dropout", training_set, validation_set, category_columns, seed)
+            matrices = train_basic_nns(settings, "dropout", training_set, validation_set, category_columns, seed)
         elif "prune_amount" in params:
-            training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_basic_nns(settings, "prune", training_set, validation_set, category_columns, seed)
+            matrices = train_basic_nns(settings, "prune", training_set, validation_set, category_columns, seed)
         elif "weight_decay" in params:
-            training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values = train_basic_nns(settings, "weightDecay", training_set, validation_set, category_columns, seed)
+            matrices = train_basic_nns(settings, "weightDecay", training_set, validation_set, category_columns, seed)
         else:
-            training_loss_values, training_accuracies_values, testing_loss_values, testing_accuracies_values= train_basic_nns(settings, "weightPerturbation", training_set, validation_set, category_columns, seed)
+            matrices = train_basic_nns(settings, "weightPerturbation", training_set, validation_set, category_columns, seed)
 
-    return testing_loss_values
+    return matrices["testing_loss"]
 
 def train_meta_nn_warp(params):
     global training_set, validation_set, selected_metric
