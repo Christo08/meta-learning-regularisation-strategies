@@ -10,8 +10,7 @@ from src.Utils.constants import *
 from src.Utils.fileHandler import save_data_frame, load_json_file, load_settings, load_meta_features_csv, \
     load_results_csv
 from src.Utils.instanceCreator import create_dataset, recreate_subsets, recreate_dataset
-from src.Utils.menus import show_dataset_menu, show_menu
-from src.Utils.metaFeatureDatasetHandler import prepare_meta_feature_dataset_for_states, prepare_meta_feature_sets
+from src.Utils.menus import show_dataset_menu, show_menu, show_dataset_loader_menu
 from src.Utils.statsCalculator import calculate_meta_learners_stats, calculate_dataset_stats
 
 
@@ -93,41 +92,13 @@ def main():
                 index_to_create = [int(index) for index in index_to_create]
                 recreate_dataset(subset_dataset, names, index_to_create, output_path, number_of_folds, datasets_settings)
         elif process == PROCESS_OPTIONS[4]:
-            was_processed= input("Has the dataset been processed before? (y/n): ").lower() == "y"
-            set_types = ["Full dataset", "Training dataset", "Testing dataset"]
-            set_type = show_menu("What type of dataset do you want to calculate stats for? ", set_types)
-            if set_type == set_types[0]:
-                if was_processed:
-                    dataset = load_meta_features_csv("")
-                else:
-                    dataset = prepare_meta_feature_dataset_for_states()
-            else:
-                if was_processed:
-                    if set_type == set_types[1]:
-                        dataset = load_meta_features_csv("training")
-                    else:
-                        dataset = load_meta_features_csv("testing")
-                else:
-                    training_set, testing_set = prepare_meta_feature_sets()
-                    if set_type == set_types[1]:
-                        dataset = training_set
-                    else:
-                        dataset = testing_set
+            dataset = show_dataset_loader_menu(allow_full_dataset = True)
             calculate_dataset_stats(dataset)
         elif process == PROCESS_OPTIONS[5]:
-            has_sets= input("Do you have training sets? (y/n): ").lower() == "y"
-            if has_sets:
-                training_set = load_meta_features_csv("training")
-            else:
-                training_set, _ = prepare_meta_feature_sets()
+            training_set = show_dataset_loader_menu()
             optimise_meta_learners(training_set)
         elif process == PROCESS_OPTIONS[6]:
-            has_sets= input("Do you have training and testing sets? (y/n): ").lower() == "y"
-            if has_sets:
-                training_set = load_meta_features_csv("training")
-                testing_set = load_meta_features_csv("testing")
-            else:
-                training_set, testing_set = prepare_meta_feature_sets()
+            training_set, testing_set = show_dataset_loader_menu(return_both_sets = True)
             train_meta_learners(training_set, testing_set)
         elif process == PROCESS_OPTIONS[7]:
             calculate_meta_learners_stats()

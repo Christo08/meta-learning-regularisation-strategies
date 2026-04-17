@@ -1,5 +1,7 @@
 from src.Utils.constants import *
-from src.Utils.fileHandler import load_json_file
+from src.Utils.fileHandler import load_json_file, load_meta_features_csv
+from src.Utils.metaFeatureDatasetHandler import prepare_meta_feature_dataset_for_states, prepare_meta_feature_sets
+
 
 def show_menu(prompt, items):
     selection = -1
@@ -56,3 +58,34 @@ def show_meta_leaner_type_menu():
     else:
         selected_meta_learn_types = [selected_meta_learn_types]
     return selected_meta_learn_types
+
+def show_dataset_loader_menu(allow_full_dataset = False, return_both_sets = False):
+    if allow_full_dataset:
+        was_processed= input("Has the dataset been processed before? (y/n): ").lower() == "y"
+        set_types = ["Full dataset", "Training dataset", "Testing dataset"]
+        set_type = show_menu("What type of dataset do you want to calculate stats for? ", set_types)
+        if was_processed:
+            if set_type == set_types[0]:
+                return load_meta_features_csv("")
+            else:
+                return load_meta_features_csv(set_type.split(" ")[0].strip().lower())
+        else:
+            if set_type == set_types[0]:
+                return prepare_meta_feature_dataset_for_states()
+            else:
+                training_set, testing_set = prepare_meta_feature_sets()
+                if set_type == set_types[1]:
+                    return training_set
+                else:
+                    return testing_set
+    elif return_both_sets:
+            if input("Do you have training and testing sets? (y/n): ").lower() == "y":
+                return load_meta_features_csv("training"), load_meta_features_csv("testing")
+            else:
+                return prepare_meta_feature_sets()
+    else:
+        if input("Do you have training sets? (y/n): ").lower() == "y":
+            return load_meta_features_csv("training")
+        else:
+            training_set, _ = prepare_meta_feature_sets()
+            return training_set
