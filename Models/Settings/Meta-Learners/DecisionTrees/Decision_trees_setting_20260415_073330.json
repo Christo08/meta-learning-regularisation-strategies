@@ -1,0 +1,66 @@
+{
+    "baseline": {
+        "criterion": "entropy",
+        "splitter": "random",
+        "max_depth": 12,
+        "min_samples_split": 38,
+        "min_samples_leaf": 15,
+        "ccp_alpha": 0.0
+    },
+    "batch_normalisation": {
+        "criterion": "gini",
+        "splitter": "random",
+        "max_depth": 74,
+        "min_samples_split": 4,
+        "min_samples_leaf": 1,
+        "ccp_alpha": 0.0
+    },
+    "dropout": {
+        "criterion": "gini",
+        "splitter": "best",
+        "max_depth": 100,
+        "min_samples_split": 31,
+        "min_samples_leaf": 30,
+        "ccp_alpha": 0.25
+    },
+    "layer_normalisation": {
+        "criterion": "entropy",
+        "splitter": "best",
+        "max_depth": 50,
+        "min_samples_split": 12,
+        "min_samples_leaf": 1,
+        "ccp_alpha": 0.0
+    },
+    "prune": {
+        "criterion": "entropy",
+        "splitter": "random",
+        "max_depth": 46,
+        "min_samples_split": 17,
+        "min_samples_leaf": 33,
+        "ccp_alpha": 0.0
+    },
+    "weight_normalisation": {
+        "criterion": "gini",
+        "splitter": "random",
+        "max_depth": 128,
+        "min_samples_split": 60,
+        "min_samples_leaf": 27,
+        "ccp_alpha": 0.0
+    },
+    "weight_decay": {
+        "criterion": "gini",
+        "splitter": "random",
+        "max_depth": 200,
+        "min_samples_split": 29,
+        "min_samples_leaf": 10,
+        "ccp_alpha": 0.0
+    },
+    "weight_perturbation": {
+        "criterion": "entropy",
+        "splitter": "random",
+        "max_depth": 144,
+        "min_samples_split": 28,
+        "min_samples_leaf": 8,
+        "ccp_alpha": 0.0
+    }
+}

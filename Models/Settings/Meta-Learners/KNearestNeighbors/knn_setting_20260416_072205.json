@@ -1,0 +1,66 @@
+{
+    "baseline": {
+        "n_neighbors": 1,
+        "weights": "distance",
+        "algorithm": "ball_tree",
+        "leaf_size": 54,
+        "p": 4,
+        "metric": "minkowski"
+    },
+    "batch_normalisation": {
+        "n_neighbors": 1,
+        "weights": "uniform",
+        "algorithm": "ball_tree",
+        "leaf_size": 23,
+        "p": 1,
+        "metric": "manhattan"
+    },
+    "dropout": {
+        "n_neighbors": 3,
+        "weights": "uniform",
+        "algorithm": "brute",
+        "leaf_size": 85,
+        "p": 1,
+        "metric": "euclidean"
+    },
+    "layer_normalisation": {
+        "n_neighbors": 13,
+        "weights": "uniform",
+        "algorithm": "brute",
+        "leaf_size": 41,
+        "p": 5,
+        "metric": "chebyshev"
+    },
+    "prune": {
+        "n_neighbors": 2,
+        "weights": "distance",
+        "algorithm": "auto",
+        "leaf_size": 52,
+        "p": 4,
+        "metric": "minkowski"
+    },
+    "weight_normalisation": {
+        "n_neighbors": 17,
+        "weights": "uniform",
+        "algorithm": "ball_tree",
+        "leaf_size": 44,
+        "p": 4,
+        "metric": "chebyshev"
+    },
+    "weight_decay": {
+        "n_neighbors": 9,
+        "weights": "distance",
+        "algorithm": "ball_tree",
+        "leaf_size": 62,
+        "p": 2,
+        "metric": "manhattan"
+    },
+    "weight_perturbation": {
+        "n_neighbors": 3,
+        "weights": "uniform",
+        "algorithm": "brute",
+        "leaf_size": 13,
+        "p": 4,
+        "metric": "manhattan"
+    }
+}
