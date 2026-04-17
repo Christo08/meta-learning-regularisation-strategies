@@ -18,7 +18,8 @@ dataset_name = ""
 category_columns = []
 
 
-def create_subsets_with_seeds(database_name, number_of_subsets_need, class_seeds, features_seeds, instances_seeds, dataset_settings):
+def create_subsets_with_seeds(number_of_subsets_need, class_seeds, features_seeds, instances_seeds, dataset_settings):
+    database_name = dataset_settings['name']
     print("Recreating " + str(number_of_subsets_need) + " Subsets for the " + database_name + " dataset")
     dataset = load_raw_dataset(dataset_settings)
     dataset = clean_dataset(dataset)
@@ -67,7 +68,8 @@ def load_subset(file_path, seed, dataset_settings):
 
     return training_set, testing_set, category_columns
 
-def create_subsets(database_name, number_of_subsets_need, dataset_settings, need_split=True):
+def create_subsets(number_of_subsets_need, dataset_settings, need_split=True):
+    database_name = dataset_settings['name']
     print("Creating " + str(number_of_subsets_need) + " Subsets for the " + database_name + " dataset")
     dataset = load_raw_dataset(dataset_settings)
     dataset = clean_dataset(dataset)

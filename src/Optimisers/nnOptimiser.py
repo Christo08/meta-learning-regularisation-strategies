@@ -65,14 +65,13 @@ validation_set = ""
 category_columns = []
 seed = random.randint(0, 4294967295)
 
-def optimise_basic_nn(dataset_name, dataset_settings, parameter_group, basic_settings_parm = None):
+def optimise_basic_nn(dataset_settings, parameter_group, basic_settings_parm = None):
     global basic_settings, training_set, validation_set, category_columns
 
-    if parameter_group == PARAMETER_GROUPS[len(PARAMETER_GROUPS) - 1]:
-        return True
     sets, category_columns = load_full_dataset(seed, dataset_settings)
     training_set = sets[0]
     validation_set = sets[1]
+    dataset_name = dataset_settings["name"]
     if parameter_group == PARAMETER_GROUPS[0]:
         best_params = setup_optimiser_and_run_it(dataset_name, "Basic", basic_parameters, 200)
         path = save_nn_settings(best_params, dataset_name, "")
@@ -103,7 +102,6 @@ def optimise_basic_nn(dataset_name, dataset_settings, parameter_group, basic_set
             else:
                 best_params = setup_optimiser_and_run_it(dataset_name, parameter_group, weight_perturbation_parameters, 100)
         save_nn_settings(best_params, dataset_name, "")
-    return parameter_group == PARAMETER_GROUPS[len(PARAMETER_GROUPS) - 1]
 
 def setup_optimiser_and_run_it(dataset_name, parameter_group_name, parameter_group, number_of_steps):
     search = pyhopper.Search(parameter_group)

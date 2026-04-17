@@ -5,7 +5,7 @@ from src.Utils.metaFeatureDatasetHandler import prepare_meta_feature_dataset_for
 
 def show_menu(prompt, items):
     selection = -1
-    while selection > len(items) or selection < 0:
+    while selection > len(items) - 1 or selection < 0:
         print(prompt)
         for database_name in items:
             print(str((items.index(database_name)+1))+". "+database_name)
@@ -19,17 +19,15 @@ def show_dataset_menu(data_settings):
     dataset_names.append("Custom")
     dataset_names.append("Back")
     datasets_option = show_menu("Select dataset by entering a number: ", dataset_names)
+    names = []
     if datasets_option == dataset_names[0]:
         names =  dataset_names[1:-2]
     elif datasets_option == dataset_names[len(dataset_names) - 2]:
         print("Enter the datasets' numbers separated by a comma:")
         select_dataset_indexes = input().replace(' ', '').split(",")
-        names = []
         for select_dataset_index in select_dataset_indexes:
             names.append(dataset_names[int(select_dataset_index) - 1])
-    elif datasets_option == dataset_names[len(dataset_names) - 1]:
-        return False
-    else:
+    elif datasets_option != dataset_names[len(dataset_names) - 1]:
         names = [datasets_option]
     return names
 
@@ -66,7 +64,7 @@ def show_dataset_loader_menu(allow_full_dataset = False, return_both_sets = Fals
         set_type = show_menu("What type of dataset do you want to calculate stats for? ", set_types)
         if was_processed:
             if set_type == set_types[0]:
-                return load_meta_features_csv("")
+                return load_meta_features_csv()
             else:
                 return load_meta_features_csv(set_type.split(" ")[0].strip().lower())
         else:

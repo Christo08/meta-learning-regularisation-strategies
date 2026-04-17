@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import PowerTransformer, StandardScaler
 
 from src.Utils.constants import TARGET_COLUMNS
-from src.Utils.fileHandler import load_meta_features_csv, save_data_frame, get_latest_settings
+from src.Utils.fileHandler import load_meta_features_csv, save_data_frame, get_latest_nn_settings
 
 
 def spilt_dataset_and_targets(dataset):
@@ -58,14 +58,14 @@ def split_dataset(dataset):
 
 def add_all_hyperparameters(dataset):
     for index, row in dataset.iterrows():
-        settings = get_latest_settings(row["dataset_name"])
-        if not settings:
+        nn_settings = get_latest_nn_settings(row["dataset_name"])
+        if not nn_settings:
             raise ValueError(f"Missing setting: {row}")
-        dataset.loc[index,"batch_size"] = settings["batch_size"]
-        dataset.loc[index,"learning_rate"] = settings["learning_rate"]
-        dataset.loc[index,"number_of_epochs"] = settings["number_of_epochs"]
-        dataset.loc[index,"number_of_hidden_layers"] = settings["number_of_hidden_layers"]
-        number_of_neurons = settings["number_of_neurons_in_layers"][:settings["number_of_hidden_layers"]]
+        dataset.loc[index,"batch_size"] = nn_settings["batch_size"]
+        dataset.loc[index,"learning_rate"] = nn_settings["learning_rate"]
+        dataset.loc[index,"number_of_epochs"] = nn_settings["number_of_epochs"]
+        dataset.loc[index,"number_of_hidden_layers"] = nn_settings["number_of_hidden_layers"]
+        number_of_neurons = nn_settings["number_of_neurons_in_layers"][:nn_settings["number_of_hidden_layers"]]
         dataset.loc[index,"avg_number_of_neurons"] = np.average(number_of_neurons)
         dataset.loc[index,"min_number_of_neurons"] = np.min(number_of_neurons)
         dataset.loc[index,"max_number_of_neurons"] = np.max(number_of_neurons)
@@ -85,7 +85,7 @@ def add_hyperparameters(dataset, settings):
     return dataset
 
 def prepare_meta_feature_dataset_for_states():
-    dataset = load_meta_features_csv("")
+    dataset = load_meta_features_csv()
 
     options = ""
     should_add_hyperparameters = input("Do you want to add hyperparameters (y/n): ").lower() == "y"
@@ -148,7 +148,7 @@ def prepare_meta_feature_full_dataset_for_states(meta_features, path_to_data_pip
 
 def prepare_meta_feature_sets():
     was_processed = input("Has the dataset be processed before, note normalise and bins should not have been applied? (y/n): ").lower() == "y"
-    dataset = load_meta_features_csv("")
+    dataset = load_meta_features_csv()
     if not was_processed:
         dataset = clean_dataset(dataset, False)
         targets = dataset[TARGET_COLUMNS]
@@ -238,21 +238,6 @@ def clean_dataset(dataset, should_drop_dataset_name = True):
         if not(column in TARGET_COLUMNS) and not (column in ["dataset_name", "seed", "file_name", "subset_type"]):
             dataset[column] = dataset[column].values.astype(np.float64)
 
-    return dataset
-
-def append_hyperparameters(dataset):
-    for index, row in dataset.iterrows():
-        setting = get_latest_settings(row["dataset_name"])
-        if not setting:
-            raise ValueError(f"Missing setting: {row}")
-        dataset.loc[index, "batch_size"] = setting["batch_size"]
-        dataset.loc[index, "learning_rate"] = setting["learning_rate"]
-        dataset.loc[index, "number_of_epochs"] = setting["number_of_epochs"]
-        dataset.loc[index, "number_of_hidden_layers"] = setting["number_of_hidden_layers"]
-        number_of_neurons = setting["number_of_neurons_in_layers"][:setting["number_of_hidden_layers"]]
-        dataset.loc[index, "avg_number_of_neurons"] = np.average(number_of_neurons)
-        dataset.loc[index, "min_number_of_neurons"] = np.min(number_of_neurons)
-        dataset.loc[index, "max_number_of_neurons"] = np.max(number_of_neurons)
     return dataset
 
 # def create_bins(features=None, training_features=None, testing_features=None):

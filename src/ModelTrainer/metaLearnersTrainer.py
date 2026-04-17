@@ -13,7 +13,7 @@ from src.ModelTrainer.svmTrainer import training_meta_support_vector_machines
 from src.Models.NN.network import Network
 from src.Utils.constants import *
 from src.Utils.datasetHandler import load_full_dataset, splitSet
-from src.Utils.fileHandler import save_data_frame, folder_maker, load_json_file, get_latest_settings
+from src.Utils.fileHandler import save_data_frame, folder_maker, load_json_file, get_latest_nn_settings
 from src.Utils.menus import show_meta_leaner_type_menu
 from src.Utils.metaFeatureCalculator import calculate_meta_features
 from src.Utils.metaFeatureDatasetHandler import prepare_meta_feature_full_dataset_for_states, add_hyperparameters
@@ -55,7 +55,7 @@ def train_meta_learners(training_dataset, testing_dataset):
     file_name = f"{output_path}\\meta_learners_results.csv"
     save_data_frame(results, file_name)
 
-def test_meta_learner(dataset_name, dataset_settings, meta_learners_results, number_of_folds, transformer_path):
+def test_meta_learner(dataset_settings, meta_learners_results, number_of_folds, transformer_path):
     seed = random.randint(0, 4294967295)
     random.seed(seed)
     dataset, category_columns = load_full_dataset(seed, dataset_settings, False)
@@ -63,14 +63,14 @@ def test_meta_learner(dataset_name, dataset_settings, meta_learners_results, num
     training_set = sets[0]
     testing_set = sets[1]
 
-    nn_settings = get_latest_settings(dataset_name)
+    nn_settings = get_latest_nn_settings(dataset_settings["name"])
 
     best_technique = predict_best_technique(meta_learners_results,
                                             dataset,
                                             category_columns,
                                             transformer_path,
                                             nn_settings)
-    instance_json_object = train_nns(dataset_name,
+    instance_json_object = train_nns(dataset_settings["name"],
                                      best_technique,
                                      seed,
                                      training_set,

@@ -10,14 +10,16 @@ import pandas as pd
 from src.ModelTrainer.nnTrainer import train_basic_nns
 from src.Utils.constants import *
 from src.Utils.datasetHandler import create_subsets, load_dataset, create_subsets_with_seeds, load_subset
-from src.Utils.fileHandler import load_meta_features_dataset, save_data_frame, get_latest_settings
+from src.Utils.datasetSettingHandler import DatasetsSettingsHandler
+from src.Utils.fileHandler import load_meta_features_dataset, save_data_frame, get_latest_nn_settings
 from src.Utils.timeFormatter import format_duration
 
 
-def recreate_subsets(meta_feature_dataset, number_of_instances, datasets_settings, names=None):
+def recreate_subsets(meta_feature_dataset, number_of_instances, names=None):
     if names is None:
         names = []
     seeds = []
+    datasets_settings = DatasetsSettingsHandler().get_dataset_settings()
     if len(meta_feature_dataset) > 0:
         for name, group in meta_feature_dataset.groupby('dataset_name'):
             seed = {
@@ -62,7 +64,6 @@ def recreate_subsets(meta_feature_dataset, number_of_instances, datasets_setting
     for seed in seeds:
         if seed["isComplete"]:
             subsets, meta_features, return_seeds, subset_category_columns, subset_file_paths = create_subsets_with_seeds(
-                seed["name"],
                 number_of_instances,
                 seed["classSeeds"],
                 seed["featuresSeeds"],
@@ -70,7 +71,6 @@ def recreate_subsets(meta_feature_dataset, number_of_instances, datasets_setting
                 seed["datasetSettings"])
         else:
             subsets, meta_features, return_seeds, subset_category_columns, subset_file_paths = create_subsets(
-                seed["name"],
                 number_of_instances,
                 seed["datasetSettings"],
                 False)
@@ -90,17 +90,18 @@ def recreate_subsets(meta_feature_dataset, number_of_instances, datasets_setting
     pd.DataFrame(meta_feature_dataset).to_csv(f"{OUTPUT_PATH}SubsetMetaFeatures_{timestamp}.csv", index=False)
 
 
-def recreate_dataset(subset_dataset, dataset_names, indexes, output_path, number_of_folds, datasets_settings):
+def recreate_dataset(subset_dataset, dataset_names, indexes, output_path, number_of_folds):
     dataset, output_path = load_meta_features_dataset(output_path)
     seeds = []
+    datasets_settings = DatasetsSettingsHandler().get_dataset_settings()
     for name, group in subset_dataset.groupby('dataset_name'):
         if name in dataset_names:
-            settings = get_latest_settings(name)
+            nn_settings = get_latest_nn_settings(name)
             dataset_settings = next((item for item in datasets_settings if item["name"] == name), None)
             seed = {
                 "name": name,
                 "dataset_settings": dataset_settings,
-                "nn_settings": settings,
+                "nn_settings": nn_settings,
                 "rows": [],
             }
             for index, row in group.iterrows():
@@ -196,14 +197,13 @@ def _to_list(value):
                 return [s]
     return [value]
 
-def create_dataset(database_name, output_path, number_of_instances, number_of_folds, dataset_settings):
+def create_dataset(output_path, number_of_instances, number_of_folds, dataset_settings):
     dataset, output_path = load_meta_features_dataset(output_path)
-    settings = get_latest_settings(database_name)
+    nn_settings = get_latest_nn_settings(dataset_settings["name"])
     total_duration = 0
 
     if number_of_instances > 1:
         training_sets, testing_sets, meta_features, seeds, subset_category_columns, subset_file_paths = create_subsets(
-            database_name,
             number_of_instances,
             dataset_settings)
     else:
@@ -218,8 +218,8 @@ def create_dataset(database_name, output_path, number_of_instances, number_of_fo
                                                                                                  seeds,
                                                                                                  subset_category_columns,
                                                                                                  subset_file_paths):
-        instance, duration = create_instance(database_name,
-                                             settings,
+        instance, duration = create_instance(dataset_settings["name"],
+                                             nn_settings,
                                              number_of_folds,
                                              training_set,
                                              testing_set,

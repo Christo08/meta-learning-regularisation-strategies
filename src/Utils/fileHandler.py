@@ -30,7 +30,7 @@ def load_json_file(path):
 def save_data_frame(data_frame, file_path):
     data_frame.to_csv(file_path, index=False)
 
-def load_meta_features_csv(type):
+def load_meta_features_csv(type = ""):
     if type == "":
         path = input(f"Enter the path of the meta features dataset file: ")
     else:
@@ -95,7 +95,7 @@ def load_settings(path):
         print(f"Error: Invalid JSON format - {e}")
         raise
 
-def get_latest_settings(name):
+def get_latest_nn_settings(name):
     directory = Path(BASIC_NN_SETTINGS_PATH)
     normalized_prefix = name.strip().replace(" ", "_")
 
