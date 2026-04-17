@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from sklearn.metrics import mean_squared_error, f1_score, accuracy_score, fbeta_score
+from sklearn.metrics import mean_squared_error, accuracy_score, fbeta_score
 
 from src.Utils.statsCalculator import calculated_confusion_matrix
 
