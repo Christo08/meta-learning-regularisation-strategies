@@ -22,9 +22,10 @@ def create_feature_stats(features, output_path):
     print(f"Making the feature summary")
     inf_removed = features.replace([np.inf, -np.inf], np.nan).dropna(axis=0, how='any')
     stats_df = inf_removed.describe().T
-    stats_df = stats_df.round(3)
+    stats_df = stats_df.round(2)
     stats_df = stats_df.reset_index().rename(columns={'index': 'column name'})
-    stats_df = stats_df[['column name', 'count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max']]
+    stats_df['skewness'] = inf_removed.skew().round(2).values
+    stats_df = stats_df[['column name', 'count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max', 'skewness']]
     if output_path is not None:
         save_data_frame(stats_df, f"{output_path}\\features_stats.csv")
         print(f"The feature summary was save to {output_path}\\features_stats.csv")
