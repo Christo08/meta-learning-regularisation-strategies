@@ -18,6 +18,7 @@ PROCESS_OPTIONS = ["Optimise NN",  #0-1
                    "Train meta learning",  #6-7
                    "Get statistics of meta learners results",  #7-8
                    "Test meta learning", #8-9
+                   "Get statistics of meta learners performance", #9-10
                    "Exit"]
 PARAMETER_GROUPS = ["All",
                     "Basic",

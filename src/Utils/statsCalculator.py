@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from scipy.stats import pointbiserialr
+from scipy.stats import ttest_rel
 from sklearn.metrics import confusion_matrix
 
 from src.Utils.constants import TARGET_COLUMNS, STATS_OPTIONS
@@ -282,6 +283,99 @@ def calculate_meta_learners_stats():
     print("Making the testing confusion matrix:")
     create_confusion_matrix(meta_learners_results, output_path, "testing")
 
+def calculate_meta_learners_performance():
+    meta_learners_results = load_results_csv()
+    should_save = input("Do you want to save the stats to a file? (y/n): ").lower() == 'y'
+    if should_save:
+        output_path = input("Enter the path of the output stats folder: ")
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_path = f"{output_path}\\{timestamp}"
+        os.makedirs(output_path, exist_ok=True)
+    else:
+        output_path = None
+
+    meta_learners_results.drop(columns=["seed","best_technique"], inplace=True, errors='ignore')
+    meta_learners_results = meta_learners_results.drop(
+        columns=[col for col in meta_learners_results.columns if 'testing' in col]
+    )
+
+    create_meta_learner_comparison_boxplots(meta_learners_results, output_path, 'f1 scores')
+
+    summaries_results(meta_learners_results, output_path)
+
+
+def summaries_results(meta_learners_results, output_path):
+    # Create summary dataframe with means and stds
+    summary_df = meta_learners_results.copy()
+
+    # Get all unique technique prefixes (excluding meta_learner)
+    techniques = []
+    for col in summary_df.columns:
+        if col.endswith('_training_loss') or col.endswith('_training_accuracies') or col.endswith(
+                '_training_f1_scores'):
+            technique = col.rsplit('_training_', 1)[0]
+            if technique != 'meta_learner' and technique not in techniques:
+                techniques.append(technique)
+
+    # Metrics to process
+    metrics = ['loss', 'accuracies', 'f1_scores']
+
+    # Process each technique and metric
+    for technique in techniques:
+        for metric in metrics:
+            tech_col = f'{technique}_training_{metric}'
+            meta_col = f'meta_learner_training_{metric}'
+
+            if tech_col in summary_df.columns and meta_col in summary_df.columns:
+                # Calculate mean and std
+                summary_df[f'{tech_col} mean'] = summary_df[tech_col].apply(
+                    lambda x: np.mean(eval(x)) if isinstance(x, str) else np.mean(x)
+                )
+                summary_df[f'{tech_col} std'] = summary_df[tech_col].apply(
+                    lambda x: np.std(eval(x)) if isinstance(x, str) else np.std(x)
+                )
+
+                # Perform hypothesis testing (paired t-test)
+                better_values = []
+                for idx, row in summary_df.iterrows():
+                    tech_values = eval(row[tech_col]) if isinstance(row[tech_col], str) else row[tech_col]
+                    meta_values = eval(row[meta_col]) if isinstance(row[meta_col], str) else row[meta_col]
+
+                    # Perform paired t-test
+                    t_stat, p_value = ttest_rel(tech_values, meta_values)
+
+                    # Determine if technique is statistically better (p < 0.05)
+                    # For loss: lower is better, so tech < meta
+                    # For accuracies/f1: higher is better, so tech > meta
+                    if metric == 'loss':
+                        is_better = (p_value < 0.05) and (np.mean(tech_values) < np.mean(meta_values))
+                    else:  # accuracies or f1_scores
+                        is_better = (p_value < 0.05) and (np.mean(tech_values) > np.mean(meta_values))
+
+                    better_values.append(is_better)
+
+                summary_df[f'{tech_col}_better'] = better_values
+
+                # Drop the original array column
+                summary_df = summary_df.drop(columns=[tech_col])
+
+    # Also add mean and std for meta_learner columns
+    for metric in metrics:
+        meta_col = f'meta_learner_training_{metric}'
+        if meta_col in summary_df.columns:
+            summary_df[f'{meta_col} mean'] = summary_df[meta_col].apply(
+                lambda x: np.mean(eval(x)) if isinstance(x, str) else np.mean(x)
+            )
+            summary_df[f'{meta_col} std'] = summary_df[meta_col].apply(
+                lambda x: np.std(eval(x)) if isinstance(x, str) else np.std(x)
+            )
+            summary_df = summary_df.drop(columns=[meta_col])
+    if output_path is not None:
+        save_data_frame(summary_df, f"{output_path}\\meta_learners_performance_summary.csv")
+        print(f"The meta learners performance summary was save to {output_path}\\meta_learners_performance_summary.csv")
+    else:
+        print(summary_df)
+
 def create_confusion_matrix(dataset, output_path, type):
     required_cols = [
         "model type",
@@ -347,7 +441,6 @@ def create_confusion_matrix(dataset, output_path, type):
             print(f"Saved confusion matrices for technique '{technique}' to {file_path}")
         plt.show()
 
-
 def create_meta_learners_bar_charts(meta_learners_results, metric_column_name, output_path):
     df = meta_learners_results.copy()
 
@@ -401,7 +494,6 @@ def create_meta_learners_bar_charts(meta_learners_results, metric_column_name, o
         fig.savefig(file_path, dpi=300)
     plt.show()
 
-
 def show_meta_learners_box_plots(meta_learners_results, metric_column_name, output_path):
     sns.set_style("darkgrid")
 
@@ -446,7 +538,7 @@ def show_meta_learners_box_plots(meta_learners_results, metric_column_name, outp
     if output_path is not None:
         file_path = f"{output_path}\\{metric_column_name.replace(" ","_")}_box_plot.png"
         print(f'Saved {metric_column_name}\'s box plot to {file_path}')
-    plt.savefig(file_path, dpi=300)
+        plt.savefig(file_path, dpi=300)
     plt.show()
 
 def explode_accuracies(df, accuracy_col):
@@ -469,3 +561,78 @@ def calculated_confusion_matrix(y_true, y_pred):
     assert true_negatives + false_positives + false_negatives + true_positives == len(y_true)
 
     return true_positives, true_negatives, false_positives, false_negatives
+
+def create_meta_learner_comparison_boxplots(meta_learners_results, output_path, metric):
+    print(f"Making meta-learner comparison boxplots for the {metric} metric")
+    sns.set_style("darkgrid")
+
+    df = meta_learners_results.copy()
+
+    # Get all technique columns
+    f1_columns = [col for col in df.columns if col.endswith(f'_training_{metric.replace(" ","_")}')]
+
+    # Extract technique names from column names
+    techniques = [col.replace(f'_training_{metric.replace(" ","_")}', '') for col in f1_columns]
+
+    # Number of datasets (rows)
+    num_datasets = len(df)
+
+    # Create subplots - one per dataset
+    num_cols = 3
+    num_rows = int(np.ceil(num_datasets / num_cols))
+    fig, axes = plt.subplots(num_rows, num_cols, figsize=(14, num_rows * 5))
+    axes = np.array(axes).reshape(-1)
+
+    # Process each dataset (row)
+    for idx, (row_idx, row) in enumerate(df.iterrows()):
+        ax = axes[idx]
+
+        # Prepare data for boxplot
+        plot_data = []
+
+        for f1_col, technique in zip(f1_columns, techniques):
+            if f1_col in row.index and pd.notna(row[f1_col]):
+                # Convert string representation to list if needed
+                f1_values = eval(row[f1_col]) if isinstance(row[f1_col], str) else row[f1_col]
+
+                # Add each value with its technique label
+                for val in f1_values:
+                    plot_data.append({
+                        'technique': technique,
+                        metric.replace(" ","_"): val
+                    })
+
+        # Convert to DataFrame for seaborn
+        plot_df = pd.DataFrame(plot_data)
+
+        # Create boxplot
+        sns.boxplot(
+            data=plot_df,
+            x='technique',
+            y=metric.replace(" ","_"),
+            ax=ax
+        )
+
+        # Set title (use dataset_name if available)
+        dataset_name = row.get('dataset_name', f'Dataset {idx + 1}')
+        ax.set_title(f'{dataset_name}')
+        ax.set_ylabel(metric)
+        ax.set_xlabel('Technique')
+        ax.tick_params(axis='x', rotation=90)
+
+        # Adjust y-axis limits for better visualization
+        ax.set_ylim([0, 1.05])
+
+    # Hide any unused subplots
+    for j in range(num_datasets, len(axes)):
+        fig.delaxes(axes[j])
+
+    fig.suptitle(f'{metric.replace(" ","_")} Comparison Across Techniques', fontsize=16)
+    fig.tight_layout(rect=[0, 0.03, 1, 0.97])
+
+    if output_path is not None:
+        file_path = f"{output_path}\\{metric.replace(" ","_")}_comparison_boxplots.png"
+        fig.savefig(file_path, dpi=300, bbox_inches='tight')
+        print(f'Saved {metric} comparison boxplots to {file_path}')
+
+    plt.show()
