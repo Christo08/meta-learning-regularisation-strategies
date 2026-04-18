@@ -11,7 +11,8 @@ from src.Utils.datasetSettingHandler import DatasetsSettingsHandler
 from src.Utils.fileHandler import save_data_frame, load_settings, load_meta_features_csv, load_results_csv
 from src.Utils.instanceCreator import create_dataset, recreate_subsets, recreate_dataset
 from src.Utils.menus import show_menu, show_dataset_loader_menu
-from src.Utils.statsCalculator import calculate_meta_learners_stats, calculate_dataset_stats
+from src.Utils.statsCalculator import calculate_meta_learners_stats, calculate_dataset_stats, \
+    calculate_meta_learners_performance
 
 
 def main():
@@ -115,6 +116,8 @@ def main():
                 results = pd.concat([results, dataset_result], ignore_index=True)
                 save_data_frame(results, file_path)
             print(results)
+        elif process == PROCESS_OPTIONS[9]:
+            calculate_meta_learners_performance()
         else:
             break
 
