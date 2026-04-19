@@ -22,9 +22,9 @@ def create_feature_stats(features, output_path):
     print(f"Making the feature summary")
     inf_removed = features.replace([np.inf, -np.inf], np.nan).dropna(axis=0, how='any')
     stats_df = inf_removed.describe().T
-    stats_df = stats_df.round(2)
+    stats_df = stats_df.round(4)
     stats_df = stats_df.reset_index().rename(columns={'index': 'column name'})
-    stats_df['skewness'] = inf_removed.skew().round(2).values
+    stats_df['skewness'] = inf_removed.skew(numeric_only=True).round(4).values
     stats_df = stats_df[['column name', 'count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max', 'skewness']]
     if output_path is not None:
         save_data_frame(stats_df, f"{output_path}\\features_stats.csv")
@@ -38,13 +38,11 @@ def create_technique_rankings_stats(targets, output_path):
     can_not_be_applied = (targets == -1).sum()
 
     summary = pd.DataFrame({
-        'average_rank': round(targets.mean(),3),
+        'average_rank': round(targets.mean(),2),
         'best_count': (targets == 1).sum(),
-        'best_count_percent': round(((targets == 1).sum()/(targets.shape[0]-can_not_be_applied)*100),3),
+        'best_count_percent': round(((targets == 1).sum()/(targets.shape[0]-can_not_be_applied)*100),2),
         'worst_count': worst_counts,
-        'worst_count_percent': round((worst_counts/(targets.shape[0]-can_not_be_applied)*100),3),
-        'can_not_be_used_count': can_not_be_applied,
-        'can_not_be_used_percent': round((can_not_be_applied/targets.shape[0]*100),3)
+        'worst_count_percent': round((worst_counts/(targets.shape[0]-can_not_be_applied)*100),2)
     })
     summary = summary.reset_index().rename(columns={'index': 'technique'})
     if output_path is not None:
