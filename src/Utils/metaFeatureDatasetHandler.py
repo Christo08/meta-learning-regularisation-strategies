@@ -88,29 +88,11 @@ def prepare_meta_feature_dataset_for_states():
     dataset = load_meta_features_csv()
 
     options = ""
-    should_add_hyperparameters = input("Do you want to add hyperparameters (y/n): ").lower() == "y"
-    if should_add_hyperparameters:
-        options = "hyperparameters_"
-        dataset = add_all_hyperparameters(dataset)
-    
+
     dataset = clean_dataset(dataset, False)
 
     targets = dataset[TARGET_COLUMNS]
     features = dataset.drop(TARGET_COLUMNS, axis=1)
-    ignore_columns = ["dataset_name"]
-
-    should_apply_transformers = input("Do you want to apply transformers? (y/n): ").lower() == "y"
-    transformer = None
-    if should_apply_transformers:
-        options = options+"transformers_"
-        features, transformer = apply_transformers(features = features)
-        # features = create_bins(features = features)
-        # ignore_columns = ignore_columns + ['proportion_of_numeric_features', 'minimum_mutual_information']
-
-    should_normalise= input("Do you want to normalise the dataset? (y/n): ").lower() == "y"
-    if should_normalise:
-        options = options+"normalised_"
-        features = apply_normalization(features=features, ignore_columns = ignore_columns)
 
     targets = rank_techniques(targets)
     should_cover_to_binary = input("Do you want to convert the ranks to binary (1 for best technique, 0 for others)? (y/n): ").lower() == "y"
@@ -119,6 +101,25 @@ def prepare_meta_feature_dataset_for_states():
         for column in TARGET_COLUMNS:
             if column in targets.columns:
                 targets[column] = targets[column].apply(lambda x: 1 if x == 1 else 0)
+
+    should_add_hyperparameters = input("Do you want to add hyperparameters (y/n): ").lower() == "y"
+    if should_add_hyperparameters:
+        options = "hyperparameters_"
+        features = add_all_hyperparameters(features)
+
+    ignore_columns = ["dataset_name"]
+
+    should_apply_transformers = input("Do you want to apply transformers? (y/n): ").lower() == "y"
+    transformer = None
+    if should_apply_transformers:
+        options = options+"transformers_"
+        features, transformer = apply_transformers(features = features)
+
+    scaler = None
+    should_normalise= input("Do you want to apply z-scoring? (y/n): ").lower() == "y"
+    if should_normalise:
+        options = options+"z-scoring_"
+        features, scaler = apply_normalization(features=features, ignore_columns = ignore_columns)
 
     dataset = pd.concat([features, targets], axis=1)
 
@@ -205,22 +206,17 @@ def prepare_meta_feature_sets():
     return training_set, testing_set
 
 def clean_dataset(dataset, should_drop_dataset_name = True):
-    columns_to_drop = [
-        "baseline_training_loss", "baseline_validation_loss", "batch_normalisation_training_loss",
-        "batch_normalisation_validation_loss", "dropout_training_loss", "dropout_validation_loss",
-        "layer_normalisation_training_loss", "layer_normalisation_validation_loss", "SMOTE_training_loss",
-        "SMOTE_validation_loss", "prune_training_loss", "prune_validation_loss", "weight_decay_training_loss",
-        "weight_decay_validation_loss", "weight_normalisation_training_loss", "weight_normalisation_validation_loss",
-        "weight_perturbation_training_loss", "weight_perturbation_validation_loss", "best_training_technique",
-        "best_validation_technique", "best_testing_technique","baseline_training_accuracies","baseline_testing_accuracies",
-        "batch_normalisation_training_accuracies",
-        "batch_normalisation_testing_accuracies","dropout_training_accuracies","dropout_testing_accuracies",
-        "layer_normalisation_training_accuracies","layer_normalisation_testing_accuracies","SMOTE_training_accuracies",
-        "SMOTE_testing_accuracies","prune_training_accuracies","prune_testing_accuracies",
-        "weight_decay_training_accuracies","weight_decay_testing_accuracies","weight_normalisation_training_accuracies",
-        "weight_normalisation_testing_accuracies","weight_perturbation_training_accuracies",
-        "weight_perturbation_testing_accuracies", "seed","file_name", "subset_type", "SMOTE_testing_loss"
-    ]
+    columns_to_drop = ["best_training_technique",
+                       "best_validation_technique",
+                       "best_testing_technique",
+                       "seed",
+                       "file_name",
+                       "subset_type"]
+    columns_to_drop = columns_to_drop + [col for col in dataset.columns if '_training_loss' in col]
+    columns_to_drop = columns_to_drop + [col for col in dataset.columns if 'SMOTE' in col]
+    columns_to_drop = columns_to_drop + [col for col in dataset.columns if '_validation_loss' in col]
+    columns_to_drop = columns_to_drop + [col for col in dataset.columns if '_f1_scores' in col]
+    columns_to_drop = columns_to_drop + [col for col in dataset.columns if '_accuracies' in col]
     if should_drop_dataset_name:
         columns_to_drop = columns_to_drop + ["dataset_name"]
 
