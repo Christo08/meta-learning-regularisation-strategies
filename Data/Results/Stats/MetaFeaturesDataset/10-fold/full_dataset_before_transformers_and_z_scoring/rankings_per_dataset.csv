@@ -2,7 +2,6 @@ dataset_name,baseline,batch_normalisation,dropout,layer_normalisation,prune,weig
 Agaricus Lepiota,0,2,0,15,0,0,1,1
 Ann thyroid,3,0,0,0,14,3,6,0
 Car evaluation,0,0,3,6,8,2,0,1
-Churn,14,14,14,14,15,14,0,13
 Dry Bean,2,7,2,5,6,6,3,3
 Indian Engineering Student Placement,2,0,2,1,1,3,14,4
 Led24,3,1,3,1,2,5,10,2

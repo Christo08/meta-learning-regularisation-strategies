@@ -24,14 +24,6 @@
     "drop_columns": []
   },
   {
-    "name": "Churn",
-    "type": "pmlb",
-    "pmlb_name": "churn",
-    "category_columns": ["voice mail plan", "international plan", "area code"],
-    "target_column": "target",
-    "drop_columns": []
-  },
-  {
     "name": "Dry Bean",
     "type": "csv",
     "file_path": "Data\\Input\\DryBeanDataset\\Dry_Bean_Dataset.csv",
