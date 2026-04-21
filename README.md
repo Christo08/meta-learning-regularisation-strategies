@@ -27,34 +27,18 @@ python main.py
 ```
 The main menu contains the following options:
 - Optimise NN: Obtain the optimised hyperparameters for a NN trained on an input dataset. NN created using this feature will be used to form the target columns.
-- Create Subsets and Instances: Create subsets of the input datasets and instances from the created subsets for meta learning. An instance consists of the meta features of the subset and the performance of each of the regularisation techniques for the subset.
+- Create Subsets and Instances: Create subsets of the input datasets and instances from the created subsets for meta learning dataset. An instance consists of the meta features of the subset, the meta features if the NN and the performance of each of the regularisation techniques for the subset.
 - Recreate Subsets:  Recreate subsets for a given seed.
 - Recreate instances: Recreate instances for a given seed and subset.
 - Get Statistics of Meta Learning Dataset: Obtain the statistics of the meta learning dataset, including the distribution of meta features and target values, and create charts of the dataset
-- Optimise Meta Learning: Obtain the optimised hyperparameters for meta learners.
-- Train Meta Learning: Train the meta learners using the created meta learning dataset and save the results to a file.
+- Optimise Meta Learning: Obtain the optimised hyperparameters for meta learner's modules.
+- Train Meta Learning: Train the meta learner's modules using the created meta learning dataset and save the results to a file.
 - Get Statistics of Meta Learners Results: Obtain the statistics of the meta learners performance, more specifically create charts comparing the performances of each of the meta learners for every regularisation technique.
-
+- Test meta learning: Test the meta learner's performance on a test set and save the results to a file.
+- Get statistics of meta learners performance: Obtain the statistics of the meta learners performance on the test set, more specifically create charts comparing the performances of each of the meta learners for every regularisation technique on the test set.
+- Exit: Exit the program.
 ## Project Structure
-`project-name/`
-│
-├──`Data/`
-│   ├──`CheckPoints/`: Checkpoints for optimising hyperparameters.
-│   ├──`Datasets/`: 
-│   │   ├──`Input/`: Folders containing the original datasets, the created subsets and a json file that contains details about the datasets.  
-│   │   ├──`Output/`
-│   │   │  ├──`Graphs/`: Graphs of the meta learning dataset.
-│   │   │  ├──`Modules/`: The meta learning modules.
-│   │   │  ├──`Processed/`: The cleaned meta learning dataset.
-│   │   │  └──`Raw/`: The raw meta learning dataset.
-│   │   └──`Results/`: Results from meta learning experiments.
-│   │   │  └──`Modules/`: The meta learning modules.
-│   └──`Settings/`: 
-│   │   ├──`BasicNN/`: The input datasets' NN hyperparameters.
-│   │   └──`MetaLearners/`: The meta learning modules' hyperparameters.
-├──`main.py`: Entry point, menu interface.
-├──`requirements.txt`
-└──`README.md`
+![Project Structure](assets/meta-learner-structure.JPG)
 
 ## Adding New Datasets
 1. Place the dataset in `Data/Datasets/Input/` with a unique name. Skip this step if the dataset is import from libraries such as pmlb or others.
