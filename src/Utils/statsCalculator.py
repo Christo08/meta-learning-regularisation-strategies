@@ -1,12 +1,13 @@
 import os
 import warnings as wr
 from datetime import datetime
+from typing import Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from scipy.stats import pointbiserialr
+from scipy.stats import pointbiserialr, stats
 from scipy.stats import ttest_rel
 from sklearn.metrics import confusion_matrix
 
@@ -295,12 +296,14 @@ def calculate_meta_learners_performance():
 
     meta_learners_results.drop(columns=["seed","best_technique"], inplace=True, errors='ignore')
     meta_learners_results = meta_learners_results.drop(
-        columns=[col for col in meta_learners_results.columns if 'testing' in col]
+        columns=[col for col in meta_learners_results.columns if 'training' in col]
     )
 
     create_meta_learner_comparison_boxplots(meta_learners_results, output_path, 'f1 scores')
 
     summaries_results(meta_learners_results, output_path)
+
+    create_f1_comparison_heatmap(meta_learners_results)
 
 
 def summaries_results(meta_learners_results, output_path):
@@ -310,31 +313,32 @@ def summaries_results(meta_learners_results, output_path):
     # Get all unique technique prefixes (excluding meta_learner)
     techniques = []
     for col in summary_df.columns:
-        if col.endswith('_training_loss') or col.endswith('_training_accuracies') or col.endswith(
-                '_training_f1_scores'):
-            technique = col.rsplit('_training_', 1)[0]
+        if '_testing_' in col:
+            technique = col.rsplit('_testing_', 1)[0]
             if technique != 'meta_learner' and technique not in techniques:
                 techniques.append(technique)
 
     # Metrics to process
-    metrics = ['loss', 'accuracies', 'f1_scores']
+    metrics = ['f1_scores']
+    metrics_to_drop = ['loss', 'accuracies']
+    for metric in metrics_to_drop:
+        summary_df = summary_df.drop(
+            columns=[col for col in summary_df.columns if metric in col]
+        )
 
-    # Process each technique and metric
     for technique in techniques:
         for metric in metrics:
-            tech_col = f'{technique}_training_{metric}'
-            meta_col = f'meta_learner_training_{metric}'
+            tech_col = f'{technique}_testing_{metric}'
+            meta_col = f'meta_learner_testing_{metric}'
 
             if tech_col in summary_df.columns and meta_col in summary_df.columns:
-                # Calculate mean and std
-                summary_df[f'{tech_col} mean'] = summary_df[tech_col].apply(
+                summary_df[f'{tech_col.replace("_", " ")} mean'] = summary_df[tech_col].apply(
                     lambda x: np.mean(eval(x)) if isinstance(x, str) else np.mean(x)
                 )
-                summary_df[f'{tech_col} std'] = summary_df[tech_col].apply(
+                summary_df[f'{tech_col.replace("_", " ")} std'] = summary_df[tech_col].apply(
                     lambda x: np.std(eval(x)) if isinstance(x, str) else np.std(x)
                 )
 
-                # Perform hypothesis testing (paired t-test)
                 better_values = []
                 for idx, row in summary_df.iterrows():
                     tech_values = eval(row[tech_col]) if isinstance(row[tech_col], str) else row[tech_col]
@@ -353,27 +357,145 @@ def summaries_results(meta_learners_results, output_path):
 
                     better_values.append(is_better)
 
-                summary_df[f'{tech_col}_better'] = better_values
+                summary_df[f'{tech_col.replace("_", " ")} better'] = better_values
 
-                # Drop the original array column
                 summary_df = summary_df.drop(columns=[tech_col])
 
-    # Also add mean and std for meta_learner columns
-    for metric in metrics:
-        meta_col = f'meta_learner_training_{metric}'
-        if meta_col in summary_df.columns:
-            summary_df[f'{meta_col} mean'] = summary_df[meta_col].apply(
-                lambda x: np.mean(eval(x)) if isinstance(x, str) else np.mean(x)
-            )
-            summary_df[f'{meta_col} std'] = summary_df[meta_col].apply(
-                lambda x: np.std(eval(x)) if isinstance(x, str) else np.std(x)
-            )
-            summary_df = summary_df.drop(columns=[meta_col])
     if output_path is not None:
         save_data_frame(summary_df, f"{output_path}\\meta_learners_performance_summary.csv")
         print(f"The meta learners performance summary was save to {output_path}\\meta_learners_performance_summary.csv")
     else:
         print(summary_df)
+
+
+def create_f1_comparison_heatmap(df: pd.DataFrame, alpha: float = 0.05,
+                                 save_path: str = None, figsize: Tuple[int, int] = (12, 10)):
+
+    # Extract technique names (columns ending with '_testing_f1_scores')
+    # Extract technique names (columns ending with '_testing_f1_scores')
+    f1_columns = [col for col in df.columns if col.endswith('_testing_f1_scores')]
+
+    # Extract technique names by removing the suffix
+    technique_names = [col.replace('_testing_f1_scores', '') for col in f1_columns]
+
+    # Initialize comparison matrix
+    n_techniques = len(technique_names)
+    row_dataframe = {}
+    for idx, row in df.iterrows():  # ✅ Fixed: Unpack tuple properly
+        comparison_matrix = np.zeros((n_techniques, n_techniques))
+        # Extract and parse F1 scores for each technique
+        technique_scores = {}
+
+        for f1_col, technique in zip(f1_columns, technique_names):
+            # Parse the string representation of list to actual list
+            f1_str = row[f1_col]
+            if isinstance(f1_str, str):
+                # Remove brackets and split by comma
+                f1_str = f1_str.strip('[]')
+                scores = [float(x.strip()) for x in f1_str.split(',')]
+            else:
+                scores = f1_str
+            technique_scores[technique] = np.array(scores)
+
+        # ✅ Fixed: Moved pairwise comparisons outside the previous loop
+        # Perform pairwise comparisons
+        for i, tech1 in enumerate(technique_names):
+            for j, tech2 in enumerate(technique_names):
+                if i == j:
+                    comparison_matrix[i, j] += 0  # Same technique
+                else:
+                    scores1 = technique_scores[tech1]
+                    scores2 = technique_scores[tech2]
+
+                    # Perform paired t-test
+                    t_stat, p_value = stats.ttest_rel(scores1, scores2)
+
+                    # Determine comparison result
+                    if p_value < alpha:
+                        # Significant difference exists
+                        if np.mean(scores1) > np.mean(scores2):
+                            comparison_matrix[i, j] += 1
+                        else:
+                            comparison_matrix[i, j] += -1
+                    # else: no significant difference, add 0
+
+        # Convert to DataFrame for better visualization
+        comparison_df = pd.DataFrame(
+            comparison_matrix,
+            index=technique_names,
+            columns=technique_names
+        )
+
+        row_dataframe[row["dataset_name"]] = comparison_df
+
+    num_datasets = len(row_dataframe)
+    num_cols = 3
+    num_rows = int(np.ceil(num_datasets / num_cols))
+
+    fig, axes = plt.subplots(num_rows, num_cols, figsize=(num_cols * 6, num_rows * 5))
+    axes = np.array(axes).reshape(-1)
+
+    # Plot heatmap for each dataset
+    for idx, (dataset_name, comparison_df) in enumerate(row_dataframe.items()):
+        ax = axes[idx]
+
+        sns.heatmap(
+            comparison_df,
+            annot=True,
+            fmt='.0f',
+            center=0,
+            cbar=True,
+            linewidths=0.5,
+            linecolor='gray',
+            vmin=-1,
+            vmax=1,
+            ax=ax
+        )
+
+        ax.set_title(f'{dataset_name}', fontsize=10, fontweight='bold')
+        ax.set_xlabel('Technique (Compared Against)', fontsize=8)
+        ax.set_ylabel('Technique', fontsize=8)
+        ax.tick_params(axis='x', rotation=45, labelsize=7)
+        ax.tick_params(axis='y', rotation=0, labelsize=7)
+
+    # Hide unused subplots
+    for j in range(num_datasets, len(axes)):
+        fig.delaxes(axes[j])
+
+    fig.suptitle(
+        f'F1 Score Comparison Heatmaps by Dataset\n(Paired T-test, α={alpha})',
+        fontsize=14,
+        fontweight='bold'
+    )
+    fig.tight_layout(rect=[0, 0.03, 1, 0.97])
+
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        print(f"Heatmap saved to: {save_path}")
+
+    plt.show()
+
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        print(f"Heatmap saved to: {save_path}")
+
+    plt.show()
+
+    # Print summary statistics
+    print("\n" + "=" * 80)
+    print("SUMMARY OF COMPARISONS")
+    print("=" * 80)
+    print(f"Number of datasets analyzed: {len(df)}")
+    print(f"Number of techniques compared: {n_techniques}")
+    print(f"Significance level (alpha): {alpha}")
+    print("\nInterpretation:")
+    print("  Positive values: Row technique significantly BETTER than column technique")
+    print("  Negative values: Row technique significantly WORSE than column technique")
+    print("  Zero: No significant difference")
+    print(f"\nValue range: {comparison_df.min().min():.0f} to {comparison_df.max().max():.0f}")
+    print("=" * 80 + "\n")
+
+    return comparison_df
 
 def create_confusion_matrix(dataset, output_path, type):
     required_cols = [
@@ -568,10 +690,10 @@ def create_meta_learner_comparison_boxplots(meta_learners_results, output_path, 
     df = meta_learners_results.copy()
 
     # Get all technique columns
-    f1_columns = [col for col in df.columns if col.endswith(f'_training_{metric.replace(" ","_")}')]
+    f1_columns = [col for col in df.columns if col.endswith(f'_testing_{metric.replace(" ","_")}')]
 
     # Extract technique names from column names
-    techniques = [col.replace(f'_training_{metric.replace(" ","_")}', '') for col in f1_columns]
+    techniques = [col.replace(f'_testing_{metric.replace(" ","_")}', '') for col in f1_columns]
 
     # Number of datasets (rows)
     num_datasets = len(df)
