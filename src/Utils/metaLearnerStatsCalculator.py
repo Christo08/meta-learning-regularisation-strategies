@@ -7,7 +7,7 @@ from src.Utils.statsCalculator import calculated_confusion_matrix
 
 class MetaLearnerStats:
     # 50% recall and 50% Precision
-    beta = 75/25
+    beta = 50/50
 
     def __init__(self):
         self.training_mses = []
