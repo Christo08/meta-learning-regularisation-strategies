@@ -1,0 +1,114 @@
+{
+    "baseline": {
+        "batch_size": 16,
+        "learning_rate": 0.0005,
+        "number_of_epochs": 280,
+        "number_of_hidden_layers": 3,
+        "number_of_neurons_in_layers": [
+            176,
+            96,
+            16,
+            176,
+            96,
+            192
+        ]
+    },
+    "batch_normalisation": {
+        "batch_size": 64,
+        "learning_rate": 0.0253,
+        "number_of_epochs": 180,
+        "number_of_hidden_layers": 4,
+        "number_of_neurons_in_layers": [
+            144,
+            144,
+            144,
+            144,
+            144,
+            144
+        ]
+    },
+    "dropout": {
+        "batch_size": 16,
+        "learning_rate": 0.0418,
+        "number_of_epochs": 280,
+        "number_of_hidden_layers": 6,
+        "number_of_neurons_in_layers": [
+            160,
+            192,
+            256,
+            32,
+            176,
+            176
+        ]
+    },
+    "layer_normalisation": {
+        "batch_size": 64,
+        "learning_rate": 0.042,
+        "number_of_epochs": 160,
+        "number_of_hidden_layers": 6,
+        "number_of_neurons_in_layers": [
+            112,
+            224,
+            256,
+            112,
+            224,
+            160
+        ]
+    },
+    "prune": {
+        "batch_size": 64,
+        "learning_rate": 0.0253,
+        "number_of_epochs": 180,
+        "number_of_hidden_layers": 4,
+        "number_of_neurons_in_layers": [
+            144,
+            144,
+            144,
+            144,
+            144,
+            144
+        ]
+    },
+    "weight_normalisation": {
+        "batch_size": 16,
+        "learning_rate": 0.0438,
+        "number_of_epochs": 100,
+        "number_of_hidden_layers": 5,
+        "number_of_neurons_in_layers": [
+            160,
+            240,
+            96,
+            32,
+            80,
+            64
+        ]
+    },
+    "weight_decay": {
+        "batch_size": 16,
+        "learning_rate": 0.0128,
+        "number_of_epochs": 60,
+        "number_of_hidden_layers": 5,
+        "number_of_neurons_in_layers": [
+            64,
+            240,
+            256,
+            144,
+            48,
+            64
+        ]
+    },
+    "weight_perturbation": {
+        "batch_size": 256,
+        "learning_rate": 0.045,
+        "number_of_epochs": 260,
+        "number_of_hidden_layers": 6,
+        "number_of_neurons_in_layers": [
+            48,
+            48,
+            160,
+            192,
+            192,
+            192
+        ]
+    }
+}
