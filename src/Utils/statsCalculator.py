@@ -346,15 +346,15 @@ def normalise_result(meta_learners_results, output_path):
 
                 for val in norm_values:
                     plot_data.append({
-                        'technique': technique,
-                        'normalized_f1': val
+                        'technique': technique.replace('_', ' '),
+                        'normalized f1': val
                     })
 
         plot_df = pd.DataFrame(plot_data)
         sns.boxplot(
             data=plot_df,
             x='technique',
-            y='normalized_f1',
+            y='normalized f1',
             ax=ax
         )
 
@@ -477,6 +477,9 @@ def create_f1_comparison_heatmap_plot(row_dataframe, alpha, save_path):
     axes = np.array(axes).reshape(-1)
 
     for idx, (dataset_name, comparison_df) in enumerate(row_dataframe.items()):
+        comparison_df.columns = comparison_df.columns.str.replace('_', ' ')
+        comparison_df.index = comparison_df.index.str.replace('_', ' ')
+
         ax = axes[idx]
 
         sns.heatmap(
@@ -569,6 +572,8 @@ def create_f1_comparison_heatmap(df: pd.DataFrame, alpha: float = 0.05,
         index=technique_names,
         columns=technique_names
     )
+    total_comparison_df.columns = total_comparison_df.columns.str.replace('_', ' ')
+    total_comparison_df.index = total_comparison_df.index.str.replace('_', ' ')
 
     create_f1_comparison_heatmap_plot(row_dataframe, alpha, save_path)
 
@@ -825,8 +830,8 @@ def create_meta_learner_comparison_boxplots(meta_learners_results, output_path, 
                 # Add each value with its technique label
                 for val in f1_values:
                     plot_data.append({
-                        'technique': technique,
-                        metric.replace(" ","_"): val
+                        'technique': technique.replace("_"," "),
+                        metric: val
                     })
 
         # Convert to DataFrame for seaborn
@@ -836,7 +841,7 @@ def create_meta_learner_comparison_boxplots(meta_learners_results, output_path, 
         sns.boxplot(
             data=plot_df,
             x='technique',
-            y=metric.replace(" ","_"),
+            y=metric.replace("_"," "),
             ax=ax
         )
 
@@ -854,7 +859,7 @@ def create_meta_learner_comparison_boxplots(meta_learners_results, output_path, 
     for j in range(num_datasets, len(axes)):
         fig.delaxes(axes[j])
 
-    fig.suptitle(f'{metric.replace(" ","_")} Comparison Across Techniques', fontsize=16)
+    fig.suptitle(f'{metric.replace("_"," ")} Comparison Across Techniques', fontsize=16)
     fig.tight_layout(rect=[0, 0.03, 1, 0.97])
 
     if output_path is not None:
