@@ -1,7 +1,6 @@
 import os
 import warnings as wr
 from datetime import datetime
-from typing import Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -302,8 +301,109 @@ def calculate_meta_learners_performance():
     create_meta_learner_comparison_boxplots(meta_learners_results, output_path, 'f1 scores')
 
     summaries_results(meta_learners_results, output_path)
+    normalise_result(meta_learners_results, output_path)
 
-    create_f1_comparison_heatmap(meta_learners_results)
+    create_f1_comparison_heatmap(meta_learners_results, save_path=output_path)
+
+def normalise_result(meta_learners_results, output_path):
+    normalised_df = meta_learners_results.copy()
+    f1_scores_columns = [col for col in normalised_df.columns if 'f1_scores' in col and 'testing' in col]
+
+    normalised_df["baseline_testing_f1_scores_mean"] = normalised_df["baseline_testing_f1_scores"].apply(
+        lambda x: np.mean(eval(x)) if isinstance(x, str) else np.mean(x)
+    )
+
+    for col in f1_scores_columns:
+        normalised_df[f"{col}_normalized"] = normalised_df.apply(
+            lambda row: [
+                f1_val / row["baseline_testing_f1_scores_mean"]
+                for f1_val in (eval(row[col]) if isinstance(row[col], str) else row[col])
+            ],
+            axis=1
+        )
+
+    normalized_columns = [f"{col}_normalized" for col in f1_scores_columns]
+    columns_to_keep = ['dataset_name'] + normalized_columns
+    normalised_df = normalised_df[columns_to_keep]
+
+    techniques = [col.replace('_testing_f1_scores_normalized', '') for col in normalized_columns]
+    num_datasets = len(normalised_df)
+
+    num_cols = 3
+    num_rows = int(np.ceil(num_datasets / num_cols))
+
+    sns.set_style("darkgrid")
+    fig, axes = plt.subplots(num_rows, num_cols, figsize=(16, num_rows * 5))
+    axes = np.array(axes).reshape(-1)
+
+    for idx, (row_idx, row) in enumerate(normalised_df.iterrows()):
+        ax = axes[idx]
+        plot_data = []
+
+        for norm_col, technique in zip(normalized_columns, techniques):
+            if norm_col in normalised_df.columns:
+                norm_values = eval(row[norm_col]) if isinstance(row[norm_col], str) else row[norm_col]
+
+                for val in norm_values:
+                    plot_data.append({
+                        'technique': technique,
+                        'normalized_f1': val
+                    })
+
+        plot_df = pd.DataFrame(plot_data)
+        sns.boxplot(
+            data=plot_df,
+            x='technique',
+            y='normalized_f1',
+            ax=ax
+        )
+
+        dataset_name = row.get('dataset_name', f'Dataset {idx + 1}')
+        ax.set_title(f'{dataset_name}', fontsize=10, fontweight='bold')
+        ax.set_ylabel('Normalized F1 Score')
+        ax.set_xlabel('Technique')
+        ax.tick_params(axis='x', rotation=45, labelsize=8)
+
+        ax.axhline(y=1.0, color='red', linestyle='--', linewidth=1, alpha=0.7, label='Baseline')
+        ax.legend(loc='upper right', fontsize=7)
+
+    for j in range(num_datasets, len(axes)):
+        fig.delaxes(axes[j])
+
+    fig.suptitle('Normalized F1 Scores by Technique for Each Dataset', fontsize=16, fontweight='bold')
+    fig.tight_layout(rect=[0, 0.03, 1, 0.97])
+
+    if output_path is not None:
+        file_path = f"{output_path}\\meta_learners_performance_normalised_box_plots.png"
+        fig.savefig(file_path, dpi=300)
+        print(f"Saved box plot for normalised meta learners performance to {file_path}")
+
+    for col in columns_to_keep:
+        if col != 'dataset_name':
+            normalised_df[f'{col.replace("_", " ")} mean'] = normalised_df[col].apply(
+                lambda x: np.mean(eval(x)) if isinstance(x, str) else np.mean(x)
+            )
+            normalised_df[f'{col.replace("_", " ")} std'] = normalised_df[col].apply(
+                lambda x: np.std(eval(x)) if isinstance(x, str) else np.std(x)
+            )
+            better_values = []
+            for idx, row in normalised_df.iterrows():
+                tech_values = eval(row[col]) if isinstance(row[col], str) else row[col]
+                meta_values = eval(row["meta_learner_testing_f1_scores_normalized"]) if isinstance(row["meta_learner_testing_f1_scores_normalized"], str) else row["meta_learner_testing_f1_scores_normalized"]
+
+                t_stat, p_value = ttest_rel(tech_values, meta_values)
+
+                is_better = (p_value < 0.05) and (np.mean(tech_values) > np.mean(meta_values))
+
+                better_values.append(is_better)
+
+            normalised_df[f'{col.replace("_", " ")} better'] = better_values
+
+    if output_path is not None:
+        save_data_frame(normalised_df, f"{output_path}\\meta_learners_performance_normalised.csv")
+        print(f"The meta learners performance normalise was save to {output_path}\\meta_learners_performance_normalised.csv")
+    else:
+        print(normalised_df)
 
 
 def summaries_results(meta_learners_results, output_path):
@@ -368,66 +468,7 @@ def summaries_results(meta_learners_results, output_path):
         print(summary_df)
 
 
-def create_f1_comparison_heatmap(df: pd.DataFrame, alpha: float = 0.05,
-                                 save_path: str = None, figsize: Tuple[int, int] = (12, 10)):
-
-    # Extract technique names (columns ending with '_testing_f1_scores')
-    # Extract technique names (columns ending with '_testing_f1_scores')
-    f1_columns = [col for col in df.columns if col.endswith('_testing_f1_scores')]
-
-    # Extract technique names by removing the suffix
-    technique_names = [col.replace('_testing_f1_scores', '') for col in f1_columns]
-
-    # Initialize comparison matrix
-    n_techniques = len(technique_names)
-    row_dataframe = {}
-    for idx, row in df.iterrows():  # ✅ Fixed: Unpack tuple properly
-        comparison_matrix = np.zeros((n_techniques, n_techniques))
-        # Extract and parse F1 scores for each technique
-        technique_scores = {}
-
-        for f1_col, technique in zip(f1_columns, technique_names):
-            # Parse the string representation of list to actual list
-            f1_str = row[f1_col]
-            if isinstance(f1_str, str):
-                # Remove brackets and split by comma
-                f1_str = f1_str.strip('[]')
-                scores = [float(x.strip()) for x in f1_str.split(',')]
-            else:
-                scores = f1_str
-            technique_scores[technique] = np.array(scores)
-
-        # ✅ Fixed: Moved pairwise comparisons outside the previous loop
-        # Perform pairwise comparisons
-        for i, tech1 in enumerate(technique_names):
-            for j, tech2 in enumerate(technique_names):
-                if i == j:
-                    comparison_matrix[i, j] += 0  # Same technique
-                else:
-                    scores1 = technique_scores[tech1]
-                    scores2 = technique_scores[tech2]
-
-                    # Perform paired t-test
-                    t_stat, p_value = stats.ttest_rel(scores1, scores2)
-
-                    # Determine comparison result
-                    if p_value < alpha:
-                        # Significant difference exists
-                        if np.mean(scores1) > np.mean(scores2):
-                            comparison_matrix[i, j] += 1
-                        else:
-                            comparison_matrix[i, j] += -1
-                    # else: no significant difference, add 0
-
-        # Convert to DataFrame for better visualization
-        comparison_df = pd.DataFrame(
-            comparison_matrix,
-            index=technique_names,
-            columns=technique_names
-        )
-
-        row_dataframe[row["dataset_name"]] = comparison_df
-
+def create_f1_comparison_heatmap_plot(row_dataframe, alpha, save_path):
     num_datasets = len(row_dataframe)
     num_cols = 3
     num_rows = int(np.ceil(num_datasets / num_cols))
@@ -435,7 +476,6 @@ def create_f1_comparison_heatmap(df: pd.DataFrame, alpha: float = 0.05,
     fig, axes = plt.subplots(num_rows, num_cols, figsize=(num_cols * 6, num_rows * 5))
     axes = np.array(axes).reshape(-1)
 
-    # Plot heatmap for each dataset
     for idx, (dataset_name, comparison_df) in enumerate(row_dataframe.items()):
         ax = axes[idx]
 
@@ -471,30 +511,95 @@ def create_f1_comparison_heatmap(df: pd.DataFrame, alpha: float = 0.05,
     fig.tight_layout(rect=[0, 0.03, 1, 0.97])
 
     if save_path:
-        plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        print(f"Heatmap saved to: {save_path}")
-
+        plt.savefig(f"{save_path}//f1_comparison_heatmap_per_dataset.png", dpi=300, bbox_inches='tight')
+        print(f'Saved figure of f1 comparison heatmap per dataset to {save_path}')
     plt.show()
+
+
+def create_f1_comparison_heatmap(df: pd.DataFrame, alpha: float = 0.05,
+                                 save_path: str = None):
+    f1_columns = [col for col in df.columns if col.endswith('_testing_f1_scores')]
+
+    technique_names = [col.replace('_testing_f1_scores', '') for col in f1_columns]
+
+    n_techniques = len(technique_names)
+    row_dataframe = {}
+    total_comparison_matrix = np.zeros((n_techniques, n_techniques))
+    for idx, row in df.iterrows():
+        comparison_matrix = np.zeros((n_techniques, n_techniques))
+        technique_scores = {}
+
+        for f1_col, technique in zip(f1_columns, technique_names):
+            f1_str = row[f1_col]
+            if isinstance(f1_str, str):
+                f1_str = f1_str.strip('[]')
+                scores = [float(x.strip()) for x in f1_str.split(',')]
+            else:
+                scores = f1_str
+            technique_scores[technique] = np.array(scores)
+
+        for i, tech1 in enumerate(technique_names):
+            for j, tech2 in enumerate(technique_names):
+                if i == j:
+                    comparison_matrix[i, j] += 0
+                else:
+                    scores1 = technique_scores[tech1]
+                    scores2 = technique_scores[tech2]
+
+                    t_stat, p_value = stats.ttest_rel(scores1, scores2)
+
+                    if p_value < alpha:
+                        if np.mean(scores1) > np.mean(scores2):
+                            comparison_matrix[i, j] += 1
+                            total_comparison_matrix[i, j] += 1
+                        else:
+                            comparison_matrix[i, j] += -1
+
+        comparison_df = pd.DataFrame(
+            comparison_matrix,
+            index=technique_names,
+            columns=technique_names
+        )
+
+        row_dataframe[row["dataset_name"]] = comparison_df
+
+
+    total_comparison_df = pd.DataFrame(
+        total_comparison_matrix,
+        index=technique_names,
+        columns=technique_names
+    )
+
+    create_f1_comparison_heatmap_plot(row_dataframe, alpha, save_path)
+
+    # CREATE HEATMAP FOR TOTAL COMPARISON - ADD THIS SECTION
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(
+        total_comparison_df,
+        annot=True,
+        fmt='.0f',
+        center=0,
+        cmap="Blues",  # Red-Yellow-Green colormap for better distinction
+        cbar=True,
+        linewidths=0.5,
+        linecolor='gray',
+        vmin=total_comparison_df.min().min(),
+        vmax=total_comparison_df.max().max()
+    )
+
+    plt.title(f'Overall F1 Score Comparison Across All Datasets\n(Paired T-test, α={alpha})',
+              fontsize=12, fontweight='bold')
+    plt.xlabel('Technique (Compared Against)', fontsize=10)
+    plt.ylabel('Technique', fontsize=10)
+    plt.xticks(rotation=45, ha='right')
+    plt.yticks(rotation=0)
+    plt.tight_layout()
 
     if save_path:
-        plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        print(f"Heatmap saved to: {save_path}")
+        plt.savefig(f"{save_path}//f1_total_comparison_heatmap.png", dpi=300, bbox_inches='tight')
+        print(f'Saved total comparison heatmap to {save_path}//f1_total_comparison_heatmap.png')
 
     plt.show()
-
-    # Print summary statistics
-    print("\n" + "=" * 80)
-    print("SUMMARY OF COMPARISONS")
-    print("=" * 80)
-    print(f"Number of datasets analyzed: {len(df)}")
-    print(f"Number of techniques compared: {n_techniques}")
-    print(f"Significance level (alpha): {alpha}")
-    print("\nInterpretation:")
-    print("  Positive values: Row technique significantly BETTER than column technique")
-    print("  Negative values: Row technique significantly WORSE than column technique")
-    print("  Zero: No significant difference")
-    print(f"\nValue range: {comparison_df.min().min():.0f} to {comparison_df.max().max():.0f}")
-    print("=" * 80 + "\n")
 
     return comparison_df
 

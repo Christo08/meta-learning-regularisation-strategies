@@ -1,10 +1,11 @@
+import ast
 import random
 from datetime import datetime
 
 import joblib
+import numpy as np
 import pandas as pd
 import torch
-from sklearn.metrics import f1_score
 
 from src.ModelTrainer.decisionTreeTrainer import training_meta_decision_trees
 from src.ModelTrainer.knnTrainer import training_meta_k_nearest_neighbors
@@ -103,16 +104,19 @@ def predict_best_technique(meta_learners_results, dataset, category_columns, tra
             meta_learners_results_per_technique_and_model = meta_learners_results_per_technique[
                 meta_learners_results_per_technique["model type"] == model_type]
             if not meta_learners_results_per_technique_and_model.empty:
-                metrix = (2*meta_learners_results_per_technique_and_model["training true positives"].iloc[0])/(
-                    2*meta_learners_results_per_technique_and_model["training true positives"].iloc[0] +
-                    meta_learners_results_per_technique_and_model["training false positives"].iloc[0] +
-                    meta_learners_results_per_technique_and_model["training false negatives"].iloc[0]
-                )
-                trues = (meta_learners_results_per_technique_and_model["training true positives"].iloc[0] +
-                         meta_learners_results_per_technique_and_model["training true negatives"].iloc[0])
-                total = trues + (meta_learners_results_per_technique_and_model["training false positives"].iloc[0]+
-                                meta_learners_results_per_technique_and_model["training false negatives"].iloc[0])
-                accouries = trues/total*100
+                # metrix = (2*meta_learners_results_per_technique_and_model["training true positives"].iloc[0])/(
+                #     2*meta_learners_results_per_technique_and_model["training true positives"].iloc[0] +
+                #     meta_learners_results_per_technique_and_model["training false positives"].iloc[0] +
+                #     meta_learners_results_per_technique_and_model["training false negatives"].iloc[0]
+                # )
+                # trues = (meta_learners_results_per_technique_and_model["training true positives"].iloc[0] +
+                #          meta_learners_results_per_technique_and_model["training true negatives"].iloc[0])
+                # total = trues + (meta_learners_results_per_technique_and_model["training false positives"].iloc[0]+
+                #                 meta_learners_results_per_technique_and_model["training false negatives"].iloc[0])
+                # accouries = trues/total*100
+                f1_scores_str = meta_learners_results_per_technique_and_model["training f1"].iloc[0]
+                f1_scores = ast.literal_eval(f1_scores_str) if isinstance(f1_scores_str, str) else f1_scores_str
+                metrix = np.mean(f1_scores)
                 if metrix > best_metrix:
                     best_metrix = metrix
                     best_model_types = [model_type]
