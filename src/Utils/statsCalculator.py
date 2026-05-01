@@ -316,7 +316,7 @@ def normalise_result(meta_learners_results, output_path):
     for col in f1_scores_columns:
         normalised_df[f"{col}_normalized"] = normalised_df.apply(
             lambda row: [
-                f1_val / row["baseline_testing_f1_scores_mean"]
+                f1_val - row["baseline_testing_f1_scores_mean"]
                 for f1_val in (eval(row[col]) if isinstance(row[col], str) else row[col])
             ],
             axis=1
@@ -355,7 +355,8 @@ def normalise_result(meta_learners_results, output_path):
             data=plot_df,
             x='technique',
             y='normalized f1',
-            ax=ax
+            ax=ax,
+            palette="Set1"
         )
 
         dataset_name = row.get('dataset_name', f'Dataset {idx + 1}')
@@ -364,13 +365,14 @@ def normalise_result(meta_learners_results, output_path):
         ax.set_xlabel('Technique')
         ax.tick_params(axis='x', rotation=45, labelsize=8)
 
-        ax.axhline(y=1.0, color='red', linestyle='--', linewidth=1, alpha=0.7, label='Baseline')
-        ax.legend(loc='upper right', fontsize=7)
+
+        ax.axhline(y=0.0, color='red', linestyle='--', linewidth=1, alpha=0.7, label='Baseline')
+        ax.legend(loc='upper left', fontsize=7)
 
     for j in range(num_datasets, len(axes)):
         fig.delaxes(axes[j])
 
-    fig.suptitle('Normalized F1 Scores by Technique for Each Dataset', fontsize=16, fontweight='bold')
+    fig.suptitle('Normalised F1 Scores by Technique for Each Dataset', fontsize=16, fontweight='bold')
     fig.tight_layout(rect=[0, 0.03, 1, 0.97])
 
     if output_path is not None:
