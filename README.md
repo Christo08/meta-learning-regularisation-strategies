@@ -13,8 +13,8 @@ This project creates a meta feature dataset and uses this dataset to create a pr
 ## Installation
 1. Clone the repository:
    ```powershell
-   git clone https://github.com/Christo08/Understanding_Regularisation_in_NN_through_Meta_Learning
-   ```
+   git clone https://github.com/Christo08/meta-learning-regularisation-strategies.git
+     ```
 2. Install dependencies:
    ```powershell
    pip install -r requirements.txt
