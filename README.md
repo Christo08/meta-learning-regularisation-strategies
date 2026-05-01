@@ -1,7 +1,7 @@
-# Understanding Regularisation in Neural Networks through Meta Learning
-This project creates a meta feature dataset and uses this dataset to create a predictor which predicts the best performing regularisation technique for a dataset.
+# Learning to Regularise: Meta-Learning of Neural Network Regularisation Strategies
 
 ## Overview
+This project creates a meta feature dataset and uses this dataset to create a predictor which predicts the best performing regularisation technique for a dataset.
 
 ## Features
 - Modular neural networks, decision trees, random forests, and SVMs.
