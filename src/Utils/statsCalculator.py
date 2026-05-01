@@ -305,6 +305,7 @@ def calculate_meta_learners_performance():
 
     create_f1_comparison_heatmap(meta_learners_results, save_path=output_path)
 
+
 def normalise_result(meta_learners_results, output_path):
     normalised_df = meta_learners_results.copy()
     f1_scores_columns = [col for col in normalised_df.columns if 'f1_scores' in col and 'testing' in col]
@@ -329,15 +330,13 @@ def normalise_result(meta_learners_results, output_path):
     techniques = [col.replace('_testing_f1_scores_normalized', '') for col in normalized_columns]
     num_datasets = len(normalised_df)
 
-    num_cols = 3
-    num_rows = int(np.ceil(num_datasets / num_cols))
-
+    # MODIFIED: Save each boxplot individually
     sns.set_style("darkgrid")
-    fig, axes = plt.subplots(num_rows, num_cols, figsize=(16, num_rows * 5))
-    axes = np.array(axes).reshape(-1)
 
     for idx, (row_idx, row) in enumerate(normalised_df.iterrows()):
-        ax = axes[idx]
+        # Create a single figure for this dataset
+        fig, ax = plt.subplots(1, 1, figsize=(10, 6))
+
         plot_data = []
 
         for norm_col, technique in zip(normalized_columns, techniques):
@@ -360,26 +359,26 @@ def normalise_result(meta_learners_results, output_path):
         )
 
         dataset_name = row.get('dataset_name', f'Dataset {idx + 1}')
-        ax.set_title(f'{dataset_name}', fontsize=10, fontweight='bold')
+        ax.set_title(f'Normalised F1 Scores for {dataset_name}', fontsize=12, fontweight='bold')
         ax.set_ylabel('Normalized F1 Score')
         ax.set_xlabel('Technique')
-        ax.tick_params(axis='x', rotation=45, labelsize=8)
-
+        ax.tick_params(axis='x', rotation=45, labelsize=10)
 
         ax.axhline(y=0.0, color='red', linestyle='--', linewidth=1, alpha=0.7, label='Baseline')
-        ax.legend(loc='upper left', fontsize=7)
+        ax.legend(loc='upper left', fontsize=9)
 
-    for j in range(num_datasets, len(axes)):
-        fig.delaxes(axes[j])
+        fig.tight_layout()
 
-    fig.suptitle('Normalised F1 Scores by Technique for Each Dataset', fontsize=16, fontweight='bold')
-    fig.tight_layout(rect=[0, 0.03, 1, 0.97])
+        if output_path is not None:
+            # Create sanitized filename from dataset name
+            safe_dataset_name = dataset_name.replace(' ', '_').replace('/', '_').replace('\\', '_')
+            file_path = f"{output_path}\\normalised_f1_{safe_dataset_name}.png"
+            fig.savefig(file_path, dpi=300, bbox_inches='tight')
+            print(f"Saved box plot for {dataset_name} to {file_path}")
 
-    if output_path is not None:
-        file_path = f"{output_path}\\meta_learners_performance_normalised_box_plots.png"
-        fig.savefig(file_path, dpi=300)
-        print(f"Saved box plot for normalised meta learners performance to {file_path}")
+        plt.close(fig)  # Close the figure to free memory
 
+    # Rest of the function remains the same
     for col in columns_to_keep:
         if col != 'dataset_name':
             normalised_df[f'{col.replace("_", " ")} mean'] = normalised_df[col].apply(
@@ -391,7 +390,9 @@ def normalise_result(meta_learners_results, output_path):
             better_values = []
             for idx, row in normalised_df.iterrows():
                 tech_values = eval(row[col]) if isinstance(row[col], str) else row[col]
-                meta_values = eval(row["meta_learner_testing_f1_scores_normalized"]) if isinstance(row["meta_learner_testing_f1_scores_normalized"], str) else row["meta_learner_testing_f1_scores_normalized"]
+                meta_values = eval(row["meta_learner_testing_f1_scores_normalized"]) if isinstance(
+                    row["meta_learner_testing_f1_scores_normalized"], str) else row[
+                    "meta_learner_testing_f1_scores_normalized"]
 
                 t_stat, p_value = ttest_rel(tech_values, meta_values)
 
@@ -403,7 +404,8 @@ def normalise_result(meta_learners_results, output_path):
 
     if output_path is not None:
         save_data_frame(normalised_df, f"{output_path}\\meta_learners_performance_normalised.csv")
-        print(f"The meta learners performance normalise was save to {output_path}\\meta_learners_performance_normalised.csv")
+        print(
+            f"The meta learners performance normalise was save to {output_path}\\meta_learners_performance_normalised.csv")
     else:
         print(normalised_df)
 
