@@ -1,5 +1,6 @@
 import ast
 import math
+import random
 from datetime import datetime
 
 import numpy as np
@@ -36,7 +37,7 @@ def split_dataset(dataset):
     rankings_per_dataset["mean_loss"] = rankings_per_dataset[targets].mean(axis=1)
     rankings_per_dataset["bin"] = pd.qcut(rankings_per_dataset["mean_loss"], q=4, labels=False)
     #Seed use to recreate meta-learner 5232
-    seed = 5232
+    seed = random.randint(0, 4294967295)
     print("Seed:", seed)
     train, test = train_test_split(rankings_per_dataset,
                                    test_size=0.25,

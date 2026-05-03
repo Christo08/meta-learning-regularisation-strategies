@@ -25,14 +25,12 @@ def training_meta_decision_trees(settings_file_path, training_set, testing_set, 
                                                          seed,
                                                          "na",
                                                          kFold)
-        seed = random.randint(0, 4294967295)
         single_training_result, testing_result, path_to_module = train_meta_decision_tree(settings[target_column],
                                                                                           cleaned_training_set,
                                                                                           cleaned_testing_set,
                                                                                           seed,
                                                                                           target_column,
                                                                                           0)
-        seed = random.randint(0, 4294967295)
         result = {
             "model type": "Decision tree",
             "model path": path_to_module,
