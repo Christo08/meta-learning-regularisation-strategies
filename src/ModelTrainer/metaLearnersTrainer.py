@@ -16,7 +16,7 @@ from src.Utils.datasetHandler import load_full_dataset, splitSet
 from src.Utils.fileHandler import save_data_frame, folder_maker, load_json_file, get_latest_nn_settings
 from src.Utils.menus import show_meta_leaner_type_menu
 from src.Utils.metaFeatureCalculator import calculate_meta_features
-from src.Utils.metaFeatureDatasetHandler import prepare_meta_feature_full_dataset_for_states, add_hyperparameters
+from src.Utils.metaFeatureDatasetHandler import prepare_meta_feature_full_dataset_for_states, remove_hyperparameters
 
 
 def train_meta_learners(training_dataset, testing_dataset):
@@ -85,7 +85,7 @@ def test_meta_learner(dataset_settings, meta_learners_results, number_of_folds, 
 
 def predict_best_technique(meta_learners_results, dataset, category_columns, transformer_path, nn_settings):
     meta_features = pd.DataFrame([calculate_meta_features(dataset, category_columns)])
-    meta_features = add_hyperparameters(meta_features, nn_settings)
+    meta_features = remove_hyperparameters(meta_features, nn_settings)
     meta_features = prepare_meta_feature_full_dataset_for_states(meta_features, transformer_path)
 
     techniques = list(meta_learners_results["technique"].dropna().unique())

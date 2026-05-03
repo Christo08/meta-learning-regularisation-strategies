@@ -243,12 +243,21 @@ def create_instance(dataset_name, settings, number_of_folds, training_set, testi
     print("")
     print("Dataset name: " + dataset_name)
     print("Seed: " + str(seed["seed"]))
+    number_of_neurons = settings["number_of_neurons_in_layers"][:settings["number_of_hidden_layers"]]
     # Add dataset name, seed and meta feature
     instance_json_object = {
         "dataset_name": dataset_name,
         "seed": seed["seed"],
         "subset_type": seed["subsetType"],
-        "file_name": subset_file_path
+        "file_name": subset_file_path,
+        "batch_size": settings["batch_size"],
+        "learning_rate":settings["learning_rate"],
+        "number_of_epochs":settings["number_of_epochs"],
+        "number_of_hidden_layers":settings["number_of_hidden_layers"],
+        "avg_number_of_neurons":np.average(number_of_neurons),
+        "min_number_of_neurons":np.min(number_of_neurons),
+        "max_number_of_neurons":np.max(number_of_neurons),
+        "total_number_of_neurons":np.sum(number_of_neurons)
     }
     instance_json_object = {**instance_json_object, **meta_feature}
     best_training_loss = float('inf')
@@ -256,8 +265,7 @@ def create_instance(dataset_name, settings, number_of_folds, training_set, testi
     best_testing_loss = float('inf')
     best_testing_technique = ""
     random.seed(seed["seed"])
-    seed = random.randint(0, 2 ** 32 - 1)
-    random.seed(seed)
+    seed = seed["seed"]
 
     # Perform training for each configuration
     for config in REGULARISATION_TECHNIQUES:

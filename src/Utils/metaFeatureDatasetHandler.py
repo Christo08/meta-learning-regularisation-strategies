@@ -1,6 +1,5 @@
 import ast
 import math
-import random
 from datetime import datetime
 
 import numpy as np
@@ -11,7 +10,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import PowerTransformer, StandardScaler
 
 from src.Utils.constants import TARGET_COLUMNS
-from src.Utils.fileHandler import load_meta_features_csv, save_data_frame, get_latest_nn_settings
+from src.Utils.fileHandler import load_meta_features_csv, save_data_frame
 
 
 def spilt_dataset_and_targets(dataset):
@@ -36,8 +35,8 @@ def split_dataset(dataset):
 
     rankings_per_dataset["mean_loss"] = rankings_per_dataset[targets].mean(axis=1)
     rankings_per_dataset["bin"] = pd.qcut(rankings_per_dataset["mean_loss"], q=4, labels=False)
-#5830
-    seed = random.randint(1, 10000)
+    #Seed use to recreate meta-learner 5232
+    seed = 5232
     print("Seed:", seed)
     train, test = train_test_split(rankings_per_dataset,
                                    test_size=0.25,
@@ -55,35 +54,41 @@ def split_dataset(dataset):
     training_set = dataset[dataset["dataset_name"].isin(train_datasets_name)]
     testing_set = dataset[dataset["dataset_name"].isin(test_datasets_name)]
 
-    return training_set, testing_set
+    return training_set, testing_set, seed
 
-def add_all_hyperparameters(dataset):
-    for index, row in dataset.iterrows():
-        nn_settings = get_latest_nn_settings(row["dataset_name"])
-        if not nn_settings:
-            raise ValueError(f"Missing setting: {row}")
-        dataset.loc[index,"batch_size"] = nn_settings["batch_size"]
-        dataset.loc[index,"learning_rate"] = nn_settings["learning_rate"]
-        dataset.loc[index,"number_of_epochs"] = nn_settings["number_of_epochs"]
-        dataset.loc[index,"number_of_hidden_layers"] = nn_settings["number_of_hidden_layers"]
-        number_of_neurons = nn_settings["number_of_neurons_in_layers"][:nn_settings["number_of_hidden_layers"]]
-        dataset.loc[index,"avg_number_of_neurons"] = np.average(number_of_neurons)
-        dataset.loc[index,"min_number_of_neurons"] = np.min(number_of_neurons)
-        dataset.loc[index,"max_number_of_neurons"] = np.max(number_of_neurons)
-        dataset.loc[index,"total_number_of_neurons"] = np.sum(number_of_neurons)
-    return dataset
+def remove_hyperparameters(dataset):
+    hyperparameter_columns = [
+        "batch_size",
+        "learning_rate",
+        "number_of_epochs",
+        "number_of_hidden_layers",
+        "avg_number_of_neurons",
+        "min_number_of_neurons",
+        "max_number_of_neurons",
+        "total_number_of_neurons"
+    ]
 
-def add_hyperparameters(dataset, settings):
-    dataset["batch_size"] = settings["batch_size"]
-    dataset["learning_rate"] = settings["learning_rate"]
-    dataset["number_of_epochs"] = settings["number_of_epochs"]
-    dataset["number_of_hidden_layers"] = settings["number_of_hidden_layers"]
-    number_of_neurons = settings["number_of_neurons_in_layers"][:settings["number_of_hidden_layers"]]
-    dataset["avg_number_of_neurons"] = np.average(number_of_neurons)
-    dataset["min_number_of_neurons"] = np.min(number_of_neurons)
-    dataset["max_number_of_neurons"] = np.max(number_of_neurons)
-    dataset["total_number_of_neurons"] = np.sum(number_of_neurons)
-    return dataset
+    return dataset.drop(columns=hyperparameter_columns, errors='ignore')
+
+def remove_meta_features(dataset):
+    meta_features_columns = [
+        "number_of_features",
+        "proportion_of_numeric_features",
+        "number_of_instances",
+        "number_of_classes",
+        "ratio_of_instances_to_features",
+        "ratio_of_classes_to_features",
+        "ratio_of_instances_to_classes",
+        "ratio_of_min_to_max_instances_per_class",
+        "proportion_of_features_with_outliers",
+        "average_mutual_information",
+        "minimum_mutual_information",
+        "maximum_mutual_information",
+        "equivalent_number_of_features",
+        "noise_to_signal_ratio_of_features"
+    ]
+
+    return dataset.drop(columns=meta_features_columns, errors='ignore')
 
 def prepare_meta_feature_dataset_for_states():
     dataset = load_meta_features_csv()
@@ -103,10 +108,15 @@ def prepare_meta_feature_dataset_for_states():
             if column in targets.columns:
                 targets[column] = targets[column].apply(lambda x: 1 if x == 1 else 0)
 
-    should_add_hyperparameters = input("Do you want to add hyperparameters (y/n): ").lower() == "y"
-    if should_add_hyperparameters:
-        options = "hyperparameters_"
-        features = add_all_hyperparameters(features)
+    should_remove_hyperparameters = input("Do you want to remove hyperparameters (y/n): ").lower() == "y"
+    if should_remove_hyperparameters:
+        options = "removed_hyperparameters_"
+        features = remove_hyperparameters(features)
+    else:
+        should_remove_meta_features = input("Do you want to remove meta features? (y/n): ").lower() == "y"
+        if should_remove_meta_features:
+            options = "removed_meta_features_"
+            features = remove_meta_features(features)
 
     ignore_columns = ["dataset_name"]
 
@@ -165,11 +175,17 @@ def prepare_meta_feature_sets():
 
     options = ""
     ignore_columns = ["dataset_name"]
-    should_add_hyperparameters = input("Do you want to add hyperparameters (y/n): ").lower() == "y"
-    if should_add_hyperparameters:
-        options = "hyperparameters_"
-        dataset = add_all_hyperparameters(dataset)
-    training_set, testing_set = split_dataset(dataset)
+    should_remove_hyperparameters = input("Do you want to remove hyperparameters (y/n): ").lower() == "y"
+    if should_remove_hyperparameters:
+        options = "removed_hyperparameters_"
+        dataset = remove_hyperparameters(dataset)
+    else:
+        should_remove_meta_features = input("Do you want to remove meta features? (y/n): ").lower() == "y"
+        if should_remove_meta_features:
+            options = "removed_meta_features_"
+            dataset = remove_meta_features(dataset)
+
+    training_set, testing_set, seed = split_dataset(dataset)
 
     training_targets = training_set[TARGET_COLUMNS]
     training_features = training_set.drop(TARGET_COLUMNS, axis=1)
@@ -196,10 +212,10 @@ def prepare_meta_feature_sets():
     if should_save_dataset:
         output_path = input("Enter the path of the output dataset folder: ")
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        file_name = f"regularisation_meta_learning_testing_set_{options}{timestamp}.csv"
+        file_name = f"testing_set_{options}{timestamp}_{seed}.csv"
         file_path = output_path + "\\TestingSets\\" + file_name
         save_data_frame(testing_set, file_path)
-        file_name = f"regularisation_meta_learning_training_set_{options}{timestamp}.csv"
+        file_name = f"training_set_{options}{timestamp}_{seed}.csv"
         file_path = output_path + "\\TrainingSets\\" + file_name
         save_data_frame(training_set, file_path)
         dump({"transformer": transformer, "scaler": scaler}, f"Models/Settings/DataPipeline/pipeline_{timestamp}.joblib")
