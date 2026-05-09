@@ -104,6 +104,9 @@ def main():
             number_of_folds = int(input("How many folds do you want to use per instance? "))
             transformer_path = input("Enter the path of the pipeline file: ")
             output_path = input("Enter the path of the output dataset folder: ")
+            hyperparameters = show_menu("Select the meta-features type by entering a number:", ["Both", "Dataset meta-features", "NN meta-features",  "Back"])
+            if hyperparameters == "Back":
+                continue
             results = pd.DataFrame()
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             file_name = f"meta_learning_testing_results_{timestamp}.csv"
@@ -112,7 +115,8 @@ def main():
                 dataset_result = test_meta_learner(dataset_settings,
                                                    meta_learners_results,
                                                    number_of_folds,
-                                                   transformer_path)
+                                                   transformer_path,
+                                                   hyperparameters)
                 results = pd.concat([results, dataset_result], ignore_index=True)
                 save_data_frame(results, file_path)
             print(results)

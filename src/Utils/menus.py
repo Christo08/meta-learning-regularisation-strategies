@@ -7,8 +7,8 @@ def show_menu(prompt, items):
     selection = -1
     while selection > len(items) - 1 or selection < 0:
         print(prompt)
-        for database_name in items:
-            print(str((items.index(database_name)+1))+". "+database_name)
+        for item in items:
+            print(str((items.index(item)+1))+". "+item)
         selection = int(input())-1
     return items[selection]
 

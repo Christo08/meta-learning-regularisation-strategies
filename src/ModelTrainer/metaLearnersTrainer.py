@@ -16,7 +16,7 @@ from src.Utils.datasetHandler import load_full_dataset, splitSet
 from src.Utils.fileHandler import save_data_frame, folder_maker, load_json_file, get_latest_nn_settings
 from src.Utils.menus import show_meta_leaner_type_menu
 from src.Utils.metaFeatureCalculator import calculate_meta_features
-from src.Utils.metaFeatureDatasetHandler import prepare_meta_feature_full_dataset_for_states, remove_hyperparameters
+from src.Utils.metaFeatureDatasetHandler import prepare_meta_feature_full_dataset_for_states, add_hyperparameters
 
 
 def train_meta_learners(training_dataset, testing_dataset):
@@ -55,7 +55,7 @@ def train_meta_learners(training_dataset, testing_dataset):
     file_name = f"{output_path}\\meta_learners_results.csv"
     save_data_frame(results, file_name)
 
-def test_meta_learner(dataset_settings, meta_learners_results, number_of_folds, transformer_path):
+def test_meta_learner(dataset_settings, meta_learners_results, number_of_folds, transformer_path, hyperparameters):
     seed = random.randint(0, 4294967295)
     random.seed(seed)
     dataset, category_columns = load_full_dataset(seed, dataset_settings, False)
@@ -69,6 +69,7 @@ def test_meta_learner(dataset_settings, meta_learners_results, number_of_folds, 
                                             dataset,
                                             category_columns,
                                             transformer_path,
+                                            hyperparameters,
                                             nn_settings)
     instance_json_object = train_nns(dataset_settings["name"],
                                      best_technique,
@@ -83,9 +84,15 @@ def test_meta_learner(dataset_settings, meta_learners_results, number_of_folds, 
 
     return pd.DataFrame([instance_json_object])
 
-def predict_best_technique(meta_learners_results, dataset, category_columns, transformer_path, nn_settings):
-    meta_features = pd.DataFrame([calculate_meta_features(dataset, category_columns)])
-    meta_features = remove_hyperparameters(meta_features, nn_settings)
+def predict_best_technique(meta_learners_results, dataset, category_columns, transformer_path, hyperparameters, nn_settings):
+    if hyperparameters == "NN meta-features":
+        meta_features = add_hyperparameters(pd.DataFrame([{}]) ,nn_settings)
+    elif hyperparameters == "Dataset meta-features":
+        meta_features = pd.DataFrame([calculate_meta_features(dataset, category_columns)])
+    else:
+        meta_features = pd.DataFrame([calculate_meta_features(dataset, category_columns)])
+        meta_features = add_hyperparameters(meta_features ,nn_settings)
+
     meta_features = prepare_meta_feature_full_dataset_for_states(meta_features, transformer_path)
 
     techniques = list(meta_learners_results["technique"].dropna().unique())
