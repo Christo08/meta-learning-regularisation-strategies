@@ -131,7 +131,7 @@ def prepare_meta_feature_dataset_for_states():
             options = "removed_meta_features_"
             features = remove_meta_features(features)
 
-    ignore_columns = ["dataset_name"]
+    ignore_columns = ["dataset_name", "file_name"]
 
     should_apply_transformers = input("Do you want to apply transformers? (y/n): ").lower() == "y"
     transformer = None
@@ -187,7 +187,7 @@ def prepare_meta_feature_sets():
         dataset = pd.concat([features, targets], axis=1)
 
     options = ""
-    ignore_columns = ["dataset_name"]
+    ignore_columns = ["dataset_name","file_name"]
     should_remove_hyperparameters = input("Do you want to remove hyperparameters (y/n): ").lower() == "y"
     if should_remove_hyperparameters:
         options = "removed_hyperparameters_"
@@ -240,7 +240,6 @@ def clean_dataset(dataset, should_drop_dataset_name = True):
                        "best_validation_technique",
                        "best_testing_technique",
                        "seed",
-                       "file_name",
                        "subset_type"]
     columns_to_drop = columns_to_drop + [col for col in dataset.columns if '_training_loss' in col]
     columns_to_drop = columns_to_drop + [col for col in dataset.columns if 'SMOTE' in col]

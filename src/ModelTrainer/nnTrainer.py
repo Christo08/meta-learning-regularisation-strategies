@@ -250,14 +250,12 @@ def training_meta_nns(settings_file_path, training_set, testing_set, seed, kFold
                                                    seed,
                                                    "na",
                                                    kFold)
-        seed = random.randint(0, 4294967295)
         single_training_result, testing_result, path_to_module = train_meta_nn_loop(settings[target_column],
                                                                                     cleaned_training_set,
                                                                                     cleaned_testing_set,
                                                                                     seed,
                                                                                     target_column,
                                                                                     0)
-        seed = random.randint(0, 4294967295)
         result = {
             "model type": "Neural Network",
             "model path": path_to_module,
