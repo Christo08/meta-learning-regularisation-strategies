@@ -43,7 +43,7 @@ def train_meta_learners(training_dataset, testing_dataset):
             result = training_meta_k_nearest_neighbors(settings_file_path, training_dataset, testing_dataset, seed, number_of_folds)
         elif selected_meta_learn_type == META_LEARN_TYPES[3]:
             settings_file_path = settings["NeuralNetworks"]
-            result = training_meta_nns(settings_file_path, training_dataset, testing_dataset, number_of_folds)
+            result = training_meta_nns(settings_file_path, training_dataset, testing_dataset, seed, number_of_folds)
         elif selected_meta_learn_type == META_LEARN_TYPES[5]:
             settings_file_path = settings["SupportVectorMachines"]
             result = training_meta_support_vector_machines(settings_file_path, training_dataset, testing_dataset, seed, number_of_folds)
@@ -55,7 +55,7 @@ def train_meta_learners(training_dataset, testing_dataset):
     file_name = f"{output_path}\\meta_learners_results.csv"
     save_data_frame(results, file_name)
 
-def test_meta_learner(dataset_settings, meta_learners_results, number_of_folds, transformer_path, hyperparameters):
+def test_meta_learner_on_full_datasets(dataset_settings, meta_learners_results, number_of_folds, transformer_path, hyperparameters):
     seed = random.randint(0, 4294967295)
     random.seed(seed)
     dataset, category_columns = load_full_dataset(seed, dataset_settings, False)
@@ -65,12 +65,18 @@ def test_meta_learner(dataset_settings, meta_learners_results, number_of_folds, 
 
     nn_settings = get_latest_nn_settings(dataset_settings["name"])
 
+    if hyperparameters == "NN meta-features":
+        meta_features = add_hyperparameters(pd.DataFrame([{}]) ,nn_settings)
+    elif hyperparameters == "Dataset meta-features":
+        meta_features = pd.DataFrame([calculate_meta_features(dataset, category_columns)])
+    else:
+        meta_features = pd.DataFrame([calculate_meta_features(dataset, category_columns)])
+        meta_features = add_hyperparameters(meta_features ,nn_settings)
+
+    meta_features = prepare_meta_feature_full_dataset_for_states(meta_features, transformer_path)
+
     best_technique = predict_best_technique(meta_learners_results,
-                                            dataset,
-                                            category_columns,
-                                            transformer_path,
-                                            hyperparameters,
-                                            nn_settings)
+                                            meta_features)
     instance_json_object = train_nns(dataset_settings["name"],
                                      best_technique,
                                      seed,
@@ -84,21 +90,31 @@ def test_meta_learner(dataset_settings, meta_learners_results, number_of_folds, 
 
     return pd.DataFrame([instance_json_object])
 
-def predict_best_technique(meta_learners_results, dataset, category_columns, transformer_path, hyperparameters, nn_settings):
-    if hyperparameters == "NN meta-features":
-        meta_features = add_hyperparameters(pd.DataFrame([{}]) ,nn_settings)
-    elif hyperparameters == "Dataset meta-features":
-        meta_features = pd.DataFrame([calculate_meta_features(dataset, category_columns)])
-    else:
-        meta_features = pd.DataFrame([calculate_meta_features(dataset, category_columns)])
-        meta_features = add_hyperparameters(meta_features ,nn_settings)
+def test_meta_learner_on_subsets(subsets, meta_learners_results, number_of_folds):
+    seed = random.randint(0, 4294967295)
+    random.seed(seed)
+    columns_to_drop = ["dataset_name", "file_name"] + TARGET_COLUMNS
+    for _, subset in subsets.iterrows():
+        dataset_name = subset["dataset_name"]
+        file_path = subset["file_name"]
 
-    meta_features = prepare_meta_feature_full_dataset_for_states(meta_features, transformer_path)
+        meta_features = subset.drop(labels=columns_to_drop, errors='ignore')
+
+        best_technique = predict_best_technique(meta_learners_results,
+                                                meta_features.to_frame().T)
+
+        nn_settings = get_latest_nn_settings(dataset_name)
+
+
+
+def predict_best_technique(meta_learners_results, meta_features):
 
     techniques = list(meta_learners_results["technique"].dropna().unique())
     model_types = list(meta_learners_results["model type"].dropna().unique())
+    model_types.remove("KNN")
 
     techniques_predicted = {technique.replace(" ", "_") : [] for technique in techniques}
+    module = []
     for technique in techniques:
         meta_learners_results_per_technique = meta_learners_results[
             meta_learners_results["technique"].replace(" ", "_") == technique]
@@ -114,14 +130,6 @@ def predict_best_technique(meta_learners_results, dataset, category_columns, tra
                     meta_learners_results_per_technique_and_model["training false positives"].iloc[0] +
                     meta_learners_results_per_technique_and_model["training false negatives"].iloc[0]
                 )
-                # trues = (meta_learners_results_per_technique_and_model["training true positives"].iloc[0] +
-                #          meta_learners_results_per_technique_and_model["training true negatives"].iloc[0])
-                # total = trues + (meta_learners_results_per_technique_and_model["training false positives"].iloc[0]+
-                #                 meta_learners_results_per_technique_and_model["training false negatives"].iloc[0])
-                # accouries = trues/total*100
-                # f1_scores_str = meta_learners_results_per_technique_and_model["training f1"].iloc[0]
-                # f1_scores = ast.literal_eval(f1_scores_str) if isinstance(f1_scores_str, str) else f1_scores_str
-                # metrix = np.mean(f1_scores)
                 if metrix > best_metrix:
                     best_metrix = metrix
                     best_model_types = [model_type]
@@ -129,7 +137,7 @@ def predict_best_technique(meta_learners_results, dataset, category_columns, tra
                     best_model_types.append(model_type)
         best_model_type = best_model_types[random.randint(0, len(best_model_types) - 1)]
         best_model_row = meta_learners_results_per_technique[
-            meta_learners_results_per_technique["model type"] == best_model_type]
+        meta_learners_results_per_technique["model type"] == best_model_type]
         path = best_model_row["model path"].values[0]
         if best_model_type == "Neural Network":
                 checkpoint = torch.load(path)
@@ -172,6 +180,7 @@ def predict_best_technique(meta_learners_results, dataset, category_columns, tra
             best_f1_score = f1_score
         elif count == best_count and best_f1_score == f1_score:
             best_technique.append(technique)
+    print(f"Best technique: {best_technique}")
     if len(best_technique) == 1:
         return best_technique[0]
     elif len(best_technique) == 0 or "baseline" in best_technique:
