@@ -121,6 +121,7 @@ def main():
                                                                         transformer_path,
                                                                         hyperparameters)
                     results = pd.concat([results, dataset_result], ignore_index=True)
+                    save_data_frame(results, file_path)
             else:
                 if input("Do you have training and testing sets? (y/n): ").lower() == "y":
                     testing_set = load_meta_features_csv("testing")
@@ -132,7 +133,7 @@ def main():
                                                               meta_learners_results,
                                                               number_of_folds)
                 results = pd.concat([dataset_result], ignore_index=True)
-            save_data_frame(results, file_path)
+                save_data_frame(results, file_path)
 
         elif process == PROCESS_OPTIONS[9]:
             calculate_meta_learners_performance()
