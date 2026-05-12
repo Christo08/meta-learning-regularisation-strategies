@@ -24,8 +24,7 @@ class DatasetsSettingsHandler:
         names = show_dataset_menu(self.datasets_settings)
         selected_dataset_settings = []
         for name in names:
-            selected_dataset_setting = next((item for item in self.datasets_settings if item["name"] == name), None)
-            selected_dataset_settings.append(selected_dataset_setting)
+            selected_dataset_settings.append(self.get_dataset_by_name(name))
         return selected_dataset_settings
 
     def select_dataset_name(self):
@@ -33,3 +32,6 @@ class DatasetsSettingsHandler:
 
     def get_dataset_settings(self):
         return self.datasets_settings
+
+    def get_dataset_by_name(self, name):
+        return next((item for item in self.datasets_settings if item["name"] == name), None)

@@ -99,7 +99,6 @@ def main():
             calculate_meta_learners_stats()
         elif process == PROCESS_OPTIONS[8]:
             meta_learners_results = load_results_csv()
-            number_of_folds = int(input("How many folds do you want to use? "))
             output_path = input("Enter the path of the output dataset folder: ")
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             results = pd.DataFrame()
@@ -109,6 +108,7 @@ def main():
                 if not datasets_settings:
                     continue
                 transformer_path = input("Enter the path of the pipeline file: ")
+                number_of_folds = int(input("How many folds do you want to use? "))
                 hyperparameters = show_menu("Select the meta-features type by entering a number:", ["Both", "Dataset meta-features", "NN meta-features",  "Back"])
                 if hyperparameters == "Back":
                     continue
@@ -123,17 +123,15 @@ def main():
                     results = pd.concat([results, dataset_result], ignore_index=True)
                     save_data_frame(results, file_path)
             else:
-                if input("Do you have training and testing sets? (y/n): ").lower() == "y":
+                if input("Do you have testing sets? (y/n): ").lower() == "y":
                     testing_set = load_meta_features_csv("testing")
                 else:
                     testing_set = prepare_meta_feature_sets()[1]
                 file_name = f"meta_learning_testing_results_subset_{timestamp}.csv"
                 file_path = output_path + "\\" + file_name
-                dataset_result = test_meta_learner_on_subsets(testing_set,
-                                                              meta_learners_results,
-                                                              number_of_folds)
-                results = pd.concat([dataset_result], ignore_index=True)
-                save_data_frame(results, file_path)
+                test_meta_learner_on_subsets(testing_set,
+                                             meta_learners_results,
+                                             file_path)
 
         elif process == PROCESS_OPTIONS[9]:
             calculate_meta_learners_performance()

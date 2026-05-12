@@ -1,5 +1,7 @@
+import ast
 import random
 from datetime import datetime
+from statistics import mean
 
 import joblib
 import pandas as pd
@@ -12,16 +14,18 @@ from src.ModelTrainer.randomForestTrainer import training_meta_random_forests
 from src.ModelTrainer.svmTrainer import training_meta_support_vector_machines
 from src.Models.NN.network import Network
 from src.Utils.constants import *
-from src.Utils.datasetHandler import load_full_dataset, splitSet
-from src.Utils.fileHandler import save_data_frame, folder_maker, load_json_file, get_latest_nn_settings
+from src.Utils.datasetHandler import load_full_dataset, splitSet, load_subset
+from src.Utils.datasetSettingHandler import DatasetsSettingsHandler
+from src.Utils.fileHandler import save_data_frame, folder_maker, load_json_file, get_latest_nn_settings, \
+    load_meta_features_csv
 from src.Utils.menus import show_meta_leaner_type_menu
 from src.Utils.metaFeatureCalculator import calculate_meta_features
 from src.Utils.metaFeatureDatasetHandler import prepare_meta_feature_full_dataset_for_states, add_hyperparameters
 
 
 def train_meta_learners(training_dataset, testing_dataset):
-    training_dataset.drop(columns=["dataset_name"], inplace=True)
-    testing_dataset.drop(columns=["dataset_name"], inplace=True)
+    training_dataset.drop(columns=["dataset_name","file_name"], inplace=True)
+    testing_dataset.drop(columns=["dataset_name", "file_name"], inplace=True)
     selected_meta_learn_types = show_meta_leaner_type_menu()
     number_of_folds = int(input("How many folds do you want the meta-learner to get trained? "))
     results = pd.DataFrame(columns=["model type", "technique",  "training loses", "testing loses"])
@@ -84,16 +88,15 @@ def test_meta_learner_on_full_datasets(dataset_settings, meta_learners_results, 
                                      testing_set,
                                      category_columns,
                                      number_of_folds,
-                                     nn_settings,
-                                     meta_learners_results,
-                                     transformer_path)
+                                     nn_settings)
 
     return pd.DataFrame([instance_json_object])
 
-def test_meta_learner_on_subsets(subsets, meta_learners_results, number_of_folds):
+def test_meta_learner_on_subsets(subsets, meta_learners_results, output_path):
     seed = random.randint(0, 4294967295)
     random.seed(seed)
     columns_to_drop = ["dataset_name", "file_name"] + TARGET_COLUMNS
+    details = []
     for _, subset in subsets.iterrows():
         dataset_name = subset["dataset_name"]
         file_path = subset["file_name"]
@@ -102,9 +105,60 @@ def test_meta_learner_on_subsets(subsets, meta_learners_results, number_of_folds
 
         best_technique = predict_best_technique(meta_learners_results,
                                                 meta_features.to_frame().T)
-
-        nn_settings = get_latest_nn_settings(dataset_name)
-
+        details.append({
+            "dataset_name": dataset_name,
+            "best_technique": best_technique,
+            "file_path": file_path
+        })
+    generate_performs = input("Do you want to generate the performs of the basic NN (Y/N)?").upper() == "Y"
+    results =pd.DataFrame()
+    if generate_performs:
+        number_of_folds = int(input("How many folds do you want to use? "))
+        dataset_settings_handler = DatasetsSettingsHandler()
+        for detail in details:
+            seed = random.randint(0, 4294967295)
+            nn_settings = get_latest_nn_settings(detail["dataset_name"])
+            training_set, testing_set, category_columns = load_subset(detail["file_path"],
+                                                                      seed,
+                                                                      dataset_settings_handler.get_dataset_by_name(detail["dataset_name"]))
+            seed = random.randint(0, 4294967295)
+            instance_json_object = train_nns(detail["dataset_name"],
+                                             detail["best_technique"],
+                                             seed,
+                                             training_set,
+                                             testing_set,
+                                             category_columns,
+                                             number_of_folds,
+                                             nn_settings)
+            results = pd.concat([results, pd.DataFrame([instance_json_object])], ignore_index=True)
+            save_data_frame(results, output_path)
+    else:
+        dataset = load_meta_features_csv()
+        for detail in details:
+            first_match = dataset[dataset["file_name"] == detail["file_path"]].iloc[0]
+            instance_json_object = {
+                "dataset_name": detail["dataset_name"],
+                "seed": first_match["seed"],
+                "best_technique": detail["best_technique"]
+            }
+            for config in REGULARISATION_TECHNIQUES:
+                print(f"Dataset name: {detail["dataset_name"]}")
+                print(f"Best technique: {detail["best_technique"]}")
+                instance_json_object[f"{config['fileName']}_training_loss"] = first_match[f"{config['fileName']}_training_loss"]
+                instance_json_object[f"{config['fileName']}_training_accuracies"] = first_match[f"{config['fileName']}_training_accuracies"]
+                instance_json_object[f"{config['fileName']}_training_f1_scores"] = first_match[f"{config['fileName']}_training_f1_scores"]
+                instance_json_object[f"{config['fileName']}_testing_loss"] = first_match[f"{config['fileName']}_testing_loss"]
+                instance_json_object[f"{config['fileName']}_testing_accuracies"] = first_match[f"{config['fileName']}_testing_accuracies"]
+                instance_json_object[f"{config['fileName']}_testing_f1_scores"] = first_match[f"{config['fileName']}_testing_f1_scores"]
+                if config['fileName'] == detail["best_technique"]:
+                    instance_json_object["meta_learner_training_loss"] = first_match[f"{config['fileName']}_training_loss"]
+                    instance_json_object["meta_learner_training_accuracies"] = first_match[f"{config['fileName']}_training_accuracies"]
+                    instance_json_object["meta_learner_training_f1_scores"] = first_match[f"{config['fileName']}_training_f1_scores"]
+                    instance_json_object["meta_learner_testing_loss"] = first_match[f"{config['fileName']}_testing_loss"]
+                    instance_json_object["meta_learner_testing_accuracies"] = first_match[f"{config['fileName']}_testing_accuracies"]
+                    instance_json_object["meta_learner_testing_f1_scores"] = first_match[f"{config['fileName']}_testing_f1_scores"]
+                results = pd.concat([results, pd.DataFrame([instance_json_object])], ignore_index=True)
+                save_data_frame(results, output_path)
 
 
 def predict_best_technique(meta_learners_results, meta_features):
@@ -125,11 +179,9 @@ def predict_best_technique(meta_learners_results, meta_features):
             meta_learners_results_per_technique_and_model = meta_learners_results_per_technique[
                 meta_learners_results_per_technique["model type"] == model_type]
             if not meta_learners_results_per_technique_and_model.empty:
-                metrix = (2*meta_learners_results_per_technique_and_model["training true positives"].iloc[0])/(
-                    2*meta_learners_results_per_technique_and_model["training true positives"].iloc[0] +
-                    meta_learners_results_per_technique_and_model["training false positives"].iloc[0] +
-                    meta_learners_results_per_technique_and_model["training false negatives"].iloc[0]
-                )
+                f1_scores = meta_learners_results_per_technique_and_model["training f1"].iloc[0]
+                f1_scores = ast.literal_eval(f1_scores)
+                metrix = mean(f1_scores)
                 if metrix > best_metrix:
                     best_metrix = metrix
                     best_model_types = [model_type]
@@ -180,7 +232,6 @@ def predict_best_technique(meta_learners_results, meta_features):
             best_f1_score = f1_score
         elif count == best_count and best_f1_score == f1_score:
             best_technique.append(technique)
-    print(f"Best technique: {best_technique}")
     if len(best_technique) == 1:
         return best_technique[0]
     elif len(best_technique) == 0 or "baseline" in best_technique:
@@ -188,7 +239,7 @@ def predict_best_technique(meta_learners_results, meta_features):
     else:
         return best_technique[random.randint(0, len(best_technique) - 1)]
 
-def train_nns(dataset_name, best_technique, seed, training_set, testing_set, category_columns, number_of_folds, nn_settings, meta_learners_results, path_to_transformer):
+def train_nns(dataset_name, best_technique, seed, training_set, testing_set, category_columns, number_of_folds, nn_settings):
     print("")
     print("Dataset name: " + dataset_name)
     print("Seed: " + str(seed))
