@@ -251,8 +251,16 @@ def train_nns(dataset_name, best_technique, seed, training_set, testing_set, cat
     }
     for config in REGULARISATION_TECHNIQUES:
         print(config["param"])
-        matrices = train_basic_nns(nn_settings, config["param"], training_set, testing_set, seed, category_columns,
-                                   number_of_folds)
+        matrices, dynamics_meta_learners = train_basic_nns(nn_settings,
+                                                           config["param"],
+                                                           training_set,
+                                                           testing_set,
+                                                           seed,
+                                                           category_columns,
+                                                           number_of_folds)
+
+        if config["name"] == "baseline":
+            instance_json_object = {**instance_json_object, **dynamics_meta_learners}
 
         instance_json_object[f"{config['fileName']}_training_loss"] = matrices["training_loss"]
         instance_json_object[f"{config['fileName']}_training_accuracies"] = matrices["training_accuracies"]

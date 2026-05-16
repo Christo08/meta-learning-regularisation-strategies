@@ -36,7 +36,7 @@ def train_basic_nns(settings, technique, training_set, testing_set, seed, catego
         testing_accuracy = []
         testing_f1_scores = []
 
-        counter =0
+        counter = 0
 
         X_full = training_set[0]
         y_full = training_set[1]
@@ -48,8 +48,15 @@ def train_basic_nns(settings, technique, training_set, testing_set, seed, catego
             counter+=1
 
             training_set = (training_set_x, training_set_y)
-            matrices = training_basic_loop(training_set, testing_set, settings, number_of_inputs, number_of_outputs,
-                                           technique, seed, all_labels, category_columns)
+            matrices, dynamics_meta_learners = training_basic_loop(training_set,
+                                                                   testing_set,
+                                                                   settings,
+                                                                   number_of_inputs,
+                                                                   number_of_outputs,
+                                                                   technique,
+                                                                   seed,
+                                                                   all_labels,
+                                                                   category_columns)
             training_mses.append(matrices["training_loss"])
             training_accuracy.append(matrices["training_accuracies"])
             training_f1_scores.append(matrices["training_f1_scores"])
@@ -63,7 +70,7 @@ def train_basic_nns(settings, technique, training_set, testing_set, seed, catego
             "testing_loss": testing_mses,
             "testing_accuracies": testing_accuracy,
             "testing_f1_scores": testing_f1_scores
-        }
+        }, dynamics_meta_learners
     else:
         return training_basic_loop(training_set,
                                    testing_set,
@@ -79,6 +86,21 @@ def training_basic_loop(training_set, testing_set, settings, number_of_inputs, n
     global device
     x_training = training_set[0]
     y_training = training_set[1]
+
+    first_training_loss = 0
+    last_training_loss = 0
+    meta_features = {}
+    prev_training_loss = 0
+    prev_testing_loss = 0
+    first_overfit_epoch = -1
+    gradients = []
+    near_zero_threshold = 1e-3
+
+    number_of_weights = 0
+    near_zero_weights = 0
+    percentage_near_zero = 0
+    total_weights = 0
+
     if technique == "SMOTE":
         number_of_neighbors = number_of_outputs - 1
         if number_of_neighbors < 3 or x_training.shape[1] - len(category_columns) < 2:
@@ -173,7 +195,6 @@ def training_basic_loop(training_set, testing_set, settings, number_of_inputs, n
             x_batch = batch["data"]
             y_batch = batch["label"]
 
-
             if x_batch.shape[0] == 1 and technique == "batchNormalisation":
                 continue
 
@@ -198,6 +219,42 @@ def training_basic_loop(training_set, testing_set, settings, number_of_inputs, n
             optimiser.zero_grad()
             training_loss.backward()
             optimiser.step()
+
+        y_testing_pred = network(x_testing)
+        y_training_pred = network(x_training)
+        training_loss = loss_function(y_training_pred, y_training).item()
+        testing_loss = loss_function(y_testing_pred, y_testing).item()
+
+        if epoch == 0:
+            first_training_loss = training_loss
+        elif epoch == settings["number_of_epochs"] - 1:
+            last_training_loss = training_loss
+        if prev_testing_loss == testing_loss and prev_training_loss < training_loss and epoch < settings["number_of_epochs"]*0.9:
+            first_overfit_epoch = epoch
+
+        prev_training_loss = training_loss
+        prev_testing_loss = testing_loss
+
+        total_grad_norm = 0.0
+
+        for name, param in network.named_parameters():
+            if param.grad is not None:
+                grad_norm = param.grad.data.norm(2)
+                total_grad_norm += grad_norm ** 2
+
+        total_grad_norm = total_grad_norm ** 0.5
+
+        gradients.append(total_grad_norm.item())
+
+        for name, param in network.named_parameters():
+            weights = param.data
+
+            total_weights += weights.sum().item()
+            number_of_weights += weights.numel()
+
+            near_zero_weights += (weights.abs() < near_zero_threshold).sum().item()
+
+        percentage_near_zero = (near_zero_weights / number_of_weights) * 100
 
         # Perform specific techniques during training
         if technique == "weightPerturbation" and epoch % settings["weight_perturbation_interval"] == 0 and epoch != 0:
@@ -234,7 +291,17 @@ def training_basic_loop(training_set, testing_set, settings, number_of_inputs, n
                                             **fbeta_kwargs)
         }
 
-    return matrices
+        meta_features = {
+            "learning_slope": (last_training_loss - first_training_loss) / settings["number_of_epochs"],
+            "validation_gap": (matrices["training_f1_scores"] - matrices["testing_f1_scores"]),
+            "first_overfit_epoch": first_overfit_epoch,
+            "mean_gradients": np.mean(gradients),
+            "std_gradients": np.std(gradients),
+            "percentage_weights_near_zero": percentage_near_zero,
+            "avg_weights": total_weights/number_of_weights
+        }
+
+    return matrices, meta_features
 
 def training_meta_nns(settings_file_path, training_set, testing_set, seed, kFold =5):
     results = []

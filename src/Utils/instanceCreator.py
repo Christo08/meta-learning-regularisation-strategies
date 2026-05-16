@@ -251,13 +251,15 @@ def create_instance(dataset_name, settings, number_of_folds, training_set, testi
         "subset_type": seed["subsetType"],
         "file_name": subset_file_path,
         "batch_size": settings["batch_size"],
-        "learning_rate":settings["learning_rate"],
-        "number_of_epochs":settings["number_of_epochs"],
-        "number_of_hidden_layers":settings["number_of_hidden_layers"],
-        "avg_number_of_neurons":np.average(number_of_neurons),
-        "min_number_of_neurons":np.min(number_of_neurons),
-        "max_number_of_neurons":np.max(number_of_neurons),
-        "total_number_of_neurons":np.sum(number_of_neurons)
+        "learning_rate": settings["learning_rate"],
+        "number_of_epochs": settings["number_of_epochs"],
+        "number_of_hidden_layers": settings["number_of_hidden_layers"],
+        "avg_number_of_neurons": np.average(number_of_neurons),
+        "min_number_of_neurons": np.min(number_of_neurons),
+        "max_number_of_neurons": np.max(number_of_neurons),
+        "total_number_of_neurons": np.sum(number_of_neurons),
+        "depth_to_width_ratio": settings["number_of_hidden_layers"]/np.average(number_of_neurons),
+        "batch_size_to_dataset_ratio": settings["batch_size"]/meta_feature["number_of_instances"],
     }
     instance_json_object = {**instance_json_object, **meta_feature}
     best_training_loss = float('inf')
@@ -270,8 +272,9 @@ def create_instance(dataset_name, settings, number_of_folds, training_set, testi
     # Perform training for each configuration
     for config in REGULARISATION_TECHNIQUES:
         print(config["param"])
-        matrices = train_basic_nns(settings, config["param"], training_set, testing_set, seed, category_columns, number_of_folds)
-
+        matrices, dynamics_meta_learners = train_basic_nns(settings, config["param"], training_set, testing_set, seed, category_columns, number_of_folds)
+        if config["name"] == "baseline":
+            instance_json_object = {**instance_json_object, **dynamics_meta_learners}
         instance_json_object[f"{config['fileName']}_training_loss"] = matrices["training_loss"]
         instance_json_object[f"{config['fileName']}_training_accuracies"] = matrices["training_accuracies"]
         instance_json_object[f"{config['fileName']}_training_f1_scores"] = matrices["training_f1_scores"]
