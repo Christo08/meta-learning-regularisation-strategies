@@ -157,15 +157,14 @@ def test_meta_learner_on_subsets(subsets, meta_learners_results, output_path):
                     instance_json_object["meta_learner_testing_loss"] = first_match[f"{config['fileName']}_testing_loss"]
                     instance_json_object["meta_learner_testing_accuracies"] = first_match[f"{config['fileName']}_testing_accuracies"]
                     instance_json_object["meta_learner_testing_f1_scores"] = first_match[f"{config['fileName']}_testing_f1_scores"]
-                results = pd.concat([results, pd.DataFrame([instance_json_object])], ignore_index=True)
-                save_data_frame(results, output_path)
+            results = pd.concat([results, pd.DataFrame([instance_json_object])], ignore_index=True)
+        save_data_frame(results, output_path)
 
 
 def predict_best_technique(meta_learners_results, meta_features):
 
     techniques = list(meta_learners_results["technique"].dropna().unique())
     model_types = list(meta_learners_results["model type"].dropna().unique())
-    model_types.remove("KNN")
 
     techniques_predicted = {technique.replace(" ", "_") : [] for technique in techniques}
     module = []

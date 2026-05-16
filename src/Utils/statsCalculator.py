@@ -11,7 +11,7 @@ from scipy.stats import ttest_rel
 from sklearn.metrics import confusion_matrix
 
 from src.Utils.constants import TARGET_COLUMNS, STATS_OPTIONS
-from src.Utils.fileHandler import load_results_csv, save_data_frame
+from src.Utils.fileHandler import load_results_csv, save_data_frame, load_meta_features_csv
 from src.Utils.menus import show_menu
 from src.Utils.metaFeatureDatasetHandler import spilt_dataset_and_targets
 
@@ -293,11 +293,12 @@ def calculate_meta_learners_performance():
     else:
         output_path = None
 
+    create_matrix(meta_learners_results)
+
     meta_learners_results.drop(columns=["seed","best_technique"], inplace=True, errors='ignore')
     meta_learners_results = meta_learners_results.drop(
         columns=[col for col in meta_learners_results.columns if 'training' in col]
     )
-
     create_meta_learner_comparison_boxplots(meta_learners_results, output_path, 'f1 scores')
 
     summaries_results(meta_learners_results, output_path)
@@ -305,6 +306,76 @@ def calculate_meta_learners_performance():
 
     create_f1_comparison_heatmap(meta_learners_results, save_path=output_path)
 
+def create_matrix(predicted_df):
+    predicted_df = predicted_df.copy()
+    predicted_df = predicted_df[["dataset_name", "best_technique"]]
+    actual_df = load_meta_features_csv("testing")
+    col = ["dataset_name"]+TARGET_COLUMNS
+    actual_df = actual_df[col]
+    actual_df["actual_technique"] = actual_df.apply(
+        extract_actual_label,
+        axis=1,
+    )
+
+    # Rename predicted column
+    predicted_df = predicted_df.rename(
+        columns={
+            "dataset": "dataset_name",
+            "best_technique": "predicted_technique",
+        }
+    )
+
+    # Build evaluation dataframe
+    eval_df = pd.DataFrame({
+        "actual": actual_df["actual_technique"],
+        "predicted": predicted_df["predicted_technique"],
+    })
+
+    # Keep only rows with a single actual technique
+    techniques = {}
+    for _, row in eval_df.iterrows():
+        if "|" in row["actual"]:
+            actual_techniques = row["actual"].split("|")
+            if row["predicted"] in actual_techniques:
+                row["actual"] = row["predicted"]
+            else:
+                for technique in actual_techniques:
+                    if technique not in techniques:
+                        techniques[technique] = 0
+                lowest_technique = min(
+                    actual_techniques,
+                    key=lambda technique: techniques[technique]
+                )
+                row["actual"] = lowest_technique
+                techniques[lowest_technique] += 1
+
+    # Create confusion matrix
+    matrix = pd.crosstab(
+        eval_df["actual"],
+        eval_df["predicted"],
+        dropna=False,
+    )
+
+    # Ensure all techniques appear as rows/columns
+    sorted_target_columns = sorted(TARGET_COLUMNS)
+    matrix = matrix.reindex(
+        index=sorted_target_columns,
+        columns=sorted_target_columns,
+        fill_value=0,
+    )
+
+    print(matrix)
+
+def extract_actual_label(row: pd.Series) -> str:
+    active = [col for col in TARGET_COLUMNS if row[col] == 1]
+
+    if len(active) == 1:
+        return active[0]
+
+    if len(active) == 0:
+        return "none"
+
+    return "|".join(active)
 
 def normalise_result(meta_learners_results, output_path):
     normalised_df = meta_learners_results.copy()
@@ -326,6 +397,28 @@ def normalise_result(meta_learners_results, output_path):
     normalized_columns = [f"{col}_normalized" for col in f1_scores_columns]
     columns_to_keep = ['dataset_name'] + normalized_columns
     normalised_df = normalised_df[columns_to_keep]
+    mean_std_data = []
+
+    for idx, row in normalised_df.iterrows():
+        dataset_name = row.get('dataset_name', f'Dataset {idx + 1}')
+        row_stats = {'dataset_name': dataset_name}
+
+        for norm_col in normalized_columns:
+            technique_name = norm_col.replace('_testing_f1_scores_normalized', '').replace('_', ' ')
+            norm_values = eval(row[norm_col]) if isinstance(row[norm_col], str) else row[norm_col]
+
+            row_stats[f'{technique_name} mean'] = np.mean(norm_values)
+            row_stats[f'{technique_name} std'] = np.std(norm_values)
+
+        mean_std_data.append(row_stats)
+
+    mean_std_df = pd.DataFrame(mean_std_data)
+    if output_path is not None:
+        save_data_frame(mean_std_df, f"{output_path}\\normalized_f1_mean_std.csv")
+        print(f"The normalized F1 mean and std was saved to {output_path}\\normalized_f1_mean_std.csv")
+    else:
+        print("\nMean and Std of Normalized F1 Scores per Dataset:")
+        print(mean_std_df)
 
     techniques = [col.replace('_testing_f1_scores_normalized', '') for col in normalized_columns]
     num_datasets = len(normalised_df)
