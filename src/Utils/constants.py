@@ -10,15 +10,14 @@ CHECK_POINTS_PATH = "Models\\CheckPoints\\"
 
 #Menu items
 PROCESS_OPTIONS = ["Optimise NN",  #0-1
-                   "Create subsets and instances",  #1-2
-                   "Recreate subsets",  #2-3
-                   "Recreate instances",  #3-4
-                   "Get statistics of meta learning dataset",  #4-5
-                   "Optimise meta learning",  #5-6
-                   "Train meta learning",  #6-7
-                   "Get statistics of meta learners results",  #7-8
-                   "Test meta learning", #8-9
-                   "Get statistics of meta learners performance", #9-10
+                   "Create subsets",  #1-2
+                   "Create instances",  #2-3
+                   "Get statistics of meta learning dataset",  #3-4
+                   "Optimise meta learning",  #4-5
+                   "Train meta learning",  #5-6
+                   "Get statistics of meta learners results",  #6-7
+                   "Test meta learning", #7-8
+                   "Get statistics of meta learners performance", #8-9
                    "Exit"]
 PARAMETER_GROUPS = ["All",
                     "Basic",

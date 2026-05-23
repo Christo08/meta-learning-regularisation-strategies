@@ -9,7 +9,7 @@ import pandas as pd
 
 from src.ModelTrainer.nnTrainer import train_basic_nns
 from src.Utils.constants import *
-from src.Utils.datasetHandler import create_subsets, load_dataset, create_subsets_with_seeds, load_subset
+from src.Utils.datasetHandler import create_subsets_from_dataset, load_dataset, create_subsets_with_seeds, load_subset
 from src.Utils.datasetSettingHandler import DatasetsSettingsHandler
 from src.Utils.fileHandler import load_meta_features_dataset, save_data_frame, get_latest_nn_settings
 from src.Utils.timeFormatter import format_duration
@@ -70,7 +70,7 @@ def recreate_subsets(meta_feature_dataset, number_of_instances, names=None):
                 seed["instancesSeeds"],
                 seed["datasetSettings"])
         else:
-            subsets, meta_features, return_seeds, subset_category_columns, subset_file_paths = create_subsets(
+            subsets, meta_features, return_seeds, subset_category_columns, subset_file_paths = create_subsets_from_dataset(
                 number_of_instances,
                 seed["datasetSettings"],
                 False)
@@ -197,13 +197,89 @@ def _to_list(value):
                 return [s]
     return [value]
 
+
+def create_subsets(output_path, number_of_instances, dataset_settings, seed):
+    random.seed(seed)
+    existing_df, output_path = load_meta_features_dataset(output_path)
+
+    if number_of_instances > 1:
+        _, _, subset_meta_features, seeds, _, subset_file_paths = create_subsets_from_dataset(number_of_instances, dataset_settings)
+    else:
+        _, _, subset_meta_features, seeds, _, subset_file_paths = load_dataset(dataset_settings)
+
+    instances = []
+    for subset_meta_feature, seed, subset_file_path in zip(subset_meta_features, seeds, subset_file_paths):
+        instance_json_object = {
+            "dataset_name": dataset_settings["name"],
+            "seed": seed["seed"],
+            "subset_type": seed["subsetType"],
+            "file_name": subset_file_path,
+        }
+        instance_json_object = {**instance_json_object, **subset_meta_feature}
+        instances.append(instance_json_object)
+    instances_df = pd.DataFrame(instances)
+
+    save_data_frame(pd.concat([existing_df, instances_df], ignore_index=True), output_path)
+    return output_path
+
+def create_dataset_for_subset(output_path, number_of_folds, base_datasets_settings):
+    subsets_config, output_path = load_meta_features_dataset(output_path)
+
+    total_duration = 0
+    total_counter = 0
+    dataset_done = 0
+    number_of_subsets = len(subsets_config)
+    for base_dataset_settings in base_datasets_settings:
+        base_dataset_name = base_dataset_settings["name"]
+        nn_settings = get_latest_nn_settings(base_dataset_name)
+        subsets_config = subsets_config[subsets_config["dataset_name"] == base_dataset_name]
+
+        dataset_duration = 0
+        dataset_counter = 0
+        number_of_instances_per_dataset = len(subsets_config)/len(base_datasets_settings)
+
+        for index, subset_config in subsets_config.iterrows():
+            file_path = subset_config["file_name"]
+            seed = {
+                "seed": subset_config["seed"],
+                "subsetType": subset_config["subset_type"],
+            }
+            training_set, testing_set, category_columns = load_subset(file_path, subset_config["seed"], base_dataset_settings)
+
+            instance, duration = create_instance(base_dataset_settings["name"],
+                                                 nn_settings,
+                                                 number_of_folds,
+                                                 training_set,
+                                                 testing_set,
+                                                 subset_config,
+                                                 seed,
+                                                 category_columns,
+                                                 file_path)
+
+            subsets_config.loc[index] = instance.iloc[0]
+            save_data_frame(subsets_config, output_path)
+
+
+            dataset_duration += duration
+            dataset_counter += 1
+            total_duration += duration
+            total_counter += 1
+
+            dataset_predicted_duration = dataset_duration / dataset_counter * number_of_instances_per_dataset
+            total_predicted_duration = total_duration / total_counter * number_of_subsets
+
+            print(f"Dataset name: {base_dataset_name}, Instances done: {dataset_counter}/{number_of_instances_per_dataset}, Times: {format_duration(dataset_duration)}/{format_duration(dataset_predicted_duration)}")
+            print(f"Dataset done count: {dataset_done}/{len(base_datasets_settings)}, Instances done: {total_counter}/{number_of_subsets}, Times: {format_duration(total_duration)}/{format_duration(total_predicted_duration)}")
+        dataset_done += 1
+
+
 def create_dataset(output_path, number_of_instances, number_of_folds, dataset_settings):
     dataset, output_path = load_meta_features_dataset(output_path)
     nn_settings = get_latest_nn_settings(dataset_settings["name"])
     total_duration = 0
 
     if number_of_instances > 1:
-        training_sets, testing_sets, meta_features, seeds, subset_category_columns, subset_file_paths = create_subsets(
+        training_sets, testing_sets, meta_features, seeds, subset_category_columns, subset_file_paths = create_subsets_from_dataset(
             number_of_instances,
             dataset_settings)
     else:

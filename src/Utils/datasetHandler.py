@@ -68,7 +68,7 @@ def load_subset(file_path, seed, dataset_settings):
 
     return training_set, testing_set, category_columns
 
-def create_subsets(number_of_subsets_need, dataset_settings, need_split=True):
+def create_subsets_from_dataset(number_of_subsets_need, dataset_settings, need_split=True):
     database_name = dataset_settings['name']
     print("Creating " + str(number_of_subsets_need) + " Subsets for the " + database_name + " dataset")
     dataset = load_raw_dataset(dataset_settings)
@@ -143,7 +143,7 @@ def load_dataset(dataset_settings):
     numeric_data = dataset.select_dtypes(include=[np.number])
     assert not np.isinf(numeric_data.values).any(), "Inf in numeric input DataFrame"
 
-    seed = random.randint(1, 100000)
+    seed = random.randint(1, 4294967295)
     random.seed(seed)
 
     dataset, dataset_category_columns = encode_categories_features(dataset, dataset_settings['category_columns'])
@@ -216,7 +216,7 @@ def make_classes_subsets(dataset, number_of_subsets_need, seeds=None):
     new_seeds =  len(seeds) < number_of_class_subset
     while counter < number_of_unique_classes_combos and len(subsets) < number_of_class_subset:
         if new_seeds:
-            seed = random.randint(1, 100000)
+            seed = random.randint(0, 4294967295)
         else:
             seed = seeds[counter]["seed"]
 
@@ -256,7 +256,7 @@ def make_features_subsets(dataset, number_of_feature_subset, seeds=None):
     new_seeds = len(seeds) < number_of_feature_subset
     while counter < number_of_unique_feature_combos and len(subsets) < number_of_feature_subset:
         if new_seeds:
-            seed = random.randint(1, 100000)
+            seed = random.randint(1, 4294967295)
         else:
             seed = seeds[counter]["seed"]
         random.seed(seed)
@@ -287,7 +287,7 @@ def make_instances_subsets(dataset, number_of_instances_subsets_needed, seeds=No
 
     for counter in range(number_of_instances_subsets_needed):
         if new_seeds:
-            seed = random.randint(1, 100000)
+            seed = random.randint(1, 4294967295)
         else:
             seed = seeds[counter]["seed"]
 

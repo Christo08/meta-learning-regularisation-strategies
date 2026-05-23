@@ -74,7 +74,6 @@ def create_generic_nn_setting():
                 generic_nn_settings[key] = round(generic_nn_settings[key]/len(settings))
             else:
                 generic_nn_settings[key] = round(generic_nn_settings[key] / len(settings),3)
-        print(generic_nn_settings)
         save_nn_settings(generic_nn_settings, "Generic", "")
     else:
         print("Invalid folder path provided.")
