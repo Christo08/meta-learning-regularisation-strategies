@@ -16,6 +16,14 @@
     "drop_columns": []
   },
   {
+    "name": "Balance Scale",
+    "type": "csv",
+    "file_path": "Data\\Input\\BalanceScale\\balance_scale.csv",
+    "category_columns": ["right distance","right weight","left distance","left weight,"],
+    "target_column": "class",
+    "drop_columns": []
+  },
+  {
     "name": "Car evaluation",
     "type": "pmlb",
     "pmlb_name": "car_evaluation",
@@ -30,6 +38,22 @@
     "category_columns": [],
     "target_column": "Class",
     "drop_columns": []
+  },
+  {
+    "name": "Ecoli",
+    "type": "csv",
+    "file_path": "Data\\Input\\Ecoli\\Ecoli.csv",
+    "category_columns": [],
+    "target_column": "class",
+    "drop_columns": ["Id"]
+  },
+  {
+    "name": "Glass Identification",
+    "type": "csv",
+    "file_path": "Data\\Input\\GlassIdentification\\glass.csv",
+    "category_columns": [],
+    "target_column": "Type",
+    "drop_columns": ["Id"]
   },
   {
     "name": "Indian Engineering Student Placement",
@@ -190,6 +214,14 @@
     "category_columns": ["background_app_usage_level","signal_strength_avg"],
     "target_column": "recommended_action",
     "drop_columns": ["Device_ID"]
+  },
+  {
+    "name": "Statlog Vehicle Silhouettes",
+    "type": "csv",
+    "file_path": "Data\\Input\\StatlogVehicleSilhouettes\\dataset.csv",
+    "category_columns": [],
+    "target_column": "class",
+    "drop_columns": []
   },
   {
     "name": "Students Performance",
