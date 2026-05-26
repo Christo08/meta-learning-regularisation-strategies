@@ -232,13 +232,13 @@ def create_dataset_for_subset(output_path, number_of_folds, base_datasets_settin
     for base_dataset_settings in base_datasets_settings:
         base_dataset_name = base_dataset_settings["name"]
         nn_settings = get_latest_nn_settings(base_dataset_name)
-        subsets_config = subsets_config[subsets_config["dataset_name"] == base_dataset_name]
+        dataset_subsets_config = subsets_config[subsets_config["dataset_name"] == base_dataset_name]
 
         dataset_duration = 0
         dataset_counter = 0
-        number_of_instances_per_dataset = len(subsets_config)/len(base_datasets_settings)
+        number_of_instances_per_dataset = len(dataset_subsets_config)
 
-        for index, subset_config in subsets_config.iterrows():
+        for index, subset_config in dataset_subsets_config.iterrows():
             file_path = subset_config["file_name"]
             seed = {
                 "seed": subset_config["seed"],
@@ -256,7 +256,7 @@ def create_dataset_for_subset(output_path, number_of_folds, base_datasets_settin
                                                  category_columns,
                                                  file_path)
 
-            subsets_config.loc[index] = instance.iloc[0]
+            subsets_config.loc[total_counter] = instance.iloc[0]
             save_data_frame(subsets_config, output_path)
 
 

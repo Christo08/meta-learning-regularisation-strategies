@@ -67,7 +67,7 @@ def main():
                 datasets_settings = datasets_settings_handler.select_datasets_settings()
                 if not datasets_settings:
                     break
-                output_path = "C:\\Users\\Chris\\OneDrive\\tuks\\master\\code\\Laptop\\Data\\Output\\Raw\\regularisation_20260522_072910.csv"#input("Enter the path to the subsets index and where the output will be saved: ")
+                output_path = "C:\\Users\\Chris\\OneDrive\\tuks\\master\\code\\Laptop\\Data\\Output\\Raw\\regularisation_20260522_072909.csv"#input("Enter the path to the subsets index and where the output will be saved: ")
                 number_of_folds = 10
                 create_dataset_for_subset(output_path, number_of_folds, datasets_settings)
         # elif process == PROCESS_OPTIONS[2]:
