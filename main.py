@@ -1,3 +1,4 @@
+import random
 from datetime import datetime
 
 import pandas as pd
@@ -9,8 +10,9 @@ from src.Optimisers.metaLearnersOptimiser import optimise_meta_learners
 from src.Optimisers.nnOptimiser import optimise_basic_nn
 from src.Utils.constants import *
 from src.Utils.datasetSettingHandler import DatasetsSettingsHandler
-from src.Utils.fileHandler import save_data_frame, load_settings, load_meta_features_csv, load_results_csv
-from src.Utils.instanceCreator import create_dataset, recreate_subsets, recreate_dataset
+from src.Utils.fileHandler import save_data_frame, load_settings, load_meta_features_csv, load_results_csv, \
+    load_meta_features_dataset
+from src.Utils.instanceCreator import create_subsets, create_dataset_for_subset
 from src.Utils.menus import show_menu, show_dataset_loader_menu
 from src.Utils.metaFeatureDatasetHandler import prepare_meta_feature_sets
 from src.Utils.statsCalculator import calculate_meta_learners_stats, calculate_dataset_stats, \
@@ -43,61 +45,77 @@ def main():
                 for dataset_settings in datasets_settings:
                     optimise_basic_nn(dataset_settings, parameter_group, basic_settings)
         elif process == PROCESS_OPTIONS[1]:
+            datasets_settings = datasets_settings_handler.select_datasets_settings()
+            if not datasets_settings:
+                break
+            output_path = input("Enter a path to the folder where the subsets index will be saved: ")
+            number_of_instances = int(input("How many Subsets do you want to create per dataset? "))
+            has_seeds = input("Do you have starting seeds (Y/N)?") == "Y"
+            seeds = []
+            if has_seeds:
+                print(f'Please enter {len(datasets_settings)} seeds:')
+                for _ in range(len(datasets_settings)):
+                    seeds.append(float(input()))
+            else:
+                for _ in range(len(datasets_settings)):
+                    seeds.append(random.randint(0, 4294967295))
+            for dataset_settings, seed in zip(datasets_settings, seeds):
+                output_path = create_subsets(output_path, number_of_instances, dataset_settings, seed)
+
+        elif process == PROCESS_OPTIONS[2]:
             while True:
                 datasets_settings = datasets_settings_handler.select_datasets_settings()
                 if not datasets_settings:
                     break
-                output_path = input("Enter the path of the output dataset file or folder: ")
-                number_of_instances = int(input("How many Subsets do you want to create per dataset? "))
-                number_of_folds = int(input("How many folds do you want to use per instance? "))
-                for dataset_settings in datasets_settings:
-                    output_path = create_dataset(output_path, number_of_instances, number_of_folds, dataset_settings)
-        elif process == PROCESS_OPTIONS[2]:
-            if input("Do you have a meta-feature file? (y/n): ").lower() == "y":
-                dataset = load_meta_features_csv()
-                number_of_instances = int(input("How many Subsets do you want to create per dataset? "))
-                recreate_subsets(dataset, number_of_instances)
-            else:
-                dataset = pd.DataFrame(columns=["dataset_name","seed","number_of_features","proportion_of_numeric_features",
-                                                "number_of_instances","number_of_classes","ratio_of_instances_to_features",
-                                                "ratio_of_classes_to_features","ratio_of_instances_to_classes",
-                                                "ratio_of_min_to_max_instances_per_class","proportion_of_features_with_outliers",
-                                                "average_mutual_information","minimum_mutual_information",
-                                                "maximum_mutual_information","equivalent_number_of_features",
-                                                "noise_to_signal_ratio_of_features","baseline_training_loss",
-                                                "baseline_testing_loss","batch_normalisation_training_loss",
-                                                "batch_normalisation_testing_loss","dropout_training_loss","dropout_testing_loss",
-                                                "layer_normalisation_training_loss","layer_normalisation_testing_loss",
-                                                "prune_training_loss","prune_testing_loss",
-                                                "weight_decay_training_loss","weight_decay_testing_loss","weight_normalisation_training_loss",
-                                                "weight_normalisation_testing_loss","weight_perturbation_training_loss",
-                                                "weight_perturbation_testing_loss","best_training_technique","best_testing_technique",
-                                                "subset_type"])
-                names = datasets_settings_handler.select_dataset_name()
-                if names:
-                    number_of_instances = int(input("How many Subsets do you want to create per dataset? "))
-                    recreate_subsets(dataset, number_of_instances, names)
+                output_path = "C:\\Users\\Chris\\OneDrive\\tuks\\master\\code\\Laptop\\Data\\Output\\Raw\\regularisation_20260522_072909.csv"#input("Enter the path to the subsets index and where the output will be saved: ")
+                number_of_folds = 10
+                create_dataset_for_subset(output_path, number_of_folds, datasets_settings)
+        # elif process == PROCESS_OPTIONS[2]:
+        #     if input("Do you have a meta-feature file? (y/n): ").lower() == "y":
+        #         dataset = load_meta_features_csv()
+        #         number_of_instances = int(input("How many Subsets do you want to create per dataset? "))
+        #         recreate_subsets(dataset, number_of_instances)
+        #     else:
+        #         dataset = pd.DataFrame(columns=["dataset_name","seed","number_of_features","proportion_of_numeric_features",
+        #                                         "number_of_instances","number_of_classes","ratio_of_instances_to_features",
+        #                                         "ratio_of_classes_to_features","ratio_of_instances_to_classes",
+        #                                         "ratio_of_min_to_max_instances_per_class","proportion_of_features_with_outliers",
+        #                                         "average_mutual_information","minimum_mutual_information",
+        #                                         "maximum_mutual_information","equivalent_number_of_features",
+        #                                         "noise_to_signal_ratio_of_features","baseline_training_loss",
+        #                                         "baseline_testing_loss","batch_normalisation_training_loss",
+        #                                         "batch_normalisation_testing_loss","dropout_training_loss","dropout_testing_loss",
+        #                                         "layer_normalisation_training_loss","layer_normalisation_testing_loss",
+        #                                         "prune_training_loss","prune_testing_loss",
+        #                                         "weight_decay_training_loss","weight_decay_testing_loss","weight_normalisation_training_loss",
+        #                                         "weight_normalisation_testing_loss","weight_perturbation_training_loss",
+        #                                         "weight_perturbation_testing_loss","best_training_technique","best_testing_technique",
+        #                                         "subset_type"])
+        #         names = datasets_settings_handler.select_dataset_name()
+        #         if names:
+        #             number_of_instances = int(input("How many Subsets do you want to create per dataset? "))
+        #             recreate_subsets(dataset, number_of_instances, names)
+        # elif process == PROCESS_OPTIONS[3]:
+        #     names = datasets_settings_handler.select_dataset_name()
+        #     if names:
+        #         subset_dataset = load_meta_features_csv()
+        #         output_path = input("Enter the path of the output dataset file or folder: ")
+        #         number_of_folds = int(input("How many folds do you want to use per instance? "))
+        #         index_to_create = input("Enter the indexes to recreate (separated by commas): ").replace(' ', '').split(",")
+        #         index_to_create = [int(index) for index in index_to_create]
+        #         recreate_dataset(subset_dataset, names, index_to_create, output_path, number_of_folds)
         elif process == PROCESS_OPTIONS[3]:
-            names = datasets_settings_handler.select_dataset_name()
-            if names:
-                subset_dataset = load_meta_features_csv()
-                output_path = input("Enter the path of the output dataset file or folder: ")
-                number_of_folds = int(input("How many folds do you want to use per instance? "))
-                index_to_create = input("Enter the indexes to recreate (separated by commas): ").replace(' ', '').split(",")
-                index_to_create = [int(index) for index in index_to_create]
-                recreate_dataset(subset_dataset, names, index_to_create, output_path, number_of_folds)
-        elif process == PROCESS_OPTIONS[4]:
             dataset = show_dataset_loader_menu(allow_full_dataset = True)
             calculate_dataset_stats(dataset)
-        elif process == PROCESS_OPTIONS[5]:
+        elif process == PROCESS_OPTIONS[4]:
             training_set = show_dataset_loader_menu()
             optimise_meta_learners(training_set)
-        elif process == PROCESS_OPTIONS[6]:
+        elif process == PROCESS_OPTIONS[5]:
             training_set, testing_set = show_dataset_loader_menu(return_both_sets = True)
             train_meta_learners(training_set, testing_set)
-        elif process == PROCESS_OPTIONS[7]:
+        elif process == PROCESS_OPTIONS[6]:
             calculate_meta_learners_stats()
-        elif process == PROCESS_OPTIONS[8]:
+        elif process == PROCESS_OPTIONS[7]:
             meta_learners_results = load_results_csv()
             output_path = input("Enter the path of the output dataset folder: ")
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -132,8 +150,7 @@ def main():
                 test_meta_learner_on_subsets(testing_set,
                                              meta_learners_results,
                                              file_path)
-
-        elif process == PROCESS_OPTIONS[9]:
+        elif process == PROCESS_OPTIONS[8]:
             calculate_meta_learners_performance()
         else:
             break

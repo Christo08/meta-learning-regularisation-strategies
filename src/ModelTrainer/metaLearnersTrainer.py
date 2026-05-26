@@ -250,7 +250,6 @@ def train_nns(dataset_name, best_technique, seed, training_set, testing_set, cat
         "best_technique": best_technique
     }
     for config in REGULARISATION_TECHNIQUES:
-        print(config["param"])
         matrices, dynamics_meta_learners = train_basic_nns(nn_settings,
                                                            config["param"],
                                                            training_set,

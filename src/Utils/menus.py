@@ -18,7 +18,7 @@ def show_dataset_menu(data_settings):
         dataset_names.append(datasetSettings["name"])
     dataset_names.append("Custom")
     dataset_names.append("Back")
-    datasets_option = show_menu("Select dataset by entering a number: ", dataset_names)
+    datasets_option = dataset_names[0]#show_menu("Select dataset by entering a number: ", dataset_names)
     names = []
     if datasets_option == dataset_names[0]:
         names =  dataset_names[1:-2]
