@@ -40,17 +40,9 @@
     "drop_columns": []
   },
   {
-    "name": "Ecoli",
-    "type": "csv",
-    "file_path": "Data\\Input\\Ecoli\\Ecoli.csv",
-    "category_columns": [],
-    "target_column": "class",
-    "drop_columns": ["Id"]
-  },
-  {
     "name": "Glass Identification",
     "type": "csv",
-    "file_path": "Data\\Input\\GlassIdentification\\glass.csv",
+    "file_path": "Data\\Input\\GlassIdentificarion\\glass.csv",
     "category_columns": [],
     "target_column": "Type",
     "drop_columns": ["Id"]
