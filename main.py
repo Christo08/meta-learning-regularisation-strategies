@@ -10,8 +10,7 @@ from src.Optimisers.metaLearnersOptimiser import optimise_meta_learners
 from src.Optimisers.nnOptimiser import optimise_basic_nn
 from src.Utils.constants import *
 from src.Utils.datasetSettingHandler import DatasetsSettingsHandler
-from src.Utils.fileHandler import save_data_frame, load_settings, load_meta_features_csv, load_results_csv, \
-    load_meta_features_dataset
+from src.Utils.fileHandler import save_data_frame, load_settings, load_meta_features_csv, load_results_csv
 from src.Utils.instanceCreator import create_subsets, create_dataset_for_subset
 from src.Utils.menus import show_menu, show_dataset_loader_menu
 from src.Utils.metaFeatureDatasetHandler import prepare_meta_feature_sets
@@ -67,7 +66,7 @@ def main():
                 datasets_settings = datasets_settings_handler.select_datasets_settings()
                 if not datasets_settings:
                     break
-                output_path = "C:\\Users\\Chris\\OneDrive\\tuks\\master\\code\\Laptop\\Data\\Output\\Raw\\regularisation_20260522_072909.csv"#input("Enter the path to the subsets index and where the output will be saved: ")
+                output_path = input("Enter the path to the subsets index and where the output will be saved: ")
                 number_of_folds = 10
                 create_dataset_for_subset(output_path, number_of_folds, datasets_settings)
         # elif process == PROCESS_OPTIONS[2]:

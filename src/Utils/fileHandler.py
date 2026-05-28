@@ -16,7 +16,7 @@ def load_meta_features_dataset(path):
         return pd.read_csv(path), path
     elif os.path.exists(path) and os.path.isdir(path):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        file_name = f"regularisation_{timestamp}.csv"
+        file_name = f"regularisation_{timestamp}_index.csv"
         file_path = path + "\\" + file_name
         return pd.DataFrame(), file_path
     else:
