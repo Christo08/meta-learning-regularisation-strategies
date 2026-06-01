@@ -222,13 +222,12 @@ def create_subsets(output_path, number_of_instances, dataset_settings, seed):
     save_data_frame(pd.concat([existing_df, instances_df], ignore_index=True), output_path)
     return output_path
 
-def create_dataset_for_subset(output_path, number_of_folds, base_datasets_settings):
+def create_dataset_for_subset(output_path, number_of_folds, base_datasets_settings, indexes = None):
     all_subsets, output_path = load_meta_features_dataset(output_path)
 
     total_duration = 0
     total_counter = 0
     dataset_done = 0
-    number_of_subsets = len(all_subsets)
     final_dataset = pd.DataFrame()
     output_path = output_path.replace("_index", "")
     for base_dataset_settings in base_datasets_settings:
@@ -238,9 +237,12 @@ def create_dataset_for_subset(output_path, number_of_folds, base_datasets_settin
 
         dataset_duration = 0
         dataset_counter = 0
-        number_of_instances_per_dataset = len(dataset_subsets)
+        number_of_instances_per_dataset = len(dataset_subsets) if indexes is None else len(indexes)
+        number_of_subsets = len(base_datasets_settings) * number_of_instances_per_dataset
 
         for index, subset in dataset_subsets.iterrows():
+            if indexes is not None and index not in indexes:
+                continue
             file_path = subset["file_name"]
             seed = {
                 "seed": subset["seed"],

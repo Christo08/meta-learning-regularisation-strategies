@@ -66,9 +66,13 @@ def main():
                 datasets_settings = datasets_settings_handler.select_datasets_settings()
                 if not datasets_settings:
                     break
+                has_indexes = input("Do you have specific indexes that you what to recreate (Y/N)?") == "Y"
+                if has_indexes:
+                    text_indexes = input("Enter the indexes of the subset you would like to create (separated by a comma): ")
+                    indexes = [int(index) for index in text_indexes.split(',')]
                 output_path = input("Enter the path to the subsets index and where the output will be saved: ")
                 number_of_folds = 10
-                create_dataset_for_subset(output_path, number_of_folds, datasets_settings)
+                create_dataset_for_subset(output_path, number_of_folds, datasets_settings, indexes)
         # elif process == PROCESS_OPTIONS[2]:
         #     if input("Do you have a meta-feature file? (y/n): ").lower() == "y":
         #         dataset = load_meta_features_csv()
