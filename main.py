@@ -3,6 +3,7 @@ from datetime import datetime
 
 import pandas as pd
 import torch
+from numba.core.types import none
 
 from src.ModelTrainer.metaLearnersTrainer import train_meta_learners, test_meta_learner_on_full_datasets, \
     test_meta_learner_on_subsets
@@ -67,6 +68,7 @@ def main():
                 if not datasets_settings:
                     break
                 has_indexes = input("Do you have specific indexes that you what to recreate (Y/N)?") == "Y"
+                indexes = None
                 if has_indexes:
                     text_indexes = input("Enter the indexes of the subset you would like to create (separated by a comma): ")
                     indexes = [int(index) for index in text_indexes.split(',')]

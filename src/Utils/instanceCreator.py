@@ -234,6 +234,7 @@ def create_dataset_for_subset(output_path, number_of_folds, base_datasets_settin
         base_dataset_name = base_dataset_settings["name"]
         nn_settings = get_latest_nn_settings(base_dataset_name)
         dataset_subsets = pd.DataFrame(all_subsets)[all_subsets["dataset_name"] == base_dataset_name]
+        dataset_subsets.reset_index(inplace = True)
 
         dataset_duration = 0
         dataset_counter = 0
