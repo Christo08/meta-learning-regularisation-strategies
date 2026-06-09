@@ -229,7 +229,8 @@ def training_basic_loop(training_set, testing_set, settings, number_of_inputs, n
             first_training_loss = training_loss
         elif epoch == settings["number_of_epochs"] - 1:
             last_training_loss = training_loss
-        if prev_testing_loss == testing_loss and prev_training_loss < training_loss and epoch < settings["number_of_epochs"]*0.9:
+
+        if prev_training_loss <= training_loss and prev_testing_loss > testing_loss:
             first_overfit_epoch = epoch
 
         prev_training_loss = training_loss
