@@ -9,7 +9,8 @@ import pandas as pd
 
 from src.ModelTrainer.nnTrainer import train_basic_nns
 from src.Utils.constants import *
-from src.Utils.datasetHandler import create_subsets_from_dataset, load_dataset, create_subsets_with_seeds, load_subset
+from src.Utils.datasetHandler import create_subsets_from_dataset, load_dataset, create_subsets_with_seeds, load_subset, \
+    load_full_dataset
 from src.Utils.datasetSettingHandler import DatasetsSettingsHandler
 from src.Utils.fileHandler import load_meta_features_dataset, save_data_frame, get_latest_nn_settings
 from src.Utils.timeFormatter import format_duration
@@ -217,6 +218,17 @@ def create_subsets(output_path, number_of_instances, dataset_settings, seed):
         }
         instance_json_object = {**instance_json_object, **subset_meta_feature}
         instances.append(instance_json_object)
+    if number_of_instances > 1:
+        _, _, subset_meta_features, seeds, _ = load_dataset(dataset_settings)
+        instance_json_object = {
+            "dataset_name": dataset_settings["name"],
+            "seed": seeds[0],
+            "subset_type": "full",
+            "file_name": ""
+        }
+        instance_json_object = {**instance_json_object, **subset_meta_features[0]}
+        instances.append(instance_json_object)
+
     instances_df = pd.DataFrame(instances)
 
     save_data_frame(pd.concat([existing_df, instances_df], ignore_index=True), output_path)
@@ -249,17 +261,29 @@ def create_dataset_for_subset(output_path, number_of_folds, base_datasets_settin
                 "seed": subset["seed"],
                 "subsetType": subset["subset_type"],
             }
-            training_set, testing_set, category_columns = load_subset(file_path, subset["seed"], base_dataset_settings)
+            if subset["subset_type"] == "full":
+                sets, category_columns = load_full_dataset(subset["seed"], base_dataset_settings)
+                instance, duration = create_instance(base_dataset_settings["name"],
+                                                     nn_settings,
+                                                     number_of_folds,
+                                                     sets[0],
+                                                     sets[1],
+                                                     subset,
+                                                     seed,
+                                                     category_columns,
+                                                     file_path)
+            else:
+                training_set, testing_set, category_columns = load_subset(file_path, subset["seed"], base_dataset_settings)
 
-            instance, duration = create_instance(base_dataset_settings["name"],
-                                                 nn_settings,
-                                                 number_of_folds,
-                                                 training_set,
-                                                 testing_set,
-                                                 subset,
-                                                 seed,
-                                                 category_columns,
-                                                 file_path)
+                instance, duration = create_instance(base_dataset_settings["name"],
+                                                     nn_settings,
+                                                     number_of_folds,
+                                                     training_set,
+                                                     testing_set,
+                                                     subset,
+                                                     seed,
+                                                     category_columns,
+                                                     file_path)
 
             final_dataset = pd.concat([final_dataset, instance], ignore_index=True)
             save_data_frame(final_dataset, output_path)
