@@ -92,14 +92,15 @@ def training_basic_loop(training_set, testing_set, settings, number_of_inputs, n
     meta_features = {}
     prev_training_loss = 0
     prev_testing_loss = 0
-    first_overfit_epoch = -1
-    gradients = []
-    near_zero_threshold = 1e-3
+    first_overfit_epoch = settings["number_of_epochs"]
+    first_stay_epoch = settings["number_of_epochs"]
+    near_zero_threshold = 0.05
+    stagnation_threshold = 0.005
 
     number_of_weights = 0
     near_zero_weights = 0
-    percentage_near_zero = 0
     total_weights = 0
+    training_loss_chasses = []
 
     if technique == "SMOTE":
         number_of_neighbors = number_of_outputs - 1
@@ -230,32 +231,19 @@ def training_basic_loop(training_set, testing_set, settings, number_of_inputs, n
         elif epoch == settings["number_of_epochs"] - 1:
             last_training_loss = training_loss
 
-        if prev_training_loss <= training_loss and prev_testing_loss > testing_loss:
+        if (prev_training_loss <= training_loss and
+            prev_testing_loss > testing_loss and
+            first_overfit_epoch == settings["number_of_epochs"]):
             first_overfit_epoch = epoch
+
+        training_loss_chasses.append(prev_training_loss - training_loss)
+        if (abs(training_loss_chasses[-1]) <= stagnation_threshold and
+            epoch >=2 and
+            first_stay_epoch == settings["number_of_epochs"]):
+            first_stay_epoch = epoch
 
         prev_training_loss = training_loss
         prev_testing_loss = testing_loss
-
-        total_grad_norm = 0.0
-
-        for name, param in network.named_parameters():
-            if param.grad is not None:
-                grad_norm = param.grad.data.norm(2)
-                total_grad_norm += grad_norm ** 2
-
-        total_grad_norm = total_grad_norm ** 0.5
-
-        gradients.append(total_grad_norm.item())
-
-        for name, param in network.named_parameters():
-            weights = param.data
-
-            total_weights += weights.sum().item()
-            number_of_weights += weights.numel()
-
-            near_zero_weights += (weights.abs() < near_zero_threshold).sum().item()
-
-        percentage_near_zero = (near_zero_weights / number_of_weights) * 100
 
         # Perform specific techniques during training
         if technique == "weightPerturbation" and epoch % settings["weight_perturbation_interval"] == 0 and epoch != 0:
@@ -265,6 +253,16 @@ def training_basic_loop(training_set, testing_set, settings, number_of_inputs, n
 
     # Final loss computation on training, validation, and testing sets
     with torch.no_grad():
+        for name, param in network.named_parameters():
+            weights = param.data.abs()
+
+            total_weights += weights.sum().item()
+            number_of_weights += weights.numel()
+
+            near_zero_weights += (weights < near_zero_threshold).sum().item()
+
+        percentage_near_zero = (near_zero_weights / number_of_weights) * 100
+
         y_training_pred = network(x_training)
         y_testing_pred = network(x_testing)
 
@@ -296,15 +294,15 @@ def training_basic_loop(training_set, testing_set, settings, number_of_inputs, n
             "learning_slope": (last_training_loss - first_training_loss) / settings["number_of_epochs"],
             "validation_gap": (matrices["training_f1_scores"] - matrices["testing_f1_scores"]),
             "first_overfit_epoch": first_overfit_epoch,
-            "mean_gradients": np.mean(gradients),
-            "std_gradients": np.std(gradients),
+            "first_stay_epoch": first_stay_epoch,
             "percentage_weights_near_zero": percentage_near_zero,
-            "avg_weights": total_weights/number_of_weights
+            "avg_weights": total_weights/number_of_weights,
+            "avg_training_loss_change": np.mean(training_loss_chasses) if training_loss_chasses else 0
         }
 
     return matrices, meta_features
 
-def training_meta_nns(settings_file_path, training_set, testing_set, seed, kFold =5):
+def training_meta_nns(settings_file_path, training_set, testing_set, seed, kFold = 5):
     results = []
     settings = load_settings(settings_file_path)
     random.seed(seed)
