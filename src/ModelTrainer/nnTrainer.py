@@ -290,15 +290,18 @@ def training_basic_loop(training_set, testing_set, settings, number_of_inputs, n
                                             **fbeta_kwargs)
         }
 
-        meta_features = {
-            "learning_slope": (last_training_loss - first_training_loss) / settings["number_of_epochs"],
-            "validation_gap": (matrices["training_f1_scores"] - matrices["testing_f1_scores"]),
-            "first_overfit_epoch": first_overfit_epoch,
-            "first_stay_epoch": first_stay_epoch,
-            "percentage_weights_near_zero": percentage_near_zero,
-            "avg_weights": total_weights/number_of_weights,
-            "avg_training_loss_change": np.mean(training_loss_chasses) if training_loss_chasses else 0
-        }
+        if technique == "baseline":
+            meta_features = {
+                "learning_slope": (last_training_loss - first_training_loss) / settings["number_of_epochs"],
+                "validation_gap": (matrices["training_f1_scores"] - matrices["testing_f1_scores"]),
+                "first_overfit_epoch": first_overfit_epoch,
+                "first_stay_epoch": first_stay_epoch,
+                "percentage_weights_near_zero": percentage_near_zero,
+                "avg_weights": total_weights/number_of_weights,
+                "avg_training_loss_change": np.mean(training_loss_chasses) if training_loss_chasses else 0
+            }
+        else:
+            meta_features = {}
 
     return matrices, meta_features
 
