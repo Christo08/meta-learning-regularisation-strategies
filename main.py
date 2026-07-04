@@ -11,7 +11,7 @@ from src.Optimisers.nnOptimiser import optimise_basic_nn
 from src.Utils.constants import *
 from src.Utils.datasetSettingHandler import DatasetsSettingsHandler
 from src.Utils.fileHandler import save_data_frame, load_settings, load_meta_features_csv, load_results_csv
-from src.Utils.instanceCreator import create_subsets, create_dataset_for_subset
+from src.Utils.instanceCreator import create_subsets, create_dataset_for_subset, recreate_meta_features
 from src.Utils.menus import show_menu, show_dataset_loader_menu
 from src.Utils.metaFeatureDatasetHandler import prepare_meta_feature_sets
 from src.Utils.statsCalculator import calculate_meta_learners_stats, calculate_dataset_stats, \
@@ -65,7 +65,7 @@ def main():
                 datasets_settings = datasets_settings_handler.select_datasets_settings()
                 if not datasets_settings:
                     break
-                has_indexes = input("Do you have specific indexes that you what to recreate (Y/N)?") == "Y"
+                has_indexes = input("Do you have specific indexes that you want to recreate (Y/N)?") == "Y"
                 indexes = None
                 if has_indexes:
                     text_indexes = input("Enter the indexes of the subset you would like to create (separated by a comma): ")
@@ -78,7 +78,7 @@ def main():
                 datasets_settings = datasets_settings_handler.select_datasets_settings()
                 if not datasets_settings:
                     break
-                has_indexes = input("Do you have specific indexes that you what to recreate (Y/N)?") == "Y"
+                has_indexes = input("Do you have specific indexes that you want to recreate (Y/N)?") == "Y"
                 indexes = None
                 if has_indexes:
                     text_indexes = input("Enter the indexes of the subset you would like to create (separated by a comma): ")

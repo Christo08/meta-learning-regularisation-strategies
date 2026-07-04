@@ -302,11 +302,73 @@ def create_dataset_for_subset(output_path, number_of_folds, base_datasets_settin
         dataset_done += 1
 
 def recreate_meta_features(output_path, number_of_folds, base_datasets_settings, indexes = None):
+    all_subsets, output_path = load_meta_features_dataset(output_path)
+
     total_duration = 0
     total_counter = 0
     dataset_done = 0
     final_dataset = pd.DataFrame()
     output_path = output_path.replace("_index", "_new_meta_features")
+    for base_dataset_settings in base_datasets_settings:
+        base_dataset_name = base_dataset_settings["name"]
+        nn_settings = get_latest_nn_settings(base_dataset_name)
+        dataset_subsets = pd.DataFrame(all_subsets)[all_subsets["dataset_name"] == base_dataset_name]
+        dataset_subsets.reset_index(inplace = True)
+
+        dataset_duration = 0
+        dataset_counter = 0
+        number_of_instances_per_dataset = len(dataset_subsets) if indexes is None else len(indexes)
+        number_of_subsets = len(base_datasets_settings) * number_of_instances_per_dataset
+
+        for index, subset in dataset_subsets.iterrows():
+            if indexes is not None and index not in indexes:
+                continue
+            file_path = subset["file_name"]
+            seed = {
+                "seed": subset["seed"],
+                "subsetType": subset["subset_type"],
+            }
+            if subset["subset_type"] == "full":
+                sets, category_columns = load_full_dataset(subset["seed"], base_dataset_settings)
+                instance, duration = create_instance(base_dataset_settings["name"],
+                                                     nn_settings,
+                                                     number_of_folds,
+                                                     sets[0],
+                                                     sets[1],
+                                                     subset,
+                                                     seed,
+                                                     category_columns,
+                                                     file_path,
+                                                     [REGULARISATION_TECHNIQUES[0]])
+            else:
+                training_set, testing_set, category_columns = load_subset(file_path, subset["seed"], base_dataset_settings)
+
+                instance, duration = create_instance(base_dataset_settings["name"],
+                                                     nn_settings,
+                                                     number_of_folds,
+                                                     training_set,
+                                                     testing_set,
+                                                     subset,
+                                                     seed,
+                                                     category_columns,
+                                                     file_path,
+                                                     [REGULARISATION_TECHNIQUES[0]])
+
+            final_dataset = pd.concat([final_dataset, instance], ignore_index=True)
+            save_data_frame(final_dataset, output_path)
+
+
+            dataset_duration += duration
+            dataset_counter += 1
+            total_duration += duration
+            total_counter += 1
+
+            dataset_predicted_duration = dataset_duration / dataset_counter * number_of_instances_per_dataset
+            total_predicted_duration = total_duration / total_counter * number_of_subsets
+
+            print(f"Dataset name: {base_dataset_name}, Instances done: {dataset_counter}/{number_of_instances_per_dataset}, Times: {format_duration(dataset_duration)}/{format_duration(dataset_predicted_duration)}")
+            print(f"Dataset done count: {dataset_done}/{len(base_datasets_settings)}, Instances done: {total_counter}/{number_of_subsets}, Times: {format_duration(total_duration)}/{format_duration(total_predicted_duration)}")
+        dataset_done += 1
 
 def create_dataset(output_path, number_of_instances, number_of_folds, dataset_settings):
     dataset, output_path = load_meta_features_dataset(output_path)
@@ -349,7 +411,7 @@ def create_dataset(output_path, number_of_instances, number_of_folds, dataset_se
 
 
 def create_instance(dataset_name, settings, number_of_folds, training_set, testing_set, meta_feature, seed,
-                    category_columns, subset_file_path):
+                    category_columns, subset_file_path, techniques = REGULARISATION_TECHNIQUES):
     start_time = time.time()
     print("")
     print("Dataset name: " + dataset_name)
@@ -381,7 +443,7 @@ def create_instance(dataset_name, settings, number_of_folds, training_set, testi
     seed = seed["seed"]
 
     # Perform training for each configuration
-    for config in REGULARISATION_TECHNIQUES:
+    for config in techniques:
         print(config["param"])
         matrices, dynamics_meta_learners = train_basic_nns(settings, config["param"], training_set, testing_set, seed, category_columns, number_of_folds)
         if config["name"] == "baseline":
