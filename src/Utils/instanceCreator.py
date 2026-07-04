@@ -301,6 +301,12 @@ def create_dataset_for_subset(output_path, number_of_folds, base_datasets_settin
             print(f"Dataset done count: {dataset_done}/{len(base_datasets_settings)}, Instances done: {total_counter}/{number_of_subsets}, Times: {format_duration(total_duration)}/{format_duration(total_predicted_duration)}")
         dataset_done += 1
 
+def recreate_meta_features(output_path, number_of_folds, base_datasets_settings, indexes = None):
+    total_duration = 0
+    total_counter = 0
+    dataset_done = 0
+    final_dataset = pd.DataFrame()
+    output_path = output_path.replace("_index", "_new_meta_features")
 
 def create_dataset(output_path, number_of_instances, number_of_folds, dataset_settings):
     dataset, output_path = load_meta_features_dataset(output_path)
