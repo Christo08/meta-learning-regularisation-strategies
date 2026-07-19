@@ -40,7 +40,7 @@ def train_basic_nns(settings, technique, training_set, testing_set, seed, catego
 
         X_full = training_set[0]
         y_full = training_set[1]
-        avg_dynamics_meta_features = {
+        raw_dynamics_meta_features = {
             "learning_slope": [],
             "validation_gap": [],
             "first_overfit_epoch": [],
@@ -49,6 +49,7 @@ def train_basic_nns(settings, technique, training_set, testing_set, seed, catego
             "avg_weights": [],
             "avg_training_loss_change": []
         }
+        avg_and_std_dynamics_meta_features= {}
 
         for train_idx, _ in kf.split(X_full):
             training_set_x = X_full.iloc[train_idx]
@@ -67,8 +68,8 @@ def train_basic_nns(settings, technique, training_set, testing_set, seed, catego
                                                                    all_labels,
                                                                    category_columns)
             if technique == "baseline":
-                for key in avg_dynamics_meta_features.keys():
-                    avg_dynamics_meta_features[key].append(dynamics_meta_features[key])
+                for key in raw_dynamics_meta_features.keys():
+                    raw_dynamics_meta_features[key].append(dynamics_meta_features[key])
 
             training_mses.append(matrices["training_loss"])
             training_accuracy.append(matrices["training_accuracies"])
@@ -78,8 +79,9 @@ def train_basic_nns(settings, technique, training_set, testing_set, seed, catego
             testing_f1_scores.append(matrices["testing_f1_scores"])
 
         if technique == "baseline":
-            for key in avg_dynamics_meta_features.keys():
-                avg_dynamics_meta_features[key] = np.average(avg_dynamics_meta_features[key])
+            for key in raw_dynamics_meta_features.keys():
+                avg_and_std_dynamics_meta_features["avg_"+key] = np.average(raw_dynamics_meta_features[key])
+                avg_and_std_dynamics_meta_features["std_"+key] = np.std(raw_dynamics_meta_features[key])
 
         return {
             "training_loss": training_mses,
@@ -88,7 +90,7 @@ def train_basic_nns(settings, technique, training_set, testing_set, seed, catego
             "testing_loss": testing_mses,
             "testing_accuracies": testing_accuracy,
             "testing_f1_scores": testing_f1_scores
-        }, avg_dynamics_meta_features
+        }, avg_and_std_dynamics_meta_features
     else:
         return training_basic_loop(training_set,
                                    testing_set,
