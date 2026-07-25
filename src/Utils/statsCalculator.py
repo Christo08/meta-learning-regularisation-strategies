@@ -87,7 +87,7 @@ def create_feature_density_plots(features, output_path):
 
     numerical_columns = features.select_dtypes(include=["int64", "float64", "int8"]).columns
 
-    num_cols = 4
+    num_cols = 5
     num_rows = int(np.ceil(len(numerical_columns) / num_cols))
 
     plt.figure(figsize=(12, num_rows * 3))
@@ -133,7 +133,7 @@ def create_box_plots(full_dataset, output_path):
 
     features = plot_df["feature"].unique()
 
-    num_cols = 4
+    num_cols = 5
     num_rows = int(np.ceil(len(features) / num_cols))
     plt.figure(figsize=(18, num_rows * 6))  # Changed from num_rows * 5 to num_rows * 3
     plt.suptitle('Box plots of features vs techniques', y=1)
@@ -580,7 +580,7 @@ def summaries_results(meta_learners_results, output_path):
 
 def create_f1_comparison_heatmap_plot(row_dataframe, alpha, save_path):
     num_datasets = len(row_dataframe)
-    num_cols = 4
+    num_cols = 5
     num_rows = int(np.ceil(num_datasets / num_cols))
 
     fig, axes = plt.subplots(num_rows, num_cols, figsize=(num_cols * 6, num_rows * 5))
@@ -920,7 +920,7 @@ def create_meta_learner_comparison_boxplots(meta_learners_results, output_path, 
     num_datasets = len(df)
 
     # Create subplots - one per dataset
-    num_cols = 4
+    num_cols = 5
     num_rows = int(np.ceil(num_datasets / num_cols))
     fig, axes = plt.subplots(num_rows, num_cols, figsize=(14, num_rows * 5))
     axes = np.array(axes).reshape(-1)

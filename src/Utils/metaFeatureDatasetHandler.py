@@ -151,7 +151,7 @@ def prepare_meta_feature_dataset_for_states():
     if should_save_dataset:
         output_path = input("Enter the path of the output dataset folder: ")
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        file_name = f"regularisation_meta_learning_{options}{timestamp}csv"
+        file_name = f"regularisation_meta_learning_{options}{timestamp}.csv"
         file_path = output_path + "\\" + file_name
         save_data_frame(dataset, file_path)
         dump({"transformer": transformer, "scaler": scaler}, f"Models/Settings/DataPipeline/pipeline_{options}{timestamp}.joblib")
