@@ -44,7 +44,11 @@ def split_dataset(dataset):
                                    random_state = seed)
 
     train_datasets_name = train["dataset_name"].tolist()
+    train_datasets_name.append("Led24")
+    train_datasets_name.remove("Vowel")
     test_datasets_name = test["dataset_name"].tolist()
+    test_datasets_name.remove("Led24")
+    test_datasets_name.append("Vowel")
 
     print("Train datasets:")
     print(train_datasets_name)
@@ -119,7 +123,7 @@ def prepare_meta_feature_dataset_for_states():
         options = options+"binary_"
         for column in TARGET_COLUMNS:
             if column in targets.columns:
-                targets[column] = targets[column].apply(lambda x: 1 if x == 1 else 0)
+                targets[column] = targets[column].apply(lambda x: 1 if x <= 2 else 0)
 
     should_remove_hyperparameters = input("Do you want to remove hyperparameters (y/n): ").lower() == "y"
     if should_remove_hyperparameters:
@@ -328,7 +332,21 @@ def apply_transformers(features = None, training_features = None, testing_featur
             'learning_rate',
             'number_of_hidden_layers',
             'min_number_of_neurons',
-            'total_number_of_neurons'
+            'total_number_of_neurons',
+            'avg_learning_slope',
+            'std_learning_slope',
+            'avg_validation_gap',
+            'std_validation_gap',
+            'avg_first_overfit_epoch',
+            'std_first_overfit_epoch',
+            'avg_first_stay_epoch',
+            'std_first_stay_epoch',
+            'avg_percentage_weights_near_zero',
+            'std_percentage_weights_near_zero',
+            'avg_avg_weights',
+            'std_avg_weights',
+            'depth_to_width_ratio',
+            'batch_size_to_dataset_ratio'
         ]
 
         if features is not None:

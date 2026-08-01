@@ -13,7 +13,7 @@ from src.Utils.menus import show_meta_leaner_type_menu
 
 
 def optimise_meta_learners(dataset):
-    dataset.drop(columns=["dataset_name"], inplace=True)
+    dataset.drop(columns=["dataset_name", "file_name"], inplace=True)
     selected_meta_learn_types = show_meta_leaner_type_menu()
     if len(selected_meta_learn_types) == 0:
         return
