@@ -1,9 +1,0 @@
-technique,average_rank,best_count,best_count_percent,worst_count,worst_count_percent
-baseline,2.86,62,14.35,84,19.44
-batch_normalisation,3.1,63,14.58,129,29.86
-dropout,3.03,33,7.64,76,17.59
-layer_normalisation,2.54,152,35.19,55,12.73
-prune,2.28,148,34.26,30,6.94
-weight_normalisation,2.36,131,30.32,27,6.25
-weight_decay,2.29,129,29.86,20,4.63
-weight_perturbation,2.77,73,16.9,11,2.55

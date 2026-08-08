@@ -64,23 +64,23 @@ class MetaLearnerStats:
     def get_training_stats_json_object(self):
         return {
             "training loses": self.training_mses if self.training_mses else 0.00,
-            "training f1": self.training_f1 if self.training_mses else 0.00,
-            "training accuracies": self.training_accuracy if self.training_mses else 0.00,
-            "training true positives": self.training_true_positive if self.training_mses else 0.00,
-            "training true negatives": self.training_true_negative if self.training_mses else 0.00,
-            "training false positives": self.training_false_positive if self.training_mses else 0.00,
-            "training false negatives": self.training_false_negative if self.training_mses else 0.00
+            "training f1": self.training_f1 if self.training_f1 else 0.00,
+            "training accuracies": self.training_accuracy if self.training_accuracy else 0.00,
+            "training true positives": self.training_true_positive if self.training_true_positive else 0.00,
+            "training true negatives": self.training_true_negative if self.training_true_negative else 0.00,
+            "training false positives": self.training_false_positive if self.training_false_positive else 0.00,
+            "training false negatives": self.training_false_negative if self.training_false_negative else 0.00
         }
 
     def get_testing_stats_json_object(self):
         return {
-            "testing loses": float(np.mean(self.testing_mses)) if self.testing_mses else 0.00,
-            "testing f1": float(np.mean(self.testing_f1)) if self.testing_mses else 0.00,
-            "testing accuracies": float(np.mean(self.testing_accuracy)) if self.testing_mses else 0.00,
-            "testing true positives": float(np.mean(self.testing_true_positive)) if self.testing_mses else 0.00,
-            "testing true negatives": float(np.mean(self.testing_true_negative)) if self.testing_mses else 0.00,
-            "testing false positives": float(np.mean(self.testing_false_positive)) if self.testing_mses else 0.00,
-            "testing false negatives": float(np.mean(self.testing_false_negative)) if self.testing_mses else 0.00
+            "testing loses": self.testing_mses if self.testing_mses else 0.00,
+            "testing f1": self.testing_f1 if self.testing_f1 else 0.00,
+            "testing accuracies": self.testing_accuracy if self.testing_accuracy else 0.00,
+            "testing true positives": self.testing_true_positive if self.testing_true_positive else 0.00,
+            "testing true negatives": self.testing_true_negative if self.testing_true_negative else 0.00,
+            "testing false positives": self.testing_false_positive if self.testing_false_positive else 0.00,
+            "testing false negatives": self.testing_false_negative if self.testing_false_negative else 0.00
         }
 
 def revert_encoding(encoded_tensor):

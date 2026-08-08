@@ -19,18 +19,12 @@ def training_meta_decision_trees(settings_file_path, training_set, testing_set, 
         print(f"Training decision tree for { target_column.replace("_"," ")}...")
         cleaned_training_set = prepared_meta_feature_dataset(training_set,target_column,False)
         cleaned_testing_set = prepared_meta_feature_dataset(testing_set,target_column,False)
-        training_result, _, _ = train_meta_decision_tree(settings[target_column],
+        training_result, testing_result, path_to_module = train_meta_decision_tree(settings[target_column],
                                                          cleaned_training_set,
                                                          cleaned_testing_set,
                                                          seed,
-                                                         "na",
+                                                         target_column,
                                                          kFold)
-        single_training_result, testing_result, path_to_module = train_meta_decision_tree(settings[target_column],
-                                                                                          cleaned_training_set,
-                                                                                          cleaned_testing_set,
-                                                                                          seed,
-                                                                                          target_column,
-                                                                                          0)
         result = {
             "model type": "Decision tree",
             "model path": path_to_module,
@@ -39,10 +33,10 @@ def training_meta_decision_trees(settings_file_path, training_set, testing_set, 
             "training loses": training_result["training loses"],
             "training accuracies": training_result["training accuracies"],
             "training f1": training_result["training f1"],
-            "training true positives": single_training_result["training true positives"][0],
-            "training true negatives": single_training_result["training true negatives"][0],
-            "training false positives": single_training_result["training false positives"][0],
-            "training false negatives": single_training_result["training false negatives"][0],
+            "training true positives": training_result["training true positives"],
+            "training true negatives": training_result["training true negatives"],
+            "training false positives": training_result["training false positives"],
+            "training false negatives": training_result["training false negatives"],
                         
             "testing loses": testing_result["testing loses"],
             "testing accuracies": testing_result["testing accuracies"],
@@ -64,22 +58,23 @@ def train_meta_decision_tree(params, training_set, testing_set, seed, target_col
     decision_trees_stats = MetaLearnerStats()
     path_to_module = ""
 
+    best_f1_score =0
+    best_tree = None
+
     if target_column != 'na':
-        folder_path = f"{MODULE_PATH}DecisionTrees\\{datetime.now().strftime("%Y%m%d_%h")}"
+        folder_path = f"{MODULE_PATH}DecisionTrees\\{datetime.now().strftime("%Y%m%d_%HH")}"
         folder_maker(folder_path)
 
     if kFold == 0:
-        tree = DecisionTreeClassifier(random_state=seed, **params)
-        tree.fit(training_x, training_y)
-        y_train_pred = tree.predict(training_x)
-        y_test_pred = tree.predict(testing_x)
+        best_tree = DecisionTreeClassifier(random_state=seed, **params)
+        best_tree.fit(training_x, training_y)
+        y_train_pred = best_tree.predict(training_x)
+        y_test_pred = best_tree.predict(testing_x)
 
         decision_trees_stats.update_training_stats(training_y, y_train_pred)
         decision_trees_stats.update_testing_stats(testing_y, y_test_pred)
 
-        if target_column != 'na':
-            path_to_module = f'{folder_path}\\{target_column}.pkl'
-            joblib.dump(tree, path_to_module)
+        path_to_module = f'{folder_path}\\{target_column}.pkl'
     else:
         kf = KFold(n_splits=kFold, shuffle=True, random_state=seed)
 
@@ -98,10 +93,13 @@ def train_meta_decision_tree(params, training_set, testing_set, seed, target_col
             decision_trees_stats.update_training_stats(y_train, y_train_pred)
             decision_trees_stats.update_testing_stats(testing_y, y_test_pred)
 
-            if target_column != 'na':
+            if best_f1_score < decision_trees_stats.get_testing_stats_json_object()["testing f1"][-1]:
+                best_f1_score = decision_trees_stats.get_testing_stats_json_object()["testing f1"][-1]
                 path_to_module = f'{folder_path}\\{target_column}_fold_{counter}.pkl'
-                joblib.dump(tree, path_to_module)
-
+                best_tree = tree
             counter = counter + 1
+
+    if target_column != 'na':
+        joblib.dump(best_tree, path_to_module)
 
     return decision_trees_stats.get_training_stats_json_object(), decision_trees_stats.get_testing_stats_json_object(), path_to_module

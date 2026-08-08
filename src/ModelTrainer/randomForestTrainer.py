@@ -19,20 +19,12 @@ def training_meta_random_forests(settings_file_path, training_set, testing_set, 
         print(f"Training random forests for { target_column.replace("_"," ")}...")
         cleaned_training_set = prepared_meta_feature_dataset(training_set,target_column,False)
         cleaned_testing_set = prepared_meta_feature_dataset(testing_set,target_column,False)
-        training_result, _, _ = train_meta_random_forest(settings[target_column],
+        training_result, testing_result, path_to_module = train_meta_random_forest(settings[target_column],
                                                          cleaned_training_set,
                                                          cleaned_testing_set,
                                                          seed,
-                                                         "na",
+                                                         target_column,
                                                          kFold)
-        seed = random.randint(0, 4294967295)
-        single_training_result, testing_result, path_to_module = train_meta_random_forest(settings[target_column],
-                                                                                          cleaned_training_set,
-                                                                                          cleaned_testing_set,
-                                                                                          seed,
-                                                                                          target_column,
-                                                                                          0)
-        seed = random.randint(0, 4294967295)
         result = {
             "model type": "Random forest",
             "model path": path_to_module,
@@ -41,10 +33,10 @@ def training_meta_random_forests(settings_file_path, training_set, testing_set, 
             "training loses": training_result["training loses"],
             "training accuracies": training_result["training accuracies"],
             "training f1": training_result["training f1"],
-            "training true positives": single_training_result["training true positives"][0],
-            "training true negatives": single_training_result["training true negatives"][0],
-            "training false positives": single_training_result["training false positives"][0],
-            "training false negatives": single_training_result["training false negatives"][0],
+            "training true positives": training_result["training true positives"],
+            "training true negatives": training_result["training true negatives"],
+            "training false positives": training_result["training false positives"],
+            "training false negatives": training_result["training false negatives"],
 
             "testing loses": testing_result["testing loses"],
             "testing accuracies": testing_result["testing accuracies"],
@@ -66,6 +58,10 @@ def train_meta_random_forest(params, training_set, testing_set, seed, target_col
     random_forests_stats = MetaLearnerStats()
 
     path_to_module = ""
+
+    best_f1_score =0
+    best_forest = None
+
     if target_column != 'na':
         folder_path = f"{MODULE_PATH}RandomForest\\{datetime.now().strftime("%Y%m%d_%h")}"
         folder_maker(folder_path)
@@ -75,18 +71,16 @@ def train_meta_random_forest(params, training_set, testing_set, seed, target_col
         rf_params["max_samples"] = None
 
     if kFold == 0:
-        forest = RandomForestClassifier(random_state=seed, **rf_params)
-        forest.fit(training_x, training_y)
+        best_forest = RandomForestClassifier(random_state=seed, **rf_params)
+        best_forest.fit(training_x, training_y)
 
-        y_train_pred = forest.predict(training_x)
-        y_test_pred = forest.predict(testing_x)
+        y_train_pred = best_forest.predict(training_x)
+        y_test_pred = best_forest.predict(testing_x)
 
         random_forests_stats.update_training_stats(training_y, y_train_pred)
         random_forests_stats.update_testing_stats(testing_y, y_test_pred)
 
-        if target_column != 'na':
-            path_to_module = f'{folder_path}\\{target_column}.pkl'
-            joblib.dump(forest, path_to_module)
+        path_to_module = f'{folder_path}\\{target_column}.pkl'
     else:
         kf = KFold(n_splits=kFold, shuffle=True, random_state=seed)
 
@@ -105,10 +99,14 @@ def train_meta_random_forest(params, training_set, testing_set, seed, target_col
             random_forests_stats.update_training_stats(y_train, y_train_pred)
             random_forests_stats.update_testing_stats(testing_y, y_test_pred)
 
-            if target_column != 'na':
+            if best_f1_score < forest.get_testing_stats_json_object()["testing f1"][-1]:
+                best_f1_score = forest.get_testing_stats_json_object()["testing f1"][-1]
                 path_to_module = f'{folder_path}\\{target_column}_fold_{counter}.pkl'
-                joblib.dump(forest, path_to_module)
+                best_forest = forest
 
             counter = counter + 1
+
+    if target_column != 'na':
+        joblib.dump(best_forest, path_to_module)
 
     return random_forests_stats.get_training_stats_json_object(), random_forests_stats.get_testing_stats_json_object(), path_to_module

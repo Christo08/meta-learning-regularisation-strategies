@@ -135,7 +135,11 @@ def test_meta_learner_on_subsets(subsets, meta_learners_results, output_path):
     else:
         dataset = load_meta_features_csv()
         for detail in details:
-            first_match = dataset[dataset["file_name"] == detail["file_path"]].iloc[0]
+            try:
+                first_match = dataset[dataset["file_name"] == detail["file_path"]].iloc[0]
+            except:
+                print(f"No match found for file: {detail['file_path']}")
+                continue
             instance_json_object = {
                 "dataset_name": detail["dataset_name"],
                 "seed": first_match["seed"],
