@@ -185,17 +185,6 @@ def create_heatmap(features, targets, output_path):
         for target_column in targets.columns:
             for feature_column in features.columns:
                 correlation,_ = pointbiserialr(targets[target_column], features[feature_column])
-                if feature_column == "noise_to_signal_ratio_of_features":
-                    print("noise_to_signal_ratio_of_features describe")
-                    print(features['noise_to_signal_ratio_of_features'].describe())
-                    print("noise_to_signal_ratio_of_features std")
-                    print(features['noise_to_signal_ratio_of_features'].std())
-                    print("noise_to_signal_ratio_of_features number of na")
-                    print(features['noise_to_signal_ratio_of_features'].isna().sum())
-                    print("noise_to_signal_ratio_of_features number of inf")
-                    print(np.isinf(features['noise_to_signal_ratio_of_features']).sum())
-                    print("noise_to_signal_ratio_of_features number of correlation")
-                    print(correlation)
                 correlations_matrix.loc[feature_column, target_column] = correlation
                 correlations_matrix.loc[target_column, feature_column] = correlation
 
