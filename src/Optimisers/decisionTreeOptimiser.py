@@ -52,10 +52,27 @@ def train_decision_tree_warp(params):
     seed = random.randint(0, 4294967295)
     training_loses, testing_loses, _ = train_meta_decision_tree(params, training_set, validation_set, seed, kFold=0)
     if selected_metric == OPTIMED_METRIC_OPTIONS[0]:
-        return testing_loses["testing accuracies"]
+        best = 0
+        for accuracy in testing_loses["testing true positives"]:
+            if best < accuracy:
+                best = accuracy
+        return best
     elif selected_metric == OPTIMED_METRIC_OPTIONS[1]:
-        return testing_loses["testing f1"]
+        best = 0
+        for accuracy in testing_loses["testing f1"]:
+            if best < accuracy:
+                best = accuracy
+        return best
     elif selected_metric == OPTIMED_METRIC_OPTIONS[2]:
-        return testing_loses["testing loses"]
+        best = float('inf')
+        for accuracy in testing_loses["testing loses"]:
+            if best > accuracy:
+                best = accuracy
+        return best
     else:
-        return testing_loses["testing true positives"]/(testing_loses["testing true positives"]+testing_loses["testing false positives"])
+        precisions = testing_loses["testing true positives"]/(testing_loses["testing true positives"]+testing_loses["testing false positives"])
+        best = 0
+        for precision in precisions:
+            if best < precision:
+                best = precision
+        return best

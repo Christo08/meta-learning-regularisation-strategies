@@ -74,7 +74,8 @@ def train_meta_decision_tree(params, training_set, testing_set, seed, target_col
         decision_trees_stats.update_training_stats(training_y, y_train_pred)
         decision_trees_stats.update_testing_stats(testing_y, y_test_pred)
 
-        path_to_module = f'{folder_path}\\{target_column}.pkl'
+        if target_column != 'na':
+            path_to_module = f'{folder_path}\\{target_column}.pkl'
     else:
         kf = KFold(n_splits=kFold, shuffle=True, random_state=seed)
 

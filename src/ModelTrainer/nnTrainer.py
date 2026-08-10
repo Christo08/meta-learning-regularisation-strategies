@@ -404,7 +404,8 @@ def train_meta_nn_loop(params, training_set, testing_set, seed, target_column ='
 
         nn_stats.update_training_stats(y_training_cpu, y_train_pred_cpu)
         nn_stats.update_testing_stats(y_testing_cpu, y_test_pred_cpu)
-        path_to_module = f'{folder_path}\\{target_column}.pt'
+        if target_column != 'na':
+            path_to_module = f'{folder_path}\\{target_column}.pt'
     else:
         kf = KFold(n_splits=kFold, shuffle=True, random_state=seed)
 
