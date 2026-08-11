@@ -59,7 +59,7 @@ def train_meta_random_forest(params, training_set, testing_set, seed, target_col
 
     path_to_module = ""
 
-    best_f1_score =0
+    best_f1_score =-1
     best_forest = None
 
     if target_column != 'na':

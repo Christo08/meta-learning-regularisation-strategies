@@ -58,11 +58,11 @@ def train_meta_decision_tree(params, training_set, testing_set, seed, target_col
     decision_trees_stats = MetaLearnerStats()
     path_to_module = ""
 
-    best_f1_score =0
+    best_f1_score = -1
     best_tree = None
 
     if target_column != 'na':
-        folder_path = f"{MODULE_PATH}DecisionTrees\\{datetime.now().strftime("%Y%m%d_%HH")}"
+        folder_path = f"{MODULE_PATH}DecisionTrees\\{datetime.now().strftime("%Y%m%d_%HH")}\\{target_column}.pkl"
         folder_maker(folder_path)
 
     if kFold == 0:
@@ -73,13 +73,10 @@ def train_meta_decision_tree(params, training_set, testing_set, seed, target_col
 
         decision_trees_stats.update_training_stats(training_y, y_train_pred)
         decision_trees_stats.update_testing_stats(testing_y, y_test_pred)
-
-        if target_column != 'na':
-            path_to_module = f'{folder_path}\\{target_column}.pkl'
     else:
         kf = KFold(n_splits=kFold, shuffle=True, random_state=seed)
 
-        counter = 1
+        counter = 0
 
         for train_idx, test_idx in kf.split(training_x):
             x_train = training_x[train_idx]
@@ -96,11 +93,11 @@ def train_meta_decision_tree(params, training_set, testing_set, seed, target_col
 
             if best_f1_score < decision_trees_stats.get_testing_stats_json_object()["testing f1"][-1]:
                 best_f1_score = decision_trees_stats.get_testing_stats_json_object()["testing f1"][-1]
-                path_to_module = f'{folder_path}\\{target_column}_fold_{counter}.pkl'
                 best_tree = tree
+                decision_trees_stats.set_best_fold(counter)
             counter = counter + 1
 
     if target_column != 'na':
         joblib.dump(best_tree, path_to_module)
 
-    return decision_trees_stats.get_training_stats_json_object(), decision_trees_stats.get_testing_stats_json_object(), path_to_module
+    return decision_trees_stats.get_best_training_stats_json_object(), decision_trees_stats.get_best_testing_stats_json_object(), path_to_module

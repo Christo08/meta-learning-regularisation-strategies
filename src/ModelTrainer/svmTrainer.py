@@ -67,7 +67,7 @@ def train_meta_support_vector_machines(params, training_set, testing_set, seed, 
 
     path_to_module = ""
 
-    best_f1_score =0
+    best_f1_score = -1
     best_svm = None
 
     if target_column != 'na':

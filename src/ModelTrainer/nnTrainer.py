@@ -373,7 +373,7 @@ def train_meta_nn_loop(params, training_set, testing_set, seed, target_column ='
     nn_stats = MetaLearnerStats()
     path_to_module = ""
 
-    best_f1_score =0
+    best_f1_score = -1
     best_nn = None
 
     if target_column != 'na':

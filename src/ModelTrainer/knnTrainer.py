@@ -59,7 +59,7 @@ def train_meta_k_nearest_neighbors(params, training_set, testing_set, seed, targ
     knn_stats = MetaLearnerStats()
     path_to_module = ""
 
-    best_f1_score =0
+    best_f1_score = -1
     best_knn = None
 
     if target_column != 'na':
@@ -102,6 +102,7 @@ def train_meta_k_nearest_neighbors(params, training_set, testing_set, seed, targ
             counter = counter + 1
 
     if target_column != 'na':
+        print(f"Saving best knn model for {target_column.replace('_',' ')} to {path_to_module}...")
         joblib.dump(best_knn, path_to_module)
 
     return knn_stats.get_training_stats_json_object(), knn_stats.get_testing_stats_json_object(), path_to_module

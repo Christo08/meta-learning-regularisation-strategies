@@ -26,6 +26,8 @@ class MetaLearnerStats:
         self.testing_true_positive = []
         self.testing_false_positive = []
 
+        self.best_fold = 0
+
     def update_training_stats(self, y_training, y_train_pred):
         single_column_y_training = revert_encoding(y_training)
         single_column_y_training_pred = revert_encoding(y_train_pred)
@@ -81,6 +83,31 @@ class MetaLearnerStats:
             "testing true negatives": self.testing_true_negative if self.testing_true_negative else 0.00,
             "testing false positives": self.testing_false_positive if self.testing_false_positive else 0.00,
             "testing false negatives": self.testing_false_negative if self.testing_false_negative else 0.00
+        }
+
+    def set_best_fold(self, best_fold):
+        self.best_fold = best_fold
+
+    def get_best_training_stats_json_object(self):
+        return {
+            "training loses": self.training_mses[self.best_fold] if self.training_mses[self.best_fold] else 0.00,
+            "training f1": self.training_f1[self.best_fold] if self.training_f1[self.best_fold] else 0.00,
+            "training accuracies": self.training_accuracy[self.best_fold] if self.training_accuracy[self.best_fold] else 0.00,
+            "training true positives": self.training_true_positive[self.best_fold] if self.training_true_positive[self.best_fold] else 0.00,
+            "training true negatives": self.training_true_negative[self.best_fold] if self.training_true_negative[self.best_fold] else 0.00,
+            "training false positives": self.training_false_positive[self.best_fold] if self.training_false_positive[self.best_fold] else 0.00,
+            "training false negatives": self.training_false_negative[self.best_fold] if self.training_false_negative[self.best_fold] else 0.00
+        }
+
+    def get_best_testing_stats_json_object(self):
+        return {
+            "testing loses": self.testing_mses[self.best_fold] if self.testing_mses[self.best_fold] else 0.00,
+            "testing f1": self.testing_f1[self.best_fold] if self.testing_f1[self.best_fold] else 0.00,
+            "testing accuracies": self.testing_accuracy[self.best_fold] if self.testing_accuracy[self.best_fold] else 0.00,
+            "testing true positives": self.testing_true_positive[self.best_fold] if self.testing_true_positive[self.best_fold] else 0.00,
+            "testing true negatives": self.testing_true_negative[self.best_fold] if self.testing_true_negative[self.best_fold] else 0.00,
+            "testing false positives": self.testing_false_positive[self.best_fold] if self.testing_false_positive[self.best_fold] else 0.00,
+            "testing false negatives": self.testing_false_negative[self.best_fold] if self.testing_false_negative[self.best_fold] else 0.00
         }
 
 def revert_encoding(encoded_tensor):
