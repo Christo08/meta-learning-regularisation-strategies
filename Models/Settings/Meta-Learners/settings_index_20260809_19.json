@@ -1,7 +1,0 @@
-{
-    "DecisionTrees": "Models\\Settings\\Meta-Learners\\DecisionTrees\\Decision_trees_setting_20260809_155425.json",
-    "KNearestNeighbors": "Models\\Settings\\Meta-Learners\\KNearestNeighbors\\knn_setting_20260809_155739.json",
-    "NeuralNetworks": "Models\\Settings\\Meta-Learners\\NeuralNetworks\\nn_setting_20260809_190649.json",
-    "RandomForest": "Models\\Settings\\Meta-Learners\\RandomForest\\Random_forest_setting_20260809_192914.json",
-    "SupportVectorMachines": "Models\\Settings\\Meta-Learners\\SupportVectorMachines\\svm_setting_20260809_193049.json"
-}
