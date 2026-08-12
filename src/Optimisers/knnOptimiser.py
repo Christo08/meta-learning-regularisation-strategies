@@ -19,14 +19,14 @@ parameter_group = {
 }
 training_set = {}
 validation_set = {}
-selected_metric = ""
+metric_type = ""
 
 
-def optimise_k_nearest_neighbors(dataset, selected_metrics, direction):
-    global training_set, validation_set, selected_metric
+def optimise_k_nearest_neighbors(dataset, selected_metric_type, direction):
+    global training_set, validation_set, metric_type
 
     settings = {}
-    selected_metric = selected_metrics
+    metric_type = selected_metric_type
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     for target_column in META_LEANER_TARGET_COLUMNS:
@@ -42,37 +42,20 @@ def optimise_k_nearest_neighbors(dataset, selected_metrics, direction):
             checkpoint_path=f"{check_point_path}\\{target_column}_{timestamp}"
         )
         validation_loses = train_k_nearest_neighbors_warp(best_params)
-        print(f"Tuned params for knn for {target_column} resulting in {validation_loses} {selected_metrics}")
+        print(f"Tuned params for knn for {target_column} resulting in {validation_loses} {metric_type}")
         settings[target_column] = best_params
     return settings
 
 def train_k_nearest_neighbors_warp(params):
-    global training_set, validation_set, selected_metric
+    global training_set, validation_set, metric_type
     seed = random.randint(0, 4294967295)
-    training_loses, testing_loses, _ = train_meta_k_nearest_neighbors(params, training_set, validation_set, seed, kFold=0)
-    if selected_metric == OPTIMED_METRIC_OPTIONS[0]:
-        best = 0
-        for accuracy in testing_loses["testing true positives"]:
-            if best < accuracy:
-                best = accuracy
-        return best
-    elif selected_metric == OPTIMED_METRIC_OPTIONS[1]:
-        best = 0
-        for accuracy in testing_loses["testing f1"]:
-            if best < accuracy:
-                best = accuracy
-        return best
-    elif selected_metric == OPTIMED_METRIC_OPTIONS[2]:
-        best = float('inf')
-        for accuracy in testing_loses["testing loses"]:
-            if best > accuracy:
-                best = accuracy
-        return best
+    stats, _ = train_meta_k_nearest_neighbors(params, training_set, validation_set, seed, kFold=5, metric_type=metric_type)
+    testing_stats = stats.get_best_testing_stats_json_object()
+    if metric_type == OPTIMED_METRIC_OPTIONS[0]:
+        return testing_stats["testing accuracies"]
+    elif metric_type == OPTIMED_METRIC_OPTIONS[1]:
+        return testing_stats["testing f1"]
+    elif metric_type == OPTIMED_METRIC_OPTIONS[2]:
+        return testing_stats["testing loses"]
     else:
-        precisions = testing_loses["testing true positives"] / (
-                    testing_loses["testing true positives"] + testing_loses["testing false positives"])
-        best = 0
-        for precision in precisions:
-            if best < precision:
-                best = precision
-        return best
+        return testing_stats["testing precision"]

@@ -49,7 +49,7 @@ STATS_OPTIONS = ["All",
                  "Custom",
                  "Back"]
 OPTIMED_METRIC_OPTIONS = ["Accuracies",
-                          "f1 scores",
+                          "f1 Scores",
                           "MSE",
                           "Precision"]
 

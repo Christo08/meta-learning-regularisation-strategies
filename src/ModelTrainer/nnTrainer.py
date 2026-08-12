@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from src.Models.NN.customDataset import CustomDataset
 from src.Models.NN.lossFunctions import CustomCrossEntropyLoss
 from src.Models.NN.network import Network
-from src.Utils.constants import META_LEANER_TARGET_COLUMNS, MODULE_PATH
+from src.Utils.constants import META_LEANER_TARGET_COLUMNS, MODULE_PATH, OPTIMED_METRIC_OPTIONS
 from src.Utils.datasetHandler import apply_smote, prepared_meta_feature_dataset
 from src.Utils.fileHandler import load_settings, folder_maker
 from src.Utils.metaLearnerStatsCalculator import MetaLearnerStats
@@ -333,55 +333,59 @@ def training_meta_nns(settings_file_path, training_set, testing_set, seed, kFold
         print(f"Training nn for { target_column.replace("_"," ")}...")
         cleaned_training_set = prepared_meta_feature_dataset(training_set,target_column,False)
         cleaned_testing_set = prepared_meta_feature_dataset(testing_set,target_column,False)
-        training_result, testing_result, path_to_module = train_meta_nn_loop(settings[target_column],
+        stats, path_to_module = train_meta_nn_loop(settings[target_column],
                                                    cleaned_training_set,
                                                    cleaned_testing_set,
                                                    seed,
                                                    "na",
                                                    kFold)
+        training_stats = stats.get_best_training_stats_json_object()
+        testing_stats = stats.get_best_testing_stats_json_object()
+        
         result = {
             "model type": "Neural Network",
             "model path": path_to_module,
             "technique": target_column.replace("_"," "),
-            
-            "training loses": training_result["training loses"],
-            "training accuracies": training_result["training accuracies"],
-            "training f1": training_result["training f1"],
-            "training true positives": training_result["training true positives"],
-            "training true negatives": training_result["training true negatives"],
-            "training false positives": training_result["training false positives"],
-            "training false negatives": training_result["training false negatives"],
+            "best fold": stats.get_best_fold(),
 
-            "testing loses": testing_result["testing loses"],
-            "testing accuracies": testing_result["testing accuracies"],
-            "testing f1": testing_result["testing f1"],
-            "testing true positives": testing_result["testing true positives"],
-            "testing true negatives": testing_result["testing true negatives"],
-            "testing false positives": testing_result["testing false positives"],
-            "testing false negatives": testing_result["testing false negatives"]
+            "training loses": training_stats["training loses"],
+            "training accuracies": training_stats["training accuracies"],
+            "training f1": training_stats["training f1"],
+            "training precision": training_stats["training precision"],
+            "training true positives": training_stats["training true positives"],
+            "training true negatives": training_stats["training true negatives"],
+            "training false positives": training_stats["training false positives"],
+            "training false negatives": training_stats["training false negatives"],
+
+            "testing loses": testing_stats["testing loses"],
+            "testing accuracies": testing_stats["testing accuracies"],
+            "testing f1": testing_stats["testing f1"],
+            "testing precision": testing_stats["testing precision"],
+            "testing true positives": testing_stats["testing true positives"],
+            "testing true negatives": testing_stats["testing true negatives"],
+            "testing false positives": testing_stats["testing false positives"],
+            "testing false negatives": testing_stats["testing false negatives"]
         }
         results.append(result)
     return results
 
-def train_meta_nn_loop(params, training_set, testing_set, seed, target_column ='na', kFold = 5):
+def train_meta_nn_loop(params,
+                       training_set,
+                       testing_set,
+                       seed,
+                       target_column ='na',
+                       kFold = 5,
+                       metric_type = OPTIMED_METRIC_OPTIONS[1]):
 
     training_x = training_set[0]
     training_y = training_set[1].to_numpy()
     testing_x = testing_set[0]
     testing_y = testing_set[1].to_numpy()
 
-    nn_stats = MetaLearnerStats()
-    path_to_module = ""
-
-    best_f1_score = -1
-    best_nn = None
-
-    if target_column != 'na':
-        folder_path = f"{MODULE_PATH}NN\\{datetime.now().strftime("%Y%m%d_%H")}"
-        folder_maker(folder_path)
+    nn_stats = MetaLearnerStats(metric_type)
 
     if kFold == 0:
-        best_nn = train_nn((training_x, training_y), params)
+        nn = train_nn((training_x, training_y), params)
 
         x_training = torch.tensor(training_x, dtype=torch.float32)
         y_training = torch.tensor(training_y, dtype=torch.float32)
@@ -395,8 +399,8 @@ def train_meta_nn_loop(params, training_set, testing_set, seed, target_column ='
             y_testing = y_testing.to(device)
 
         with torch.no_grad():
-            y_train_pred = best_nn(x_training)
-            y_test_pred = best_nn(x_testing)
+            y_train_pred = nn(x_training)
+            y_test_pred = nn(x_testing)
         y_training_cpu = output_cleaner(y_training.detach().cpu().numpy())
         y_train_pred_cpu = output_cleaner(y_train_pred.detach().cpu().numpy())
         y_testing_cpu = output_cleaner(y_testing.detach().cpu().numpy())
@@ -404,12 +408,20 @@ def train_meta_nn_loop(params, training_set, testing_set, seed, target_column ='
 
         nn_stats.update_training_stats(y_training_cpu, y_train_pred_cpu)
         nn_stats.update_testing_stats(y_testing_cpu, y_test_pred_cpu)
-        if target_column != 'na':
-            path_to_module = f'{folder_path}\\{target_column}.pt'
+        checkpoint = {
+            "model_class": "Network",
+            "model_kwargs": {
+                "input_size": training_set[0].shape[1],
+                "hidden_sizes": params["number_of_neurons_in_layers"],
+                "number_of_hidden_layers": params["number_of_hidden_layers"],
+                "output_size": training_set[1].shape[1],
+            },
+            "state_dict": nn.state_dict(),
+        }
+        nn_stats.add_module(checkpoint)
     else:
         kf = KFold(n_splits=kFold, shuffle=True, random_state=seed)
 
-        counter = 1
         for train_idx, test_idx in kf.split(training_x):
             x_train = training_x[train_idx]
             y_train = training_y[train_idx]
@@ -437,26 +449,25 @@ def train_meta_nn_loop(params, training_set, testing_set, seed, target_column ='
 
             nn_stats.update_training_stats(y_training_cpu, y_train_pred_cpu)
             nn_stats.update_testing_stats(y_testing_cpu, y_test_pred_cpu)
+            checkpoint = {
+                "model_class": "Network",
+                "model_kwargs": {
+                    "input_size": training_set[0].shape[1],
+                    "hidden_sizes": params["number_of_neurons_in_layers"],
+                    "number_of_hidden_layers": params["number_of_hidden_layers"],
+                    "output_size": training_set[1].shape[1],
+                },
+                "state_dict": nn.state_dict(),
+            }
+            nn_stats.add_module(checkpoint)
 
-            if best_f1_score < nn_stats.get_testing_stats_json_object()["testing f1"][-1]:
-                best_f1_score = nn_stats.get_testing_stats_json_object()["testing f1"][-1]
-                path_to_module = f'{folder_path}\\{target_column}_fold_{counter}.pkl'
-                best_nn = nn
-            counter = counter + 1
-
+    path_to_module = ""
     if target_column != 'na':
-        checkpoint = {
-            "model_class": "Network",
-            "model_kwargs": {
-                "input_size": training_set[0].shape[1],
-                "hidden_sizes": params["number_of_neurons_in_layers"],
-                "number_of_hidden_layers": params["number_of_hidden_layers"],
-                "output_size": training_set[1].shape[1],
-            },
-            "state_dict": best_nn.state_dict(),
-        }
-        torch.save(checkpoint, path_to_module)
-    return nn_stats.get_training_stats_json_object(), nn_stats.get_testing_stats_json_object(), path_to_module
+        folder_path = f"{MODULE_PATH}NN\\{datetime.now().strftime("%Y%m%d_%H")}"
+        folder_maker(folder_path)
+        path_to_module = f"{folder_path}\\{target_column}.pkl"
+        torch.save(nn_stats.get_best_model(), path_to_module)
+    return nn_stats, path_to_module
 
 def train_nn(training_set, settings):
     global device
