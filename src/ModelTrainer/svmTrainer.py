@@ -26,31 +26,38 @@ def training_meta_support_vector_machines(settings_file_path, training_set, test
                                                                    seed,
                                                                    target_column,
                                                                    kFold)
-        training_stats = stats.get_best_training_stats_json_object()
-        testing_stats = stats.get_best_testing_stats_json_object()
+        training_stats = stats.get_training_stats_json_object()
+        best_training_stats = stats.get_best_training_stats_json_object()
+        testing_stats = stats.get_testing_stats_json_object()
+        best_testing_stats = stats.get_best_testing_stats_json_object()
+
         result = {
             "model type": "svm",
             "model path": path_to_module,
             "technique": target_column.replace("_"," "),
             "best fold": stats.get_best_fold(),
 
-            "training loses": training_stats["training loses"],
-            "training accuracies": training_stats["training accuracies"],
-            "training f1": training_stats["training f1"],
-            "training precision": training_stats["training precision"],
-            "training true positives": training_stats["training true positives"],
-            "training true negatives": training_stats["training true negatives"],
-            "training false positives": training_stats["training false positives"],
-            "training false negatives": training_stats["training false negatives"],
+            **training_stats,
 
-            "testing loses": testing_stats["testing loses"],
-            "testing accuracies": testing_stats["testing accuracies"],
-            "testing f1": testing_stats["testing f1"],
-            "testing precision": testing_stats["testing precision"],
-            "testing true positives": testing_stats["testing true positives"],
-            "testing true negatives": testing_stats["testing true negatives"],
-            "testing false positives": testing_stats["testing false positives"],
-            "testing false negatives": testing_stats["testing false negatives"]
+            "best training loses": best_training_stats["training loses"],
+            "best training accuracies": best_training_stats["training accuracies"],
+            "best training f1": best_training_stats["training f1"],
+            "best training precision": best_training_stats["training precision"],
+            "best training true positives": best_training_stats["training true positives"],
+            "best training true negatives": best_training_stats["training true negatives"],
+            "best training false positives": best_training_stats["training false positives"],
+            "best training false negatives": best_training_stats["training false negatives"],
+
+            **testing_stats,
+
+            "best testing loses": best_testing_stats["testing loses"],
+            "best testing accuracies": best_testing_stats["testing accuracies"],
+            "best testing f1": best_testing_stats["testing f1"],
+            "best testing precision": best_testing_stats["testing precision"],
+            "best testing true positives": best_testing_stats["testing true positives"],
+            "best testing true negatives": best_testing_stats["testing true negatives"],
+            "best testing false positives": best_testing_stats["testing false positives"],
+            "best testing false negatives": best_testing_stats["testing false negatives"]
         }
         results.append(result)
     return results
@@ -105,7 +112,7 @@ def train_meta_support_vector_machines(params,
 
     path_to_module = ""
     if target_column != 'na':
-        folder_path = f"{MODULE_PATH}SVM\\{datetime.now().strftime("%Y%m%d_%h")}"
+        folder_path = f"{MODULE_PATH}SVM\\{datetime.now().strftime("%Y%m%d_%H")}"
         folder_maker(folder_path)
         path_to_module = f'{folder_path}\\{target_column}.pkl'
         joblib.dump(svm_stats.get_best_model(), path_to_module)

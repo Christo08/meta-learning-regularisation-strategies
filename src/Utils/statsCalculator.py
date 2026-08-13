@@ -275,8 +275,8 @@ def calculate_meta_learners_stats():
     print("Making the f1 training box plots:")
     show_meta_learners_box_plots(meta_learners_results, 'training f1', output_path)
 
-    print("Making the f1 testing bar chart")
-    create_meta_learners_bar_charts(meta_learners_results, 'testing f1', output_path)
+    print("Making the f1 testing box plots:")
+    show_meta_learners_box_plots(meta_learners_results, 'testing f1', output_path)
 
     print("Making the training confusion matrix:")
     create_confusion_matrix(meta_learners_results, output_path, "training")
@@ -711,10 +711,10 @@ def create_confusion_matrix(dataset, output_path, type):
     required_cols = [
         "model type",
         "technique",
-        f"{type} true positives",
-        f"{type} true negatives",
-        f"{type} false positives",
-        f"{type} false negatives",
+        f"best {type} true positives",
+        f"best {type} true negatives",
+        f"best {type} false positives",
+        f"best {type} false negatives",
     ]
     missing = [c for c in required_cols if c not in dataset.columns]
     if missing:
@@ -748,10 +748,10 @@ def create_confusion_matrix(dataset, output_path, type):
             module_df = technique_df[technique_df["model type"] == model_type]
 
             # Get the mean of the folds
-            tp = float(module_df[f"{type} true positives"].iloc[0])
-            tn = float(module_df[f"{type} true negatives"].iloc[0])
-            fp = float(module_df[f"{type} false positives"].iloc[0])
-            fn = float(module_df[f"{type} false negatives"].iloc[0])
+            tp = float(module_df[f"best {type} true positives"].iloc[0])
+            tn = float(module_df[f"best {type} true negatives"].iloc[0])
+            fp = float(module_df[f"best {type} false positives"].iloc[0])
+            fn = float(module_df[f"best {type} false negatives"].iloc[0])
 
             confusion_matrix = np.array([[tn, fp], [fn, tp]])
 
