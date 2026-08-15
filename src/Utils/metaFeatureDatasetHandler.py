@@ -187,7 +187,7 @@ def prepare_meta_feature_sets():
         if should_cover_to_binary:
             for column in TARGET_COLUMNS:
                 if column in targets.columns:
-                    targets[column] = targets[column].apply(lambda x: 1 if x == 1 else 0)
+                    targets[column] = targets[column].apply(lambda x: 1 if x <= 2 else 0)
         dataset = pd.concat([features, targets], axis=1)
 
     options = ""

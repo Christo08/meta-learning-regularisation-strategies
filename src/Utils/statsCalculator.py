@@ -891,7 +891,7 @@ def calculated_confusion_matrix(y_true, y_pred):
 
     assert true_negatives + false_positives + false_negatives + true_positives == len(y_true)
 
-    return true_positives, true_negatives, false_positives, false_negatives
+    return int(true_positives), int(true_negatives), int(false_positives), int(false_negatives)
 
 def create_meta_learner_comparison_boxplots(meta_learners_results, output_path, metric):
     print(f"Making meta-learner comparison boxplots for the {metric} metric")

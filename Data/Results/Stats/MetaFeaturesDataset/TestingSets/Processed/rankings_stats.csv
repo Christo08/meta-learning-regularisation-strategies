@@ -1,9 +1,9 @@
 technique,average_rank,best_count,best_count_percent,worst_count,worst_count_percent
-baseline,0.12,17,11.81,17,11.81
-batch_normalisation,0.17,25,17.36,23,15.97
-dropout,0.09,13,9.03,12,8.33
-layer_normalisation,0.3,43,29.86,34,23.61
-prune,0.33,47,32.64,24,16.67
-weight_normalisation,0.27,39,27.08,15,10.42
-weight_decay,0.31,44,30.56,18,12.5
-weight_perturbation,0.16,23,15.97,1,0.69
+baseline,0.47,68,47.22,68,47.22
+batch_normalisation,0.39,56,38.89,28,19.44
+dropout,0.24,35,24.31,14,9.72
+layer_normalisation,0.41,59,40.97,16,11.11
+prune,0.65,94,65.28,15,10.42
+weight_normalisation,0.67,96,66.67,3,2.08
+weight_decay,0.65,93,64.58,0,0.0
+weight_perturbation,0.46,66,45.83,0,0.0

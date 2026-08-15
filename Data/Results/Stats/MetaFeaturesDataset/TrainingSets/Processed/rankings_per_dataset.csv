@@ -1,28 +1,28 @@
 dataset_name,baseline,batch_normalisation,dropout,layer_normalisation,prune,weight_normalisation,weight_decay,weight_perturbation
-Agaricus Lepiota,0,3,0,13,0,1,0,0
-Ann thyroid,0,0,0,0,8,5,7,1
-Balance Scale,0,1,0,9,2,8,5,0
-Car evaluation,2,1,5,11,7,2,2,1
-Dry Bean,1,5,0,8,10,2,5,9
-Glass Identification,4,3,0,6,9,2,5,2
-Indian Engineering Student Placement,4,0,0,1,2,3,13,3
-Led24,1,1,1,0,0,2,13,2
-Led7,2,2,2,2,14,1,6,2
-Liver Cirrhosis,5,6,3,11,5,6,5,8
-Magic,0,8,0,1,9,9,0,1
-Mobile Price Classification,0,0,0,0,15,0,2,0
-Mofn_3_7_10,1,0,1,4,2,12,1,1
-Nursery,2,3,2,2,6,5,7,2
-Obesity Levels,4,0,1,4,1,11,0,4
-Page Blocks,0,1,0,15,0,0,0,0
-Parity5,3,2,0,0,5,3,9,2
-Pendigits,0,1,2,15,1,0,0,0
-Pima Indians Diabetes,1,1,1,0,2,1,15,1
-Ring,3,0,0,0,11,11,8,7
-Salaries 2023,2,11,4,2,3,3,3,2
-Schizo,3,6,1,11,1,2,5,1
-Smartphone battery,7,0,0,1,6,9,5,6
-Statlog Vehicle Silhouettes,5,1,1,9,4,10,3,6
-Twonorm,6,0,3,2,4,8,10,4
-White Wine Quality,1,2,0,10,8,3,7,2
-Wine Quality Red,5,6,7,1,7,8,6,8
+Agaricus Lepiota,2,16,1,15,1,1,1,1
+Ann thyroid,6,4,2,0,10,13,13,4
+Balance Scale,0,4,0,15,8,13,12,2
+Car evaluation,5,6,11,11,12,6,9,5
+Dry Bean,8,11,7,10,15,8,12,12
+Glass Identification,9,8,8,8,13,11,12,8
+Indian Engineering Student Placement,8,0,7,4,8,9,16,9
+Led24,7,4,10,2,7,11,15,7
+Led7,7,4,8,6,16,6,14,5
+Liver Cirrhosis,14,12,14,16,12,11,14,13
+Magic,4,11,1,7,13,15,8,2
+Mobile Price Classification,0,0,1,0,16,0,16,0
+Mofn_3_7_10,6,1,1,10,8,15,8,5
+Nursery,5,4,3,6,12,10,12,5
+Obesity Levels,9,4,5,7,3,13,2,10
+Page Blocks,5,2,4,16,9,8,2,9
+Parity5,5,4,10,2,9,6,9,5
+Pendigits,2,5,12,16,3,3,0,4
+Pima Indians Diabetes,5,5,13,1,9,8,15,7
+Ring,11,0,3,1,14,13,15,11
+Salaries 2023,7,13,8,4,8,6,10,5
+Schizo,9,11,8,15,2,9,13,13
+Smartphone battery,11,0,4,1,13,14,10,11
+Statlog Vehicle Silhouettes,10,9,2,15,10,14,10,13
+Twonorm,14,0,7,5,9,15,16,8
+White Wine Quality,7,10,8,14,8,8,10,9
+Wine Quality Red,10,10,11,6,9,12,13,10

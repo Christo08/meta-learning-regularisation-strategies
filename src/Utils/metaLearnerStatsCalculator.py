@@ -103,18 +103,18 @@ class MetaLearnerStats:
             best_metric = -1
         else:
             best_metric = float("inf")
-        for counter, f1_score in enumerate(self.testing_f1):
-            if self.metric_type == OPTIMED_METRIC_OPTIONS[0] and self.testing_accuracy[counter] > best_metric:
-                best_metric = self.testing_accuracy[counter]
+        for counter, f1_score in enumerate(self.training_f1):
+            if self.metric_type == OPTIMED_METRIC_OPTIONS[0] and self.training_accuracy[counter] > best_metric:
+                best_metric = self.training_accuracy[counter]
                 self.best_fold = counter
             elif self.metric_type == OPTIMED_METRIC_OPTIONS[1] and f1_score > best_metric:
                 best_metric = f1_score
                 self.best_fold = counter
-            elif self.metric_type == OPTIMED_METRIC_OPTIONS[2] and self.testing_mses[counter] < best_metric:
-                best_metric = self.testing_mses[counter]
+            elif self.metric_type == OPTIMED_METRIC_OPTIONS[2] and self.training_mses[counter] < best_metric:
+                best_metric = self.training_mses[counter]
                 self.best_fold = counter
-            elif self.metric_type == OPTIMED_METRIC_OPTIONS[3] and  self.testing_precision[counter] > best_metric:
-                best_metric = self.testing_precision[counter]
+            elif self.metric_type == OPTIMED_METRIC_OPTIONS[3] and  self.training_precision[counter] > best_metric:
+                best_metric = self.training_precision[counter]
                 self.best_fold = counter
             else:
                throw_error("Invalid metric type provided for best fold selection.")

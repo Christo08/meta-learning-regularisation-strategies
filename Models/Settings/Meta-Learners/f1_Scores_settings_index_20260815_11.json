@@ -1,0 +1,4 @@
+{
+    "DecisionTrees": "Models\\Settings\\Meta-Learners\\DecisionTrees\\Decision_trees_setting_20260815_112736.json",
+    "KNearestNeighbors": "Models\\Settings\\Meta-Learners\\KNearestNeighbors\\knn_setting_20260815_114012.json"
+}
