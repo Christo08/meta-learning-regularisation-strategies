@@ -387,17 +387,11 @@ def normalise_result(meta_learners_results, output_path):
         lambda x: np.mean(eval(x)) if isinstance(x, str) else np.mean(x)
     )
 
-    for col in f1_scores_columns:
-        normalised_df[f"{col}_normalized"] = normalised_df.apply(
-            lambda row: [
-                f1_val - row["baseline_testing_f1_scores_mean"]
-                for f1_val in (eval(row[col]) if isinstance(row[col], str) else row[col])
-            ],
-            axis=1
-        )
+    normalised_df["baseline_testing_f1_scores_std"] = normalised_df["baseline_testing_f1_scores"].apply(
+        lambda x: np.std(eval(x)) if isinstance(x, str) else np.std(x)
+    )
 
-    normalized_columns = [f"{col}_normalized" for col in f1_scores_columns]
-    columns_to_keep = ['dataset_name'] + normalized_columns
+    columns_to_keep = ['dataset_name', "baseline_testing_f1_scores_mean", "baseline_testing_f1_scores_std"] + f1_scores_columns
     normalised_df = normalised_df[columns_to_keep]
     mean_std_data = []
 
@@ -405,14 +399,16 @@ def normalise_result(meta_learners_results, output_path):
         dataset_name = row.get('dataset_name', f'Dataset {idx + 1}')
         row_stats = {'dataset_name': dataset_name}
 
-        for norm_col in normalized_columns:
-            technique_name = norm_col.replace('_testing_f1_scores_normalized', '').replace('_', ' ')
+        for norm_col in f1_scores_columns:
+            technique_name = norm_col.replace('_testing_f1_scores', '').replace('_', ' ')
             norm_values = eval(row[norm_col]) if isinstance(row[norm_col], str) else row[norm_col]
 
-            row_stats[f'{technique_name} mean'] = np.mean(norm_values)
-            row_stats[f'{technique_name} std'] = np.std(norm_values)
+            row_stats[f'{technique_name} mean'] = np.mean(norm_values) - row["baseline_testing_f1_scores_mean"]
+            row_stats[f'{technique_name} std'] = np.std(norm_values) -  row["baseline_testing_f1_scores_std"]
 
         mean_std_data.append(row_stats)
+
+    normalised_df = normalised_df.drop(columns=["baseline_testing_f1_scores_mean", "baseline_testing_f1_scores_std"])
 
     mean_std_df = pd.DataFrame(mean_std_data)
     if output_path is not None:
@@ -422,8 +418,7 @@ def normalise_result(meta_learners_results, output_path):
         print("\nMean and Std of Normalized F1 Scores per Dataset:")
         print(mean_std_df)
 
-    techniques = [col.replace('_testing_f1_scores_normalized', '') for col in normalized_columns]
-    num_datasets = len(normalised_df)
+    techniques = [col.replace('_testing_f1_scores', '') for col in f1_scores_columns]
 
     # MODIFIED: Save each boxplot individually
     sns.set_style("darkgrid")
@@ -434,7 +429,7 @@ def normalise_result(meta_learners_results, output_path):
 
         plot_data = []
 
-        for norm_col, technique in zip(normalized_columns, techniques):
+        for norm_col, technique in zip(f1_scores_columns, techniques):
             if norm_col in normalised_df.columns:
                 norm_values = eval(row[norm_col]) if isinstance(row[norm_col], str) else row[norm_col]
 
@@ -546,13 +541,20 @@ def summaries_results(meta_learners_results, output_path):
                     # Perform paired t-test
                     t_stat, p_value = ttest_rel(tech_values, meta_values)
 
-                    # Determine if technique is statistically better (p < 0.05)
-                    # For loss: lower is better, so tech < meta
-                    # For accuracies/f1: higher is better, so tech > meta
-                    if metric == 'loss':
-                        is_better = (p_value < 0.05) and (np.mean(tech_values) < np.mean(meta_values))
-                    else:  # accuracies or f1_scores
-                        is_better = (p_value < 0.05) and (np.mean(tech_values) > np.mean(meta_values))
+                    # working with f1 score
+                    # 1 - meta learner is better
+                    # 0 - the same
+                    #-1 - meta-learner is worst
+                    if (p_value >= 0.05):
+                        is_better = 0
+                    else:
+                        if np.mean(tech_values) > np.mean(meta_values):
+                            is_better = -1
+                        elif np.mean(tech_values) < np.mean(meta_values):
+                            is_better = 1
+                        else:
+                            is_better = 0
+
 
                     better_values.append(is_better)
 

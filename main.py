@@ -5,7 +5,7 @@ import pandas as pd
 import torch
 
 from src.ModelTrainer.metaLearnersTrainer import train_meta_learners, test_meta_learner_on_full_datasets, \
-    test_meta_learner_on_subsets
+    test_meta_learner
 from src.Optimisers.metaLearnersOptimiser import optimise_meta_learners
 from src.Optimisers.nnOptimiser import optimise_basic_nn
 from src.Utils.constants import *
@@ -101,37 +101,13 @@ def main():
             meta_learners_results = load_results_csv()
             output_path = input("Enter the path of the output dataset folder: ")
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            results = pd.DataFrame()
-            dataset_type = input("How you want to use full dataset or subset of the dataset (enter full or subset):  ").lower()
-            if dataset_type == "full":
-                datasets_settings = datasets_settings_handler.select_datasets_settings()
-                if not datasets_settings:
-                    continue
-                transformer_path = input("Enter the path of the pipeline file: ")
-                number_of_folds = int(input("How many folds do you want to use? "))
-                hyperparameters = show_menu("Select the meta-features type by entering a number:", ["Both", "Dataset meta-features", "NN meta-features",  "Back"])
-                if hyperparameters == "Back":
-                    continue
-                file_name = f"meta_learning_testing_results_full_{timestamp}.csv"
-                file_path = output_path + "\\" + file_name
-                for dataset_settings in datasets_settings:
-                    dataset_result = test_meta_learner_on_full_datasets(dataset_settings,
-                                                                        meta_learners_results,
-                                                                        number_of_folds,
-                                                                        transformer_path,
-                                                                        hyperparameters)
-                    results = pd.concat([results, dataset_result], ignore_index=True)
-                    save_data_frame(results, file_path)
+            if input("Do you have testing sets? (y/n): ").lower() == "y":
+                testing_set = load_meta_features_csv("testing")
             else:
-                if input("Do you have testing sets? (y/n): ").lower() == "y":
-                    testing_set = load_meta_features_csv("testing")
-                else:
-                    testing_set = prepare_meta_feature_sets()[1]
-                file_name = f"meta_learning_testing_results_subset_{timestamp}.csv"
-                file_path = output_path + "\\" + file_name
-                test_meta_learner_on_subsets(testing_set,
-                                             meta_learners_results,
-                                             file_path)
+                testing_set = prepare_meta_feature_sets()[1]
+            file_name = f"meta_learning_testing_results_{timestamp}.csv"
+            file_path = output_path + "\\" + file_name
+            test_meta_learner(testing_set, meta_learners_results, file_path)
         elif process == PROCESS_OPTIONS[9]:
             calculate_meta_learners_performance()
         else:
