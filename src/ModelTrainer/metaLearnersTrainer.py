@@ -92,23 +92,21 @@ def test_meta_learner_on_full_datasets(dataset_settings, meta_learners_results, 
 
     return pd.DataFrame([instance_json_object])
 
-def test_meta_learner_on_subsets(subsets, meta_learners_results, output_path):
+def test_meta_learner(subsets, meta_learners_results, output_path):
     seed = random.randint(0, 4294967295)
     random.seed(seed)
     columns_to_drop = ["dataset_name", "file_name"] + TARGET_COLUMNS
     details = []
+    print("Predict best techniques for each dataset...")
     for _, subset in subsets.iterrows():
-        dataset_name = subset["dataset_name"]
-        file_path = subset["file_name"]
-
         meta_features = subset.drop(labels=columns_to_drop, errors='ignore')
 
         best_technique = predict_best_technique(meta_learners_results,
                                                 meta_features.to_frame().T)
         details.append({
-            "dataset_name": dataset_name,
+            "dataset_name": subset["dataset_name"],
             "best_technique": best_technique,
-            "file_path": file_path
+            "file_path": subset["file_name"]
         })
     generate_performs = input("Do you want to generate the performs of the basic NN (Y/N)?").upper() == "Y"
     results =pd.DataFrame()
@@ -136,8 +134,11 @@ def test_meta_learner_on_subsets(subsets, meta_learners_results, output_path):
         dataset = load_meta_features_csv()
         for detail in details:
             try:
-                first_match = dataset[dataset["file_name"] == detail["file_path"]].iloc[0]
-            except:
+                if str(detail['file_path']) == "nan":
+                    first_match = dataset[(dataset["dataset_name"] == detail["dataset_name"]) & (dataset["subset_type"] == "full")].iloc[0]
+                else:
+                    first_match = dataset[(dataset["file_name"] == detail["file_path"])].iloc[0]
+            except IndexError:
                 print(f"No match found for file: {detail['file_path']}")
                 continue
             instance_json_object = {
@@ -145,9 +146,10 @@ def test_meta_learner_on_subsets(subsets, meta_learners_results, output_path):
                 "seed": first_match["seed"],
                 "best_technique": detail["best_technique"]
             }
+            print(f"Dataset name: {detail["dataset_name"]}")
+            print(f"Best technique: {detail["best_technique"]}")
+            instance_json_object["meta_learner_training_loss"] = detail["best_technique"]
             for config in REGULARISATION_TECHNIQUES:
-                print(f"Dataset name: {detail["dataset_name"]}")
-                print(f"Best technique: {detail["best_technique"]}")
                 instance_json_object[f"{config['fileName']}_training_loss"] = first_match[f"{config['fileName']}_training_loss"]
                 instance_json_object[f"{config['fileName']}_training_accuracies"] = first_match[f"{config['fileName']}_training_accuracies"]
                 instance_json_object[f"{config['fileName']}_training_f1_scores"] = first_match[f"{config['fileName']}_training_f1_scores"]
@@ -171,7 +173,6 @@ def predict_best_technique(meta_learners_results, meta_features):
     model_types = list(meta_learners_results["model type"].dropna().unique())
 
     techniques_predicted = {technique.replace(" ", "_") : [] for technique in techniques}
-    module = []
     for technique in techniques:
         meta_learners_results_per_technique = meta_learners_results[
             meta_learners_results["technique"].replace(" ", "_") == technique]
