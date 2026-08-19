@@ -12,8 +12,9 @@ from src.Utils.menus import META_LEARN_TYPES, show_menu
 from src.Utils.menus import show_meta_leaner_type_menu
 
 
-def optimise_meta_learners(dataset):
-    dataset.drop(columns=["dataset_name", "file_name"], inplace=True)
+def optimise_meta_learners(training_set, validation_set):
+    training_set.drop(columns=["dataset_name","file_name"], inplace=True)
+    validation_set.drop(columns=["dataset_name", "file_name"], inplace=True)
     selected_meta_learn_types = show_meta_leaner_type_menu()
     if len(selected_meta_learn_types) == 0:
         return
@@ -24,19 +25,19 @@ def optimise_meta_learners(dataset):
     path = f"{META_LEARNERS_SETTINGS_PATH}\\{selected_metric_type.replace(" ","_")}_settings_index_{timestamp}.json"
     for selected_meta_learn_type in selected_meta_learn_types:
         if selected_meta_learn_type == META_LEARN_TYPES[1]:
-            setting = optimise_decision_tree(dataset, selected_metric_type, direction)
+            setting = optimise_decision_tree(training_set, validation_set, selected_metric_type, direction)
             module_type = "DecisionTrees"
         elif selected_meta_learn_type == META_LEARN_TYPES[2]:
-            setting = optimise_k_nearest_neighbors(dataset, selected_metric_type, direction)
+            setting = optimise_k_nearest_neighbors(training_set, validation_set, selected_metric_type, direction)
             module_type = "KNearestNeighbors"
         elif selected_meta_learn_type == META_LEARN_TYPES[3]:
-            setting = optimise_mate_nn(dataset, selected_metric_type, direction)
+            setting = optimise_mate_nn(training_set, validation_set, selected_metric_type, direction)
             module_type = "NeuralNetworks"
         elif selected_meta_learn_type == META_LEARN_TYPES[4]:
-            setting = optimise_random_forest(dataset, selected_metric_type, direction)
+            setting = optimise_random_forest(training_set, validation_set, selected_metric_type, direction)
             module_type = "RandomForest"
         elif selected_meta_learn_type == META_LEARN_TYPES[5]:
-            setting = optimise_support_vector_machine(dataset, selected_metric_type, direction)
+            setting = optimise_support_vector_machine(training_set, validation_set, selected_metric_type, direction)
             module_type = "SupportVectorMachines"
         else:
             return

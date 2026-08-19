@@ -90,11 +90,11 @@ def main():
             dataset = show_dataset_loader_menu(allow_full_dataset = True)
             calculate_dataset_stats(dataset)
         elif process == PROCESS_OPTIONS[5]:
-            training_set = show_dataset_loader_menu()
-            optimise_meta_learners(training_set)
+            training_set, validation_set = show_dataset_loader_menu(return_both_sets = True)
+            optimise_meta_learners(training_set, validation_set)
         elif process == PROCESS_OPTIONS[6]:
-            training_set, testing_set = show_dataset_loader_menu(return_both_sets = True)
-            train_meta_learners(training_set, testing_set)
+            training_set, validation_set = show_dataset_loader_menu(return_both_sets = True)
+            train_meta_learners(training_set, validation_set)
         elif process == PROCESS_OPTIONS[7]:
             calculate_meta_learners_stats()
         elif process == PROCESS_OPTIONS[8]:

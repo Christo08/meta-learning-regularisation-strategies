@@ -22,7 +22,7 @@ validation_set = {}
 metric_type = ""
 
 
-def optimise_support_vector_machine(dataset, selected_metric_type, direction):
+def optimise_support_vector_machine(training_dataset, validation_dataset, selected_metric_type, direction):
     global training_set, validation_set, metric_type
 
     settings = {}
@@ -30,7 +30,8 @@ def optimise_support_vector_machine(dataset, selected_metric_type, direction):
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     for target_column in META_LEANER_TARGET_COLUMNS:
-        training_set, validation_set = prepared_meta_feature_dataset(dataset, target_column)
+        training_set = prepared_meta_feature_dataset(training_dataset, target_column, False)
+        validation_set = prepared_meta_feature_dataset(validation_dataset, target_column, False)
 
         search = pyhopper.Search(parameter_group)
         check_point_path = f"{CHECK_POINTS_PATH}Meta-learners\\SVM"

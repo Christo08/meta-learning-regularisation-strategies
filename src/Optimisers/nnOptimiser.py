@@ -120,7 +120,7 @@ def setup_optimiser_and_run_it(dataset_name, parameter_group_name, parameter_gro
     print(f"Tuned params for {dataset_name} dataset using {parameter_group_name} parameter group resulting in a of mse: {test_loss}")
     return best_params
 
-def optimise_mate_nn(dataset, selected_metric_type, direction):
+def optimise_mate_nn(training_dataset, validation_dataset, selected_metric_type, direction):
     global training_set, validation_set, metric_type
 
     settings = {}
@@ -128,7 +128,8 @@ def optimise_mate_nn(dataset, selected_metric_type, direction):
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     for target_column in META_LEANER_TARGET_COLUMNS:
-        training_set, validation_set = prepared_meta_feature_dataset(dataset, target_column)
+        training_set = prepared_meta_feature_dataset(training_dataset, target_column, False)
+        validation_set = prepared_meta_feature_dataset(validation_dataset, target_column, False)
 
         search = pyhopper.Search(basic_parameters)
         check_point_path = f"{CHECK_POINTS_PATH}Meta-learners\\NN"

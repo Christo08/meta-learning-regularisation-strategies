@@ -340,10 +340,12 @@ def training_meta_nns(settings_file_path, training_set, testing_set, seed, kFold
                                                    target_column,
                                                    kFold)
         training_stats = stats.get_training_stats_json_object()
-        best_training_stats = stats.get_best_training_stats_json_object()
         testing_stats = stats.get_testing_stats_json_object()
+        validation_stats = stats.get_validation_stats_json_object()
+
+        best_training_stats = stats.get_best_training_stats_json_object()
         best_testing_stats = stats.get_best_testing_stats_json_object()
-        
+        best_validation_stats = stats.get_best_validation_stats_json_object()
         result = {
             "model type": "Neural Network",
             "model path": path_to_module,
@@ -351,33 +353,20 @@ def training_meta_nns(settings_file_path, training_set, testing_set, seed, kFold
             "best fold": stats.get_best_fold(),
 
             **training_stats,
-
-            "best training loses": best_training_stats["training loses"],
-            "best training accuracies": best_training_stats["training accuracies"],
-            "best training f1": best_training_stats["training f1"],
-            "best training precision": best_training_stats["training precision"],
-            "best training true positives": best_training_stats["training true positives"],
-            "best training true negatives": best_training_stats["training true negatives"],
-            "best training false positives": best_training_stats["training false positives"],
-            "best training false negatives": best_training_stats["training false negatives"],
+            **best_training_stats,
 
             **testing_stats,
+            **best_testing_stats,
 
-            "best testing loses": best_testing_stats["testing loses"],
-            "best testing accuracies": best_testing_stats["testing accuracies"],
-            "best testing f1": best_testing_stats["testing f1"],
-            "best testing precision": best_testing_stats["testing precision"],
-            "best testing true positives": best_testing_stats["testing true positives"],
-            "best testing true negatives": best_testing_stats["testing true negatives"],
-            "best testing false positives": best_testing_stats["testing false positives"],
-            "best testing false negatives": best_testing_stats["testing false negatives"]
+            **validation_stats,
+            **best_validation_stats,
         }
         results.append(result)
     return results
 
 def train_meta_nn_loop(params,
                        training_set,
-                       testing_set,
+                       validation_set,
                        seed,
                        target_column ='na',
                        kFold = 5,
@@ -385,8 +374,8 @@ def train_meta_nn_loop(params,
 
     training_x = training_set[0]
     training_y = training_set[1].to_numpy()
-    testing_x = testing_set[0]
-    testing_y = testing_set[1].to_numpy()
+    validation_x = validation_set[0]
+    validation_y = validation_set[1].to_numpy()
 
     nn_stats = MetaLearnerStats(metric_type)
 
@@ -395,25 +384,26 @@ def train_meta_nn_loop(params,
 
         x_training = torch.tensor(training_x, dtype=torch.float32)
         y_training = torch.tensor(training_y, dtype=torch.float32)
-        x_testing = torch.tensor(testing_x, dtype=torch.float32)
-        y_testing = torch.tensor(testing_y, dtype=torch.float32)
+        x_validation = torch.tensor(validation_x, dtype=torch.float32)
+        y_validation = torch.tensor(validation_y, dtype=torch.float32)
 
         if torch.cuda.is_available():
             x_training = x_training.to(device)
             y_training = y_training.to(device)
-            x_testing = x_testing.to(device)
-            y_testing = y_testing.to(device)
+            x_validation = x_validation.to(device)
+            y_validation = y_validation.to(device)
 
         with torch.no_grad():
             y_train_pred = nn(x_training)
-            y_test_pred = nn(x_testing)
+            y_validation_pred = nn(x_validation)
         y_training_cpu = output_cleaner(y_training.detach().cpu().numpy())
         y_train_pred_cpu = output_cleaner(y_train_pred.detach().cpu().numpy())
-        y_testing_cpu = output_cleaner(y_testing.detach().cpu().numpy())
-        y_test_pred_cpu = output_cleaner(y_test_pred.detach().cpu().numpy())
+        y_validation_cpu = output_cleaner(y_validation.detach().cpu().numpy())
+        y_validation_pred_cpu = output_cleaner(y_validation_pred.detach().cpu().numpy())
 
         nn_stats.update_training_stats(y_training_cpu, y_train_pred_cpu)
-        nn_stats.update_testing_stats(y_testing_cpu, y_test_pred_cpu)
+        nn_stats.update_testing_stats(y_training_cpu, y_train_pred_cpu)
+        nn_stats.update_validation_stats(y_validation_cpu, y_validation_pred_cpu)
         checkpoint = {
             "model_class": "Network",
             "model_kwargs": {
@@ -432,29 +422,42 @@ def train_meta_nn_loop(params,
             x_train = training_x[train_idx]
             y_train = training_y[train_idx]
 
+            x_test = training_x[test_idx]
+            y_test = training_y[test_idx]
+
             nn = train_nn((x_train, y_train), params)
 
             x_training = torch.tensor(x_train, dtype=torch.float32)
             y_training = torch.tensor(y_train, dtype=torch.float32)
-            x_testing = torch.tensor(testing_x, dtype=torch.float32)
-            y_testing = torch.tensor(testing_y, dtype=torch.float32)
+            x_testing = torch.tensor(x_test, dtype=torch.float32)
+            y_testing = torch.tensor(y_test, dtype=torch.float32)
+            x_validation = torch.tensor(validation_x, dtype=torch.float32)
+            y_validation = torch.tensor(validation_y, dtype=torch.float32)
 
             if torch.cuda.is_available():
                 x_training = x_training.to(device)
                 y_training = y_training.to(device)
+
                 x_testing = x_testing.to(device)
                 y_testing = y_testing.to(device)
 
+                x_validation = x_validation.to(device)
+                y_validation = y_validation.to(device)
+
             with torch.no_grad():
                 y_train_pred = nn(x_training)
-                y_test_pred = nn(x_testing)
+                y_testing_pred = nn(x_testing)
+                y_validation_pred = nn(x_validation)
             y_training_cpu = output_cleaner(y_training.detach().cpu().numpy())
             y_train_pred_cpu= output_cleaner(y_train_pred.detach().cpu().numpy())
             y_testing_cpu = output_cleaner(y_testing.detach().cpu().numpy())
-            y_test_pred_cpu = output_cleaner(y_test_pred.detach().cpu().numpy())
+            y_test_pred_cpu= output_cleaner(y_testing_pred.detach().cpu().numpy())
+            y_validation_cpu = output_cleaner(y_validation.detach().cpu().numpy())
+            y_validation_pred_cpu = output_cleaner(y_validation_pred.detach().cpu().numpy())
 
             nn_stats.update_training_stats(y_training_cpu, y_train_pred_cpu)
             nn_stats.update_testing_stats(y_testing_cpu, y_test_pred_cpu)
+            nn_stats.update_validation_stats(y_validation_cpu, y_validation_pred_cpu)
             checkpoint = {
                 "model_class": "Network",
                 "model_kwargs": {

@@ -26,10 +26,12 @@ def training_meta_random_forests(settings_file_path, training_set, testing_set, 
                                                          target_column,
                                                          kFold)
         training_stats = stats.get_training_stats_json_object()
-        best_training_stats = stats.get_best_training_stats_json_object()
         testing_stats = stats.get_testing_stats_json_object()
-        best_testing_stats = stats.get_best_testing_stats_json_object()
+        validation_stats = stats.get_validation_stats_json_object()
 
+        best_training_stats = stats.get_best_training_stats_json_object()
+        best_testing_stats = stats.get_best_testing_stats_json_object()
+        best_validation_stats = stats.get_best_validation_stats_json_object()
         result = {
             "model type": "Random forest",
             "model path": path_to_module,
@@ -37,41 +39,28 @@ def training_meta_random_forests(settings_file_path, training_set, testing_set, 
             "best fold": stats.get_best_fold(),
 
             **training_stats,
-
-            "best training loses": best_training_stats["training loses"],
-            "best training accuracies": best_training_stats["training accuracies"],
-            "best training f1": best_training_stats["training f1"],
-            "best training precision": best_training_stats["training precision"],
-            "best training true positives": best_training_stats["training true positives"],
-            "best training true negatives": best_training_stats["training true negatives"],
-            "best training false positives": best_training_stats["training false positives"],
-            "best training false negatives": best_training_stats["training false negatives"],
+            **best_training_stats,
 
             **testing_stats,
+            **best_testing_stats,
 
-            "best testing loses": best_testing_stats["testing loses"],
-            "best testing accuracies": best_testing_stats["testing accuracies"],
-            "best testing f1": best_testing_stats["testing f1"],
-            "best testing precision": best_testing_stats["testing precision"],
-            "best testing true positives": best_testing_stats["testing true positives"],
-            "best testing true negatives": best_testing_stats["testing true negatives"],
-            "best testing false positives": best_testing_stats["testing false positives"],
-            "best testing false negatives": best_testing_stats["testing false negatives"]
+            **validation_stats,
+            **best_validation_stats,
         }
         results.append(result)
     return results
 
 def train_meta_random_forest(params,
                              training_set,
-                             testing_set,
+                             validation_set,
                              seed,
                              target_column ='na',
                              kFold = 5,
                              metric_type = OPTIMED_METRIC_OPTIONS[1]):
     training_x = training_set[0]
     training_y = training_set[1].to_numpy()
-    testing_x = testing_set[0]
-    testing_y = testing_set[1]
+    validation_x = validation_set[0]
+    validation_y = validation_set[1]
 
     random_forests_stats = MetaLearnerStats(metric_type)
 
@@ -84,10 +73,11 @@ def train_meta_random_forest(params,
         forest.fit(training_x, training_y)
 
         y_train_pred = forest.predict(training_x)
-        y_test_pred = forest.predict(testing_x)
+        y_validation_pred = forest.predict(validation_x)
 
         random_forests_stats.update_training_stats(training_y, y_train_pred)
-        random_forests_stats.update_testing_stats(testing_y, y_test_pred)
+        random_forests_stats.update_testing_stats(training_y, training_y)
+        random_forests_stats.update_validation_stats(validation_y, y_validation_pred)
         random_forests_stats.add_module(forest)
     else:
         kf = KFold(n_splits=kFold, shuffle=True, random_state=seed)
@@ -96,14 +86,19 @@ def train_meta_random_forest(params,
             x_train = training_x[train_idx]
             y_train = training_y[train_idx]
 
+            x_test = training_x[test_idx]
+            y_test = training_y[test_idx]
+
             forest = RandomForestClassifier(random_state=seed, **rf_params)
             forest.fit(x_train, y_train)
 
             y_train_pred = forest.predict(x_train)
-            y_test_pred = forest.predict(testing_x)
+            y_test_pred = forest.predict(x_test)
+            y_validation_pred = forest.predict(validation_x)
 
             random_forests_stats.update_training_stats(y_train, y_train_pred)
-            random_forests_stats.update_testing_stats(testing_y, y_test_pred)
+            random_forests_stats.update_testing_stats(y_test, y_test_pred)
+            random_forests_stats.update_validation_stats(validation_y, y_validation_pred)
             random_forests_stats.add_module(forest)
 
     path_to_module = ""

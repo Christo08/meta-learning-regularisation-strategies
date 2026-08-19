@@ -34,6 +34,15 @@ class MetaLearnerStats:
         self.testing_true_positive = []
         self.testing_false_positive = []
 
+        self.validation_mses = []
+        self.validation_f1 = []
+        self.validation_accuracy = []
+        self.validation_precision = []
+        self.validation_true_negative = []
+        self.validation_false_negative = []
+        self.validation_true_positive = []
+        self.validation_false_positive = []
+
     def add_module(self, module):
         self.modules.append(module)
 
@@ -73,6 +82,24 @@ class MetaLearnerStats:
         self.testing_false_positive.append(fp)
         self.testing_false_negative.append(fn)
 
+    def update_validation_stats(self, y_validation, y_validation_pred):
+        single_column_y_testing = revert_encoding(y_validation)
+        single_column_y_testing_pred = revert_encoding(y_validation_pred)
+        tp, tn, fp, fn = calculated_confusion_matrix(single_column_y_testing, single_column_y_testing_pred)
+
+        self.validation_mses.append(mean_squared_error(y_validation, y_validation_pred))
+        self.validation_f1.append(fbeta_score(single_column_y_testing,
+                                            single_column_y_testing_pred,
+                                            beta=self.beta,
+                                            average='binary',
+                                            pos_label=1))
+        self.validation_accuracy.append(accuracy_score(y_validation, y_validation_pred)*100)
+        self.validation_precision.append(tp / (tp + fp) if (tp + fp) > 0 else 0.0)
+        self.validation_true_positive.append(tp)
+        self.validation_true_negative.append(tn)
+        self.validation_false_positive.append(fp)
+        self.validation_false_negative.append(fn)
+
 
     def get_training_stats_json_object(self):
         return {
@@ -98,23 +125,35 @@ class MetaLearnerStats:
             "testing false negatives": self.testing_false_negative if self.testing_false_negative else 0.00
         }
 
+    def get_validation_stats_json_object(self):
+        return {
+            "validation loses": self.validation_mses if self.validation_mses else 0.00,
+            "validation f1": self.validation_f1 if self.validation_f1 else 0.00,
+            "validation accuracies": self.validation_accuracy if self.validation_accuracy else 0.00,
+            "validation precision": self.validation_precision if self.validation_precision else 0.00,
+            "validation true positives": self.validation_true_positive if self.validation_true_positive else 0.00,
+            "validation true negatives": self.validation_true_negative if self.validation_true_negative else 0.00,
+            "validation false positives": self.validation_false_positive if self.validation_false_positive else 0.00,
+            "validation false negatives": self.validation_false_negative if self.validation_false_negative else 0.00
+        }
+
     def set_best_fold(self):
         if self.metric_type != OPTIMED_METRIC_OPTIONS[2]:
             best_metric = -1
         else:
             best_metric = float("inf")
-        for counter, f1_score in enumerate(self.training_f1):
-            if self.metric_type == OPTIMED_METRIC_OPTIONS[0] and self.training_accuracy[counter] > best_metric:
-                best_metric = self.training_accuracy[counter]
+        for counter, f1_score in enumerate(self.testing_f1):
+            if self.metric_type == OPTIMED_METRIC_OPTIONS[0] and self.testing_accuracy[counter] > best_metric:
+                best_metric = self.testing_accuracy[counter]
                 self.best_fold = counter
             elif self.metric_type == OPTIMED_METRIC_OPTIONS[1] and f1_score > best_metric:
                 best_metric = f1_score
                 self.best_fold = counter
-            elif self.metric_type == OPTIMED_METRIC_OPTIONS[2] and self.training_mses[counter] < best_metric:
-                best_metric = self.training_mses[counter]
+            elif self.metric_type == OPTIMED_METRIC_OPTIONS[2] and self.testing_mses[counter] < best_metric:
+                best_metric = self.testing_mses[counter]
                 self.best_fold = counter
-            elif self.metric_type == OPTIMED_METRIC_OPTIONS[3] and  self.training_precision[counter] > best_metric:
-                best_metric = self.training_precision[counter]
+            elif self.metric_type == OPTIMED_METRIC_OPTIONS[3] and  self.testing_precision[counter] > best_metric:
+                best_metric = self.testing_precision[counter]
                 self.best_fold = counter
             else:
                throw_error("Invalid metric type provided for best fold selection.")
@@ -126,28 +165,42 @@ class MetaLearnerStats:
         if self.best_fold == -1:
             self.set_best_fold()
         return {
-            "training loses": self.training_mses[self.best_fold] if self.training_mses[self.best_fold] else 0.00,
-            "training f1": self.training_f1[self.best_fold] if self.training_f1[self.best_fold] else 0.00,
-            "training accuracies": self.training_accuracy[self.best_fold] if self.training_accuracy[self.best_fold] else 0.00,
-            "training precision": self.training_precision[self.best_fold] if self.training_precision[self.best_fold] else 0.00,
-            "training true positives": self.training_true_positive[self.best_fold] if self.training_true_positive[self.best_fold] else 0.00,
-            "training true negatives": self.training_true_negative[self.best_fold] if self.training_true_negative[self.best_fold] else 0.00,
-            "training false positives": self.training_false_positive[self.best_fold] if self.training_false_positive[self.best_fold] else 0.00,
-            "training false negatives": self.training_false_negative[self.best_fold] if self.training_false_negative[self.best_fold] else 0.00
+            "best training loses": self.training_mses[self.best_fold] if self.training_mses[self.best_fold] else 0.00,
+            "best training f1": self.training_f1[self.best_fold] if self.training_f1[self.best_fold] else 0.00,
+            "best training accuracies": self.training_accuracy[self.best_fold] if self.training_accuracy[self.best_fold] else 0.00,
+            "best training precision": self.training_precision[self.best_fold] if self.training_precision[self.best_fold] else 0.00,
+            "best training true positives": self.training_true_positive[self.best_fold] if self.training_true_positive[self.best_fold] else 0.00,
+            "best training true negatives": self.training_true_negative[self.best_fold] if self.training_true_negative[self.best_fold] else 0.00,
+            "best training false positives": self.training_false_positive[self.best_fold] if self.training_false_positive[self.best_fold] else 0.00,
+            "best training false negatives": self.training_false_negative[self.best_fold] if self.training_false_negative[self.best_fold] else 0.00
         }
 
     def get_best_testing_stats_json_object(self):
         if self.best_fold == -1:
             self.set_best_fold()
         return {
-            "testing loses": self.testing_mses[self.best_fold] if self.testing_mses[self.best_fold] else 0.00,
-            "testing f1": self.testing_f1[self.best_fold] if self.testing_f1[self.best_fold] else 0.00,
-            "testing accuracies": self.testing_accuracy[self.best_fold] if self.testing_accuracy[self.best_fold] else 0.00,
-            "testing precision": self.testing_precision[self.best_fold] if self.testing_precision[self.best_fold] else 0.00,
-            "testing true positives": self.testing_true_positive[self.best_fold] if self.testing_true_positive[self.best_fold] else 0.00,
-            "testing true negatives": self.testing_true_negative[self.best_fold] if self.testing_true_negative[self.best_fold] else 0.00,
-            "testing false positives": self.testing_false_positive[self.best_fold] if self.testing_false_positive[self.best_fold] else 0.00,
-            "testing false negatives": self.testing_false_negative[self.best_fold] if self.testing_false_negative[self.best_fold] else 0.00
+            "best testing loses": self.testing_mses[self.best_fold] if self.testing_mses[self.best_fold] else 0.00,
+            "best testing f1": self.testing_f1[self.best_fold] if self.testing_f1[self.best_fold] else 0.00,
+            "best testing accuracies": self.testing_accuracy[self.best_fold] if self.testing_accuracy[self.best_fold] else 0.00,
+            "best testing precision": self.testing_precision[self.best_fold] if self.testing_precision[self.best_fold] else 0.00,
+            "best testing true positives": self.testing_true_positive[self.best_fold] if self.testing_true_positive[self.best_fold] else 0.00,
+            "best testing true negatives": self.testing_true_negative[self.best_fold] if self.testing_true_negative[self.best_fold] else 0.00,
+            "best testing false positives": self.testing_false_positive[self.best_fold] if self.testing_false_positive[self.best_fold] else 0.00,
+            "best testing false negatives": self.testing_false_negative[self.best_fold] if self.testing_false_negative[self.best_fold] else 0.00
+        }
+
+    def get_best_validation_stats_json_object(self):
+        if self.best_fold == -1:
+            self.set_best_fold()
+        return {
+            "best validation loses": self.validation_mses[self.best_fold] if self.validation_mses[self.best_fold] else 0.00,
+            "best validation f1": self.validation_f1[self.best_fold] if self.validation_f1[self.best_fold] else 0.00,
+            "best validation accuracies": self.validation_accuracy[self.best_fold] if self.validation_accuracy[self.best_fold] else 0.00,
+            "best validation precision": self.validation_precision[self.best_fold] if self.validation_precision[self.best_fold] else 0.00,
+            "best validation true positives": self.validation_true_positive[self.best_fold] if self.validation_true_positive[self.best_fold] else 0.00,
+            "best validation true negatives": self.validation_true_negative[self.best_fold] if self.validation_true_negative[self.best_fold] else 0.00,
+            "best validation false positives": self.validation_false_positive[self.best_fold] if self.validation_false_positive[self.best_fold] else 0.00,
+            "best validation false negatives": self.validation_false_negative[self.best_fold] if self.validation_false_negative[self.best_fold] else 0.00
         }
 
     def get_best_model(self):
