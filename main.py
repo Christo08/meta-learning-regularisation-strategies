@@ -1,16 +1,15 @@
 import random
 from datetime import datetime
 
-import pandas as pd
 import torch
 
-from src.ModelTrainer.metaLearnersTrainer import train_meta_learners, test_meta_learner_on_full_datasets, \
-    test_meta_learner
+from src.ModelTrainer.metaLearnersTrainer import train_meta_learners, test_meta_learner
+from src.Models.metaLearner import MetaLearner
 from src.Optimisers.metaLearnersOptimiser import optimise_meta_learners
 from src.Optimisers.nnOptimiser import optimise_basic_nn
 from src.Utils.constants import *
 from src.Utils.datasetSettingHandler import DatasetsSettingsHandler
-from src.Utils.fileHandler import save_data_frame, load_settings, load_meta_features_csv, load_results_csv
+from src.Utils.fileHandler import load_settings, load_meta_features_csv, load_results_csv
 from src.Utils.instanceCreator import create_subsets, create_dataset_for_subset, recreate_meta_features
 from src.Utils.menus import show_menu, show_dataset_loader_menu
 from src.Utils.metaFeatureDatasetHandler import prepare_meta_feature_sets
@@ -105,9 +104,14 @@ def main():
                 testing_set = load_meta_features_csv("testing")
             else:
                 testing_set = prepare_meta_feature_sets()[1]
+            if input("Do you have a ranked validation sets? (y/n): ").lower() == "y":
+                ranked_validation_set = load_meta_features_csv("testing")
+            else:
+                ranked_validation_set = prepare_meta_feature_sets()[1]
             file_name = f"meta_learning_testing_results_{timestamp}.csv"
             file_path = output_path + "\\" + file_name
-            test_meta_learner(testing_set, meta_learners_results, file_path)
+            meta_learner = MetaLearner(meta_learners_results)
+            test_meta_learner(testing_set, ranked_validation_set, file_path, meta_learner)
         elif process == PROCESS_OPTIONS[9]:
             calculate_meta_learners_performance()
         else:
