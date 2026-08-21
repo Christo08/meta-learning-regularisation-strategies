@@ -278,11 +278,17 @@ def calculate_meta_learners_stats():
     print("Making the f1 testing box plots:")
     show_meta_learners_box_plots(meta_learners_results, 'testing f1', output_path)
 
+    print("Making the f1 validation box plots:")
+    show_meta_learners_box_plots(meta_learners_results, 'validation f1', output_path)
+
     print("Making the training confusion matrix:")
     create_confusion_matrix(meta_learners_results, output_path, "training")
 
     print("Making the testing confusion matrix:")
     create_confusion_matrix(meta_learners_results, output_path, "testing")
+
+    print("Making the validation confusion matrix:")
+    create_confusion_matrix(meta_learners_results, output_path, "validation")
 
 def calculate_meta_learners_performance():
     meta_learners_results = load_results_csv()
@@ -294,19 +300,8 @@ def calculate_meta_learners_performance():
         os.makedirs(output_path, exist_ok=True)
     else:
         output_path = None
-
-    create_matrix(meta_learners_results)
-
-    meta_learners_results.drop(columns=["seed","best_technique"], inplace=True, errors='ignore')
-    meta_learners_results = meta_learners_results.drop(
-        columns=[col for col in meta_learners_results.columns if 'training' in col]
-    )
-    create_meta_learner_comparison_boxplots(meta_learners_results, output_path, 'f1 scores')
-
-    summaries_results(meta_learners_results, output_path)
-    normalise_result(meta_learners_results, output_path)
-
-    create_f1_comparison_heatmap(meta_learners_results, save_path=output_path)
+    features, targets = spilt_dataset_and_targets(meta_learners_results, target_columns=["baseline_rank","batch_normalisation_rank","dropout_rank","layer_normalisation_rank","prune_rank","weight_decay_rank","meta_learner_rank","weight_normalisation_rank","weight_perturbation_rank"])
+    create_technique_rankings_stats(targets, output_path)
 
 def create_matrix(predicted_df):
     predicted_df = predicted_df.copy()
@@ -499,7 +494,6 @@ def normalise_result(meta_learners_results, output_path):
     else:
         print(normalised_df)
 
-
 def summaries_results(meta_learners_results, output_path):
     # Create summary dataframe with means and stds
     summary_df = meta_learners_results.copy()
@@ -568,7 +562,6 @@ def summaries_results(meta_learners_results, output_path):
     else:
         print(summary_df)
 
-
 def create_f1_comparison_heatmap_plot(row_dataframe, alpha, save_path):
     num_datasets = len(row_dataframe)
     num_cols = 5
@@ -618,7 +611,6 @@ def create_f1_comparison_heatmap_plot(row_dataframe, alpha, save_path):
         plt.savefig(f"{save_path}//f1_comparison_heatmap_per_dataset.png", dpi=300, bbox_inches='tight')
         print(f'Saved figure of f1 comparison heatmap per dataset to {save_path}')
     plt.show()
-
 
 def create_f1_comparison_heatmap(df: pd.DataFrame, alpha: float = 0.05,
                                  save_path: str = None):

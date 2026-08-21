@@ -13,9 +13,9 @@ from src.Utils.constants import TARGET_COLUMNS
 from src.Utils.fileHandler import load_meta_features_csv, save_data_frame
 
 
-def spilt_dataset_and_targets(dataset):
+def spilt_dataset_and_targets(dataset, target_columns=TARGET_COLUMNS):
     missing = False
-    for target_column in TARGET_COLUMNS:
+    for target_column in target_columns:
         if target_column not in dataset.columns:
             missing = True
             break
@@ -23,8 +23,8 @@ def spilt_dataset_and_targets(dataset):
         targets = pd.DataFrame()
         return dataset, targets
     else:
-        targets = dataset[TARGET_COLUMNS]
-        dataset = dataset.drop(TARGET_COLUMNS, axis=1)
+        targets = dataset[target_columns]
+        dataset = dataset.drop(target_columns, axis=1)
         return dataset, targets
 
 def split_dataset(dataset):
