@@ -1,6 +1,7 @@
 import random
 from datetime import datetime
 
+import numpy as np
 import pyhopper
 
 from src.ModelTrainer.svmTrainer import train_meta_support_vector_machines
@@ -51,13 +52,12 @@ def train_support_vector_machine_warp(params):
     global training_set, validation_set, metric_type
     seed = random.randint(0, 4294967295)
     stats, _ = train_meta_support_vector_machines(params, training_set, validation_set, seed, kFold=5, metric_type=metric_type)
-
-    testing_stats = stats.get_best_testing_stats_json_object()
+    testing_stats = stats.get_testing_stats_json_object()
     if metric_type == OPTIMED_METRIC_OPTIONS[0]:
-        return testing_stats["testing accuracies"]
+        return np.mean(testing_stats["testing accuracies"])
     elif metric_type == OPTIMED_METRIC_OPTIONS[1]:
-        return testing_stats["testing f1"]
+        return np.mean(testing_stats["testing f1"])
     elif metric_type == OPTIMED_METRIC_OPTIONS[2]:
-        return testing_stats["testing loses"]
+        return np.mean(testing_stats["testing loses"])
     else:
-        return testing_stats["testing precision"]
+        return np.mean(testing_stats["testing precision"])
