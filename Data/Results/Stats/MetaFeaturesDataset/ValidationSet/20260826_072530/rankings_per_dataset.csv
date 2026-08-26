@@ -1,0 +1,10 @@
+dataset_name,baseline,batch_normalisation,dropout,layer_normalisation,prune,weight_normalisation,weight_decay,weight_perturbation
+Balance Scale,0,2,0,12,7,11,8,0
+Led7,6,7,10,5,16,6,12,6
+Schizo,10,12,11,14,9,11,12,14
+Statlog Vehicle Silhouettes,13,9,4,15,12,16,12,13
+Students Performance Burnout,11,0,11,0,15,11,11,11
+Vehicle,10,12,2,7,8,10,7,9
+Vowel,8,2,2,15,10,12,9,7
+Waveform_21,6,8,1,1,7,8,16,6
+Yeast,9,6,4,15,7,6,9,9

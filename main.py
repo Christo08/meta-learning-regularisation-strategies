@@ -100,10 +100,10 @@ def main():
             meta_learners_results = load_results_csv()
             output_path = input("Enter the path of the output dataset folder: ")
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            if input("Do you have testing sets? (y/n): ").lower() == "y":
-                testing_set = load_meta_features_csv("testing")
+            if input("Do you have validation sets? (y/n): ").lower() == "y":
+                validation_set = load_meta_features_csv("testing")
             else:
-                testing_set = prepare_meta_feature_sets()[1]
+                validation_set = prepare_meta_feature_sets()[1]
             if input("Do you have a ranked validation sets? (y/n): ").lower() == "y":
                 ranked_validation_set = load_meta_features_csv("testing")
             else:
@@ -111,7 +111,7 @@ def main():
             file_name = f"meta_learning_testing_results_{timestamp}.csv"
             file_path = output_path + "\\" + file_name
             meta_learner = MetaLearner(meta_learners_results)
-            test_meta_learner(testing_set, ranked_validation_set, file_path, meta_learner)
+            test_meta_learner(validation_set, ranked_validation_set, file_path, meta_learner)
         elif process == PROCESS_OPTIONS[9]:
             calculate_meta_learners_performance()
         else:

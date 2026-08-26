@@ -44,10 +44,14 @@ def split_dataset(dataset):
                                    random_state = seed)
 
     train_datasets_name = train["dataset_name"].tolist()
-    train_datasets_name.append("Led24")
+    train_datasets_name.append("Salaries 2023")
+    train_datasets_name.remove("Students Performance Burnout")
+    train_datasets_name.append("Mushroom")
     train_datasets_name.remove("Vowel")
     test_datasets_name = test["dataset_name"].tolist()
-    test_datasets_name.remove("Led24")
+    test_datasets_name.remove("Salaries 2023")
+    test_datasets_name.append("Students Performance Burnout")
+    test_datasets_name.remove("Mushroom")
     test_datasets_name.append("Vowel")
 
     print("Train datasets:")
@@ -176,68 +180,72 @@ def prepare_meta_feature_full_dataset_for_states(meta_features, path_to_data_pip
 
 
 def prepare_meta_feature_sets():
-    was_processed = input("Has the dataset be processed before, note normalise and bins should not have been applied? (y/n): ").lower() == "y"
     dataset = load_meta_features_csv()
-    if not was_processed:
-        dataset = clean_dataset(dataset, False)
-        targets = dataset[TARGET_COLUMNS]
-        features = dataset.drop(TARGET_COLUMNS, axis=1)
-        targets = rank_techniques(targets)
-        should_cover_to_binary = input("Do you want to convert the ranks to binary (1 for best technique, 0 for others)? (y/n): ").lower() == "y"
-        if should_cover_to_binary:
-            for column in TARGET_COLUMNS:
-                if column in targets.columns:
-                    targets[column] = targets[column].apply(lambda x: 1 if x <= 2 else 0)
-        dataset = pd.concat([features, targets], axis=1)
+    dataset = clean_dataset(dataset, False)
+
+    targets = dataset[TARGET_COLUMNS]
+    features = dataset.drop(TARGET_COLUMNS, axis=1)
+    targets = rank_techniques(targets)
+    dataset = pd.concat([features, targets], axis=1)
+
+    training_set, validation_set, seed = split_dataset(dataset)
+
+    should_cover_to_binary = input("Do you want to convert the ranks to binary (1 for best technique, 0 for others)? (y/n): ").lower() == "y"
+    if should_cover_to_binary:
+        for column in TARGET_COLUMNS:
+            if column in training_set.columns:
+                training_set[column] = training_set[column].apply(lambda x: 1 if x == 1 else 0)
+                validation_set[column] = validation_set[column].apply(lambda x: 1 if x == 1 else 0)
 
     options = ""
     ignore_columns = ["dataset_name","file_name"]
+
     should_remove_hyperparameters = input("Do you want to remove hyperparameters (y/n): ").lower() == "y"
     if should_remove_hyperparameters:
         options = "removed_hyperparameters_"
-        dataset = remove_hyperparameters(dataset)
+        training_set = remove_hyperparameters(training_set)
+        validation_set = remove_hyperparameters(validation_set)
     else:
         should_remove_meta_features = input("Do you want to remove meta features? (y/n): ").lower() == "y"
         if should_remove_meta_features:
             options = "removed_meta_features_"
-            dataset = remove_meta_features(dataset)
-
-    training_set, testing_set, seed = split_dataset(dataset)
+            training_set = remove_meta_features(training_set)
+            validation_set = remove_meta_features(validation_set)
 
     training_targets = training_set[TARGET_COLUMNS]
     training_features = training_set.drop(TARGET_COLUMNS, axis=1)
 
-    testing_targets = testing_set[TARGET_COLUMNS]
-    testing_features = testing_set.drop(TARGET_COLUMNS, axis=1)
+    validation_targets = validation_set[TARGET_COLUMNS]
+    validation_features = validation_set.drop(TARGET_COLUMNS, axis=1)
 
     should_apply_transformers = input("Do you want to apply transformers? (y/n): ").lower() == "y"
     transformer = None
     if should_apply_transformers:
         options = options+"transformers_"
-        training_features, testing_features, transformer = apply_transformers(training_features = training_features, testing_features = testing_features)
+        training_features, validation_features, transformer = apply_transformers(training_features = training_features, testing_features = validation_features)
 
     should_apply_z_scoring = input("Do you want to apply z-scoring? (y/n): ").lower() == "y"
     scaler = None
     if should_apply_z_scoring:
         options = options+"z_scoring_"
-        training_features, testing_features, scaler = apply_normalization(training_features = training_features, testing_features = testing_features, ignore_columns = ignore_columns)
+        training_features, validation_features, scaler = apply_normalization(training_features = training_features, testing_features = validation_features, ignore_columns = ignore_columns)
 
     training_set = pd.concat([training_features, training_targets], axis=1)
-    testing_set = pd.concat([testing_features, testing_targets], axis=1)
+    validation_set = pd.concat([validation_features, validation_targets], axis=1)
 
     should_save_dataset = input("Do you want to save the prepared dataset? (y/n): ").lower() == "y"
     if should_save_dataset:
         output_path = input("Enter the path of the output dataset folder: ")
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        file_name = f"testing_set_{options}{timestamp}_{seed}.csv"
-        file_path = output_path + "\\TestingSets\\" + file_name
-        save_data_frame(testing_set, file_path)
+        file_name = f"validation_set_{options}{timestamp}_{seed}.csv"
+        file_path = output_path + "\\ValidationSets\\" + file_name
+        save_data_frame(validation_set, file_path)
         file_name = f"training_set_{options}{timestamp}_{seed}.csv"
         file_path = output_path + "\\TrainingSets\\" + file_name
         save_data_frame(training_set, file_path)
         dump({"transformer": transformer, "scaler": scaler}, f"Models/Settings/DataPipeline/pipeline_{options}{timestamp}_{seed}.joblib")
 
-    return training_set, testing_set
+    return training_set, validation_set
 
 def clean_dataset(dataset, should_drop_dataset_name = True):
     columns_to_drop = ["best_training_technique",
@@ -481,7 +489,7 @@ def apply_ttest(cell1, cell2):
         return False
 
     stat, p_value = ttest_ind(values1, values2, equal_var=False)
-    return p_value >= 0.5
+    return p_value >= 0.05
 
 def calculate_mean(cell):
     values = cell_parse(cell)

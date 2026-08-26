@@ -60,7 +60,7 @@ def show_meta_leaner_type_menu():
 def show_dataset_loader_menu(allow_full_dataset = False, return_both_sets = False):
     if allow_full_dataset:
         was_processed= input("Has the dataset been processed before? (y/n): ").lower() == "y"
-        set_types = ["Full dataset", "Training dataset", "Testing dataset"]
+        set_types = ["Full dataset", "Training dataset", "Validation dataset"]
         set_type = show_menu("What type of dataset do you want to calculate stats for? ", set_types)
         if was_processed:
             if set_type == set_types[0]:
@@ -71,14 +71,14 @@ def show_dataset_loader_menu(allow_full_dataset = False, return_both_sets = Fals
             if set_type == set_types[0]:
                 return prepare_meta_feature_dataset_for_states()
             else:
-                training_set, testing_set = prepare_meta_feature_sets()
+                training_set, validation_set = prepare_meta_feature_sets()
                 if set_type == set_types[1]:
                     return training_set
                 else:
-                    return testing_set
+                    return validation_set
     elif return_both_sets:
-            if input("Do you have training and testing sets? (y/n): ").lower() == "y":
-                return load_meta_features_csv("training"), load_meta_features_csv("testing")
+            if input("Do you have training and validation sets? (y/n): ").lower() == "y":
+                return load_meta_features_csv("training"), load_meta_features_csv("validation")
             else:
                 return prepare_meta_feature_sets()
     else:
