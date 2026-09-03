@@ -43,16 +43,8 @@ def split_dataset(dataset):
                                    stratify=rankings_per_dataset["bin"],
                                    random_state = seed)
 
-    train_datasets_name = train["dataset_name"].tolist()
-    train_datasets_name.append("Salaries 2023")
-    train_datasets_name.remove("Students Performance Burnout")
-    train_datasets_name.append("Mushroom")
-    train_datasets_name.remove("Vowel")
-    test_datasets_name = test["dataset_name"].tolist()
-    test_datasets_name.remove("Salaries 2023")
-    test_datasets_name.append("Students Performance Burnout")
-    test_datasets_name.remove("Mushroom")
-    test_datasets_name.append("Vowel")
+    train_datasets_name =["Agaricus Lepiota","Ann thyroid","Car evaluation","Dry Bean","Glass Identification","Indian Engineering Student Placement","Led24","Liver Cirrhosis","Magic","Mobile Price Classification","Mofn_3_7_10","Mushroom","Nursery","Obesity Levels","Online shopper","Page Blocks","Parity5","Pendigits","Pima Indians Diabetes","Ring","Salaries 2023","Segmentation","Smartphone battery","Students Performance","Twonorm","White Wine Quality","Wine Quality Red"]
+    test_datasets_name = ["Balance Scale","Led7","Schizo","Statlog Vehicle Silhouettes","Students Performance Burnout","Vehicle","Vowel","Waveform_21","Yeast"]
 
     print("Train datasets:")
     print(train_datasets_name)
@@ -127,7 +119,7 @@ def prepare_meta_feature_dataset_for_states():
         options = options+"binary_"
         for column in TARGET_COLUMNS:
             if column in targets.columns:
-                targets[column] = targets[column].apply(lambda x: 1 if x <= 2 else 0)
+                targets[column] = targets[column].apply(lambda x: 1 if x == 1 else 0)
 
     should_remove_hyperparameters = input("Do you want to remove hyperparameters (y/n): ").lower() == "y"
     if should_remove_hyperparameters:
@@ -489,7 +481,7 @@ def apply_ttest(cell1, cell2):
         return False
 
     stat, p_value = ttest_ind(values1, values2, equal_var=False)
-    return p_value >= 0.05
+    return p_value >= 0.1
 
 def calculate_mean(cell):
     values = cell_parse(cell)

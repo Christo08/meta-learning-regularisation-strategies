@@ -34,7 +34,8 @@ def create_feature_stats(features, output_path):
 def create_technique_rankings_stats(targets, output_path):
     print(f"Making the technique summary")
     #Make Technique rankings summary
-    worst_counts = targets.idxmax(axis=1).value_counts().reindex(targets.columns, fill_value=0)
+    targets_columns = targets.columns
+    worst_counts = targets.idxmax(axis=1).value_counts().reindex(targets_columns, fill_value=0)
     can_not_be_applied = (targets == -1).sum()
 
     summary = pd.DataFrame({
@@ -45,10 +46,25 @@ def create_technique_rankings_stats(targets, output_path):
         'worst_count_percent': round((worst_counts/(targets.shape[0]-can_not_be_applied)*100),2)
     })
     summary = summary.reset_index().rename(columns={'index': 'technique'})
+    counts = range(1, len(targets_columns)+1)
+    same_performance = pd.DataFrame(0,
+        index=targets_columns,
+        columns=counts,
+        dtype=int,
+    )
+    for _, row in targets.iterrows():
+        count = int((row == 1).sum())
+        for col_technique in targets_columns:
+            if row[col_technique] == 1:
+                same_performance.loc[col_technique, count] += 1
+
+    same_performance = same_performance.reset_index().rename(columns={"index": "technique"})
+
     if output_path is not None:
         save_data_frame(summary, f"{output_path}\\rankings_stats.csv")
         print(f"The technique summary was save to {output_path}\\rankings_stats.csv")
-
+        save_data_frame(same_performance, f"{output_path}\\same_performance_stats.csv")
+        print(f"The same performance summary was save to {output_path}\\same_performance_stats.csv")
 
 def create_technique_stack_bar_chart(full_dataset, output_path):
     print("Making technique count bar chart")
