@@ -1,0 +1,82 @@
+{
+    "baseline": {
+        "criterion": "log_loss",
+        "max_depth": 91,
+        "min_samples_split": 23,
+        "min_samples_leaf": 1,
+        "ccp_alpha": 0.0106,
+        "n_estimators": 231,
+        "bootstrap": false,
+        "max_samples": 0.94
+    },
+    "batch_normalisation": {
+        "criterion": "entropy",
+        "max_depth": 208,
+        "min_samples_split": 23,
+        "min_samples_leaf": 14,
+        "ccp_alpha": 0.0,
+        "n_estimators": 10,
+        "bootstrap": false,
+        "max_samples": 0.96
+    },
+    "dropout": {
+        "criterion": "gini",
+        "max_depth": 247,
+        "min_samples_split": 14,
+        "min_samples_leaf": 1,
+        "ccp_alpha": 0.0,
+        "n_estimators": 121,
+        "bootstrap": false,
+        "max_samples": 0.72
+    },
+    "layer_normalisation": {
+        "criterion": "entropy",
+        "max_depth": 124,
+        "min_samples_split": 2,
+        "min_samples_leaf": 3,
+        "ccp_alpha": 0.0,
+        "n_estimators": 102,
+        "bootstrap": true,
+        "max_samples": 0.64
+    },
+    "prune": {
+        "criterion": "entropy",
+        "max_depth": 11,
+        "min_samples_split": 16,
+        "min_samples_leaf": 3,
+        "ccp_alpha": 0.0,
+        "n_estimators": 298,
+        "bootstrap": false,
+        "max_samples": 0.53
+    },
+    "weight_normalisation": {
+        "criterion": "gini",
+        "max_depth": 12,
+        "min_samples_split": 13,
+        "min_samples_leaf": 5,
+        "ccp_alpha": 0.0,
+        "n_estimators": 120,
+        "bootstrap": false,
+        "max_samples": 0.76
+    },
+    "weight_decay": {
+        "criterion": "log_loss",
+        "max_depth": 163,
+        "min_samples_split": 21,
+        "min_samples_leaf": 8,
+        "ccp_alpha": 0.0,
+        "n_estimators": 108,
+        "bootstrap": false,
+        "max_samples": 0.36
+    },
+    "weight_perturbation": {
+        "criterion": "log_loss",
+        "max_depth": 303,
+        "min_samples_split": 46,
+        "min_samples_leaf": 14,
+        "ccp_alpha": 0.0104,
+        "n_estimators": 273,
+        "bootstrap": false,
+        "max_samples": 0.88
+    }
+}
