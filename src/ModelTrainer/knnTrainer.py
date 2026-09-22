@@ -19,7 +19,7 @@ def training_meta_k_nearest_neighbors(settings_file_path, training_set, testing_
         print(f"Training knn for { target_column.replace("_"," ")}...")
         cleaned_training_set = prepared_meta_feature_dataset(training_set,target_column,False)
         cleaned_testing_set = prepared_meta_feature_dataset(testing_set,target_column,False)
-        stats, path_to_module = train_meta_k_nearest_neighbors(settings[target_column],
+        stats, path_to_model = train_meta_k_nearest_neighbors(settings[target_column],
                                                                cleaned_training_set,
                                                                cleaned_testing_set,
                                                                seed,
@@ -35,7 +35,7 @@ def training_meta_k_nearest_neighbors(settings_file_path, training_set, testing_
 
         result = {
             "model type": "KNN",
-            "model path": path_to_module,
+            "model path": path_to_model,
             "technique": target_column.replace("_"," "),
             "best fold": stats.get_best_fold(),
 
@@ -63,7 +63,7 @@ def train_meta_k_nearest_neighbors(params,
     validation_x = validation_set[0]
     validation_y = validation_set[1]
 
-    path_to_module = ""
+    path_to_model = ""
     knn_stats = MetaLearnerStats(metric_type)
 
     if kFold == 0:
@@ -75,7 +75,7 @@ def train_meta_k_nearest_neighbors(params,
         knn_stats.update_training_stats(training_y, y_train_pred)
         knn_stats.update_testing_stats(training_y, y_train_pred)
         knn_stats.update_validation_stats(validation_y, y_validation_pred)
-        knn_stats.add_module(knn)
+        knn_stats.add_model(knn)
     else:
         kf = KFold(n_splits=kFold, shuffle=True, random_state=seed)
 
@@ -96,12 +96,12 @@ def train_meta_k_nearest_neighbors(params,
             knn_stats.update_training_stats(y_train, y_train_pred)
             knn_stats.update_testing_stats(y_test, y_test_pred)
             knn_stats.update_validation_stats(validation_y, y_validation_pred)
-            knn_stats.add_module(knn)
+            knn_stats.add_model(knn)
 
     if target_column != 'na':
-        folder_path = f"{MODULE_PATH}KNN\\{datetime.now().strftime("%Y%m%d_%H")}"
+        folder_path = f"{MODEL_PATH}KNN\\{datetime.now().strftime("%Y%m%d_%H")}"
         folder_maker(folder_path)
-        path_to_module = f"{folder_path}\\{target_column}.pkl"
-        joblib.dump(knn_stats.get_best_model(), path_to_module)
+        path_to_model = f"{folder_path}\\{target_column}.pkl"
+        joblib.dump(knn_stats.get_best_model(), path_to_model)
 
-    return knn_stats, path_to_module
+    return knn_stats, path_to_model

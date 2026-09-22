@@ -4,7 +4,7 @@ from torch.nn.utils import prune
 from torch.nn.utils.parametrizations import weight_norm
 
 
-class Network(nn.Module):
+class Network(nn.Model):
     def __init__(self,
                  input_size,
                  hidden_sizes,

@@ -307,6 +307,7 @@ def calculate_meta_learners_stats():
     print("Making the validation confusion matrix:")
     create_confusion_matrix(meta_learners_results, output_path, "validation")
 
+
 def calculate_meta_learners_performance():
     meta_learners_results = load_results_csv()
     should_save = input("Do you want to save the stats to a file? (y/n): ").lower() == 'y'
@@ -718,6 +719,7 @@ def create_f1_comparison_heatmap(df: pd.DataFrame, alpha: float = 0.05,
 
     return comparison_df
 
+
 def create_confusion_matrix(dataset, output_path, type):
     required_cols = [
         "model type",
@@ -756,13 +758,13 @@ def create_confusion_matrix(dataset, output_path, type):
 
         for idx, model_type in enumerate(model_types):
             ax = axes[idx]
-            module_df = technique_df[technique_df["model type"] == model_type]
+            model_df = technique_df[technique_df["model type"] == model_type]
 
             # Get the mean of the folds
-            tp = float(module_df[f"best {type} true positives"].iloc[0])
-            tn = float(module_df[f"best {type} true negatives"].iloc[0])
-            fp = float(module_df[f"best {type} false positives"].iloc[0])
-            fn = float(module_df[f"best {type} false negatives"].iloc[0])
+            tp = float(model_df[f"best {type} true positives"].iloc[0])
+            tn = float(model_df[f"best {type} true negatives"].iloc[0])
+            fp = float(model_df[f"best {type} false positives"].iloc[0])
+            fn = float(model_df[f"best {type} false negatives"].iloc[0])
 
             confusion_matrix = np.array([[tn, fp], [fn, tp]])
 

@@ -14,7 +14,7 @@ class MetaLearnerStats:
     def __init__(self, metric_type=OPTIMED_METRIC_OPTIONS[1]):
         self.metric_type = metric_type
         self.best_fold = -1
-        self.modules = []
+        self.models = []
 
         self.training_mses = []
         self.training_f1 = []
@@ -43,8 +43,8 @@ class MetaLearnerStats:
         self.validation_true_positive = []
         self.validation_false_positive = []
 
-    def add_module(self, module):
-        self.modules.append(module)
+    def add_model(self, model):
+        self.models.append(model)
 
     def update_training_stats(self, y_training, y_train_pred):
         single_column_y_training = revert_encoding(y_training)
@@ -206,7 +206,7 @@ class MetaLearnerStats:
     def get_best_model(self):
         if self.best_fold == -1:
             self.set_best_fold()
-        return self.modules[self.best_fold]
+        return self.models[self.best_fold]
 
 
 def revert_encoding(encoded_tensor):

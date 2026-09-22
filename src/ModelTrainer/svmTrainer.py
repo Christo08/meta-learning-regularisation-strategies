@@ -20,7 +20,7 @@ def training_meta_support_vector_machines(settings_file_path, training_set, test
         print(f"Training svm for { target_column.replace("_"," ")}...")
         cleaned_training_set = prepared_meta_feature_dataset(training_set,target_column,False)
         cleaned_testing_set = prepared_meta_feature_dataset(testing_set,target_column,False)
-        stats, path_to_module = train_meta_support_vector_machines(settings[target_column],
+        stats, path_to_model = train_meta_support_vector_machines(settings[target_column],
                                                                    cleaned_training_set,
                                                                    cleaned_testing_set,
                                                                    seed,
@@ -36,7 +36,7 @@ def training_meta_support_vector_machines(settings_file_path, training_set, test
 
         result = {
             "model type": "svm",
-            "model path": path_to_module,
+            "model path": path_to_model,
             "technique": target_column.replace("_"," "),
             "best fold": stats.get_best_fold(),
 
@@ -83,7 +83,7 @@ def train_meta_support_vector_machines(params,
         svm_stats.update_training_stats(training_y, y_train_pred)
         svm_stats.update_testing_stats(training_y, y_train_pred)
         svm_stats.update_validation_stats(validation_y, y_validation_pred)
-        svm_stats.add_module(svm)
+        svm_stats.add_model(svm)
     else:
         kf = KFold(n_splits=kFold, shuffle=True, random_state=seed)
 
@@ -104,13 +104,13 @@ def train_meta_support_vector_machines(params,
             svm_stats.update_training_stats(y_train, y_train_pred)
             svm_stats.update_testing_stats(y_test, y_test_pred)
             svm_stats.update_validation_stats(validation_y, y_validation_pred)
-            svm_stats.add_module(svm)
+            svm_stats.add_model(svm)
 
-    path_to_module = ""
+    path_to_model = ""
     if target_column != 'na':
-        folder_path = f"{MODULE_PATH}SVM\\{datetime.now().strftime("%Y%m%d_%H")}"
+        folder_path = f"{MODEL_PATH}SVM\\{datetime.now().strftime("%Y%m%d_%H")}"
         folder_maker(folder_path)
-        path_to_module = f'{folder_path}\\{target_column}.pkl'
-        joblib.dump(svm_stats.get_best_model(), path_to_module)
+        path_to_model = f'{folder_path}\\{target_column}.pkl'
+        joblib.dump(svm_stats.get_best_model(), path_to_model)
 
-    return  svm_stats, path_to_module
+    return  svm_stats, path_to_model

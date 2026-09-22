@@ -2,7 +2,7 @@
 BASIC_NN_SETTINGS_PATH = "Models\\Settings\\BasicNN\\"
 META_LEARNERS_SETTINGS_PATH = "Models\\Settings\\Meta-Learners\\"
 DATASETS_INFO_PATH = "Data\\Input\\all_dataset_info.json"
-MODULE_PATH ="Models\\"
+MODEL_PATH ="Models\\"
 SUBSET_PATH = "Data\\Input\\Subsets\\"
 OUTPUT_PATH = "Data\\Output\\Raw\\"
 RESULTS_PATH = "Data\\Results\\"

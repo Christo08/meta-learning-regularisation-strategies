@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from src.Models.NN.customDataset import CustomDataset
 from src.Models.NN.lossFunctions import CustomCrossEntropyLoss
 from src.Models.NN.network import Network
-from src.Utils.constants import META_LEANER_TARGET_COLUMNS, MODULE_PATH, OPTIMED_METRIC_OPTIONS
+from src.Utils.constants import META_LEANER_TARGET_COLUMNS, MODEL_PATH, OPTIMED_METRIC_OPTIONS
 from src.Utils.datasetHandler import apply_smote, prepared_meta_feature_dataset
 from src.Utils.fileHandler import load_settings, folder_maker
 from src.Utils.metaLearnerStatsCalculator import MetaLearnerStats
@@ -333,7 +333,7 @@ def training_meta_nns(settings_file_path, training_set, testing_set, seed, kFold
         print(f"Training nn for { target_column.replace("_"," ")}...")
         cleaned_training_set = prepared_meta_feature_dataset(training_set,target_column,False)
         cleaned_testing_set = prepared_meta_feature_dataset(testing_set,target_column,False)
-        stats, path_to_module = train_meta_nn_loop(settings[target_column],
+        stats, path_to_model = train_meta_nn_loop(settings[target_column],
                                                    cleaned_training_set,
                                                    cleaned_testing_set,
                                                    seed,
@@ -348,7 +348,7 @@ def training_meta_nns(settings_file_path, training_set, testing_set, seed, kFold
         best_validation_stats = stats.get_best_validation_stats_json_object()
         result = {
             "model type": "Neural Network",
-            "model path": path_to_module,
+            "model path": path_to_model,
             "technique": target_column.replace("_"," "),
             "best fold": stats.get_best_fold(),
 
@@ -414,7 +414,7 @@ def train_meta_nn_loop(params,
             },
             "state_dict": nn.state_dict(),
         }
-        nn_stats.add_module(checkpoint)
+        nn_stats.add_model(checkpoint)
     else:
         kf = KFold(n_splits=kFold, shuffle=True, random_state=seed)
 
@@ -468,15 +468,15 @@ def train_meta_nn_loop(params,
                 },
                 "state_dict": nn.state_dict(),
             }
-            nn_stats.add_module(checkpoint)
+            nn_stats.add_model(checkpoint)
 
-    path_to_module = ""
+    path_to_model = ""
     if target_column != 'na':
-        folder_path = f"{MODULE_PATH}NN\\{datetime.now().strftime("%Y%m%d_%H")}"
+        folder_path = f"{MODEL_PATH}NN\\{datetime.now().strftime("%Y%m%d_%H")}"
         folder_maker(folder_path)
-        path_to_module = f"{folder_path}\\{target_column}.pkl"
-        torch.save(nn_stats.get_best_model(), path_to_module)
-    return nn_stats, path_to_module
+        path_to_model = f"{folder_path}\\{target_column}.pkl"
+        torch.save(nn_stats.get_best_model(), path_to_model)
+    return nn_stats, path_to_model
 
 def train_nn(training_set, settings):
     global device

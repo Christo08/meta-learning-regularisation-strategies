@@ -31,8 +31,8 @@ The main menu contains the following options:
 - Recreate Subsets:  Recreate subsets for a given seed.
 - Recreate instances: Recreate instances for a given seed and subset.
 - Get Statistics of Meta Learning Dataset: Obtain the statistics of the meta learning dataset, including the distribution of meta features and target values, and create charts of the dataset
-- Optimise Meta Learning: Obtain the optimised hyperparameters for meta learner's modules.
-- Train Meta Learning: Train the meta learner's modules using the created meta learning dataset and save the results to a file.
+- Optimise Meta Learning: Obtain the optimised hyperparameters for meta learner's models.
+- Train Meta Learning: Train the meta learner's models using the created meta learning dataset and save the results to a file.
 - Get Statistics of Meta Learners Results: Obtain the statistics of the meta learners performance, more specifically create charts comparing the performances of each of the meta learners for every regularisation technique.
 - Test meta learning: Test the meta learner's performance on a test set and save the results to a file.
 - Get statistics of meta learners performance: Obtain the statistics of the meta learners performance on the test set, more specifically create charts comparing the performances of each of the meta learners for every regularisation technique on the test set.

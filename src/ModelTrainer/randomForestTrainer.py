@@ -19,7 +19,7 @@ def training_meta_random_forests(settings_file_path, training_set, testing_set, 
         print(f"Training random forests for { target_column.replace("_"," ")}...")
         cleaned_training_set = prepared_meta_feature_dataset(training_set,target_column,False)
         cleaned_testing_set = prepared_meta_feature_dataset(testing_set,target_column,False)
-        stats, path_to_module = train_meta_random_forest(settings[target_column],
+        stats, path_to_model = train_meta_random_forest(settings[target_column],
                                                          cleaned_training_set,
                                                          cleaned_testing_set,
                                                          seed,
@@ -34,7 +34,7 @@ def training_meta_random_forests(settings_file_path, training_set, testing_set, 
         best_validation_stats = stats.get_best_validation_stats_json_object()
         result = {
             "model type": "Random forest",
-            "model path": path_to_module,
+            "model path": path_to_model,
             "technique": target_column.replace("_"," "),
             "best fold": stats.get_best_fold(),
 
@@ -78,7 +78,7 @@ def train_meta_random_forest(params,
         random_forests_stats.update_training_stats(training_y, y_train_pred)
         random_forests_stats.update_testing_stats(training_y, training_y)
         random_forests_stats.update_validation_stats(validation_y, y_validation_pred)
-        random_forests_stats.add_module(forest)
+        random_forests_stats.add_model(forest)
     else:
         kf = KFold(n_splits=kFold, shuffle=True, random_state=seed)
 
@@ -99,13 +99,13 @@ def train_meta_random_forest(params,
             random_forests_stats.update_training_stats(y_train, y_train_pred)
             random_forests_stats.update_testing_stats(y_test, y_test_pred)
             random_forests_stats.update_validation_stats(validation_y, y_validation_pred)
-            random_forests_stats.add_module(forest)
+            random_forests_stats.add_model(forest)
 
-    path_to_module = ""
+    path_to_model = ""
     if target_column != 'na':
-        folder_path = f"{MODULE_PATH}RandomForest\\{datetime.now().strftime("%Y%m%d_%H")}"
+        folder_path = f"{MODEL_PATH}RandomForest\\{datetime.now().strftime("%Y%m%d_%H")}"
         folder_maker(folder_path)
-        path_to_module = f'{folder_path}\\{target_column}.pkl'
-        joblib.dump(forest, path_to_module)
+        path_to_model = f'{folder_path}\\{target_column}.pkl'
+        joblib.dump(forest, path_to_model)
 
-    return random_forests_stats, path_to_module
+    return random_forests_stats, path_to_model

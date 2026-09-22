@@ -26,21 +26,21 @@ def optimise_meta_learners(training_set, validation_set):
     for selected_meta_learn_type in selected_meta_learn_types:
         if selected_meta_learn_type == META_LEARN_TYPES[1]:
             setting = optimise_decision_tree(training_set, validation_set, selected_metric_type, direction)
-            module_type = "DecisionTrees"
+            model_type = "DecisionTrees"
         elif selected_meta_learn_type == META_LEARN_TYPES[2]:
             setting = optimise_k_nearest_neighbors(training_set, validation_set, selected_metric_type, direction)
-            module_type = "KNearestNeighbors"
+            model_type = "KNearestNeighbors"
         elif selected_meta_learn_type == META_LEARN_TYPES[3]:
             setting = optimise_mate_nn(training_set, validation_set, selected_metric_type, direction)
-            module_type = "NeuralNetworks"
+            model_type = "NeuralNetworks"
         elif selected_meta_learn_type == META_LEARN_TYPES[4]:
             setting = optimise_random_forest(training_set, validation_set, selected_metric_type, direction)
-            module_type = "RandomForest"
+            model_type = "RandomForest"
         elif selected_meta_learn_type == META_LEARN_TYPES[5]:
             setting = optimise_support_vector_machine(training_set, validation_set, selected_metric_type, direction)
-            module_type = "SupportVectorMachines"
+            model_type = "SupportVectorMachines"
         else:
             return
-        setting_indexes[module_type] = save_meta_learner_settings(setting, module_type)
+        setting_indexes[model_type] = save_meta_learner_settings(setting, model_type)
         with open(path, "w") as file:
             json.dump(setting_indexes, file, indent=4, cls=ObjectEncoder)

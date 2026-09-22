@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 
 
-class CustomCrossEntropyLoss(nn.Module):
+class CustomCrossEntropyLoss(nn.Model):
     def __init__(self):
         super(CustomCrossEntropyLoss, self).__init__()
         self.loss = nn.CrossEntropyLoss()
@@ -19,7 +19,7 @@ class CustomCrossEntropyLoss(nn.Module):
         return output
 
 
-class CustomCrossEntropyRegularisationTermLoss(nn.Module):
+class CustomCrossEntropyRegularisationTermLoss(nn.Model):
     def __init__(self, lambda_):
         super(CustomCrossEntropyRegularisationTermLoss, self).__init__()
         self.lambda_ = lambda_

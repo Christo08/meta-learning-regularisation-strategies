@@ -29,7 +29,7 @@ class MetaLearner():
         self.techniques = list(meta_learners_results["technique"].dropna().unique())
         self.model_types = list(meta_learners_results["model type"].dropna().unique())
         options = TEST_TYPES
-        options.append("One module")
+        options.append("One model")
 
         test_type = show_menu("Select the test method which will be used to rank the techniques: ", options)
         if test_type == TEST_TYPES[0]:
@@ -37,8 +37,8 @@ class MetaLearner():
         elif test_type == TEST_TYPES[1]:
             self.get_best_models_base_on_friedman(meta_learners_results)
         else:
-            module_type = show_menu("Select the module type which will be used: ", self.model_types)
-            self.get_module_info(meta_learners_results, module_type)
+            model_type = show_menu("Select the model type which will be used: ", self.model_types)
+            self.get_model_info(meta_learners_results, model_type)
         print("Meta-Learner:")
         for technique in  self.techniques:
             types =[]
@@ -194,10 +194,10 @@ class MetaLearner():
             # 3) Nemenyi pairwise comparisons
             if p_value <= alpha:
                 if studentized_range is not None:
-                    number_of_modules = len(self.model_types)
-                    q_critical = studentized_range.ppf(1 - alpha, number_of_modules, np.inf) / np.sqrt(2)
+                    number_of_models = len(self.model_types)
+                    q_critical = studentized_range.ppf(1 - alpha, number_of_models, np.inf) / np.sqrt(2)
                     critical_difference = q_critical * np.sqrt(
-                        number_of_modules * (number_of_modules - 1) / (6 * run_count)
+                        number_of_models * (number_of_models - 1) / (6 * run_count)
                     )
                 else:
                     critical_difference = 0.0
@@ -254,7 +254,7 @@ class MetaLearner():
                     })
             self.models_for_each_technique[technique] = best_model_types
 
-    def get_module_info(self, meta_learners_results, model_type):
+    def get_model_info(self, meta_learners_results, model_type):
         for technique in self.techniques:
             results_per_technique = meta_learners_results[meta_learners_results["technique"].replace(" ", "_") == technique]
             results_per_technique_and_model = results_per_technique[results_per_technique["model type"] == model_type]
