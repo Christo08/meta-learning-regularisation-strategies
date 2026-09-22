@@ -1,0 +1,4 @@
+{
+    "SupportVectorMachines": "Models\\Settings\\Meta-Learners\\SupportVectorMachines\\svm_setting_20260912_105014.json",
+    "RandomForest": "Models\\Settings\\Meta-Learners\\RandomForest\\Random_forest_setting_20260912_115520.json"
+}

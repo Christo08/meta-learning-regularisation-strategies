@@ -3,6 +3,7 @@ import random
 from statistics import mean
 
 from scipy.stats import ttest_ind
+from sympy import false
 
 from src.ModelTrainer.decisionTreeTrainer import training_meta_decision_trees
 from src.ModelTrainer.knnTrainer import training_meta_k_nearest_neighbors
@@ -63,10 +64,10 @@ def test_meta_learner(subsets, ranked_subsets, output_path, meta_learner):
         best_technique = meta_learner.predict_best_technique(meta_features.to_frame().T)
         details.append({
             "dataset_name": subset["dataset_name"],
-            "best_technique": best_technique,
+            "meta_learner_predicts": best_technique,
             "file_path": subset["file_name"]
         })
-    generate_performs = input("Do you want to generate the performs of the basic NN (Y/N)?").upper() == "Y"
+    generate_performs = False
     results = pd.DataFrame()
     if generate_performs:
         number_of_folds = int(input("How many folds do you want to use? "))
@@ -106,10 +107,9 @@ def test_meta_learner(subsets, ranked_subsets, output_path, meta_learner):
             instance_json_object = {
                 "dataset_name": detail["dataset_name"],
                 "seed": first_match["seed"],
-                "best_technique": detail["best_technique"]
+                "meta_learner_predicts": detail["meta_learner_predicts"]
             }
-            print(f"Dataset name: {detail["dataset_name"]}")
-            print(f"Best technique: {detail["best_technique"]}")
+            best_technique = []
             for config in REGULARISATION_TECHNIQUES:
                 instance_json_object[f"{config['fileName']}_training_loss"] = first_match[f"{config['fileName']}_training_loss"]
                 instance_json_object[f"{config['fileName']}_training_accuracies"] = first_match[f"{config['fileName']}_training_accuracies"]
@@ -118,7 +118,9 @@ def test_meta_learner(subsets, ranked_subsets, output_path, meta_learner):
                 instance_json_object[f"{config['fileName']}_testing_accuracies"] = first_match[f"{config['fileName']}_testing_accuracies"]
                 instance_json_object[f"{config['fileName']}_testing_f1_scores"] = first_match[f"{config['fileName']}_testing_f1_scores"]
                 instance_json_object[f"{config['fileName']}_rank"] = first_ranked_match[f"{config['fileName']}"]
-                if config['fileName'].replace("_"," ") == detail["best_technique"]:
+                if first_ranked_match[f"{config['fileName']}"] == 1:
+                    best_technique.append(config['fileName'])
+                if config['fileName'].replace("_"," ") == detail["meta_learner_predicts"]:
                     instance_json_object["meta_learner_training_loss"] = first_match[f"{config['fileName']}_training_loss"]
                     instance_json_object["meta_learner_training_accuracies"] = first_match[f"{config['fileName']}_training_accuracies"]
                     instance_json_object["meta_learner_training_f1_scores"] = first_match[f"{config['fileName']}_training_f1_scores"]
@@ -126,6 +128,7 @@ def test_meta_learner(subsets, ranked_subsets, output_path, meta_learner):
                     instance_json_object["meta_learner_testing_accuracies"] = first_match[f"{config['fileName']}_testing_accuracies"]
                     instance_json_object["meta_learner_testing_f1_scores"] = first_match[f"{config['fileName']}_testing_f1_scores"]
                     instance_json_object[f"meta_learner_rank"] = first_ranked_match[f"{config['fileName']}"]
+            print(f"Dataset name: {detail["dataset_name"]}, ML predicts: {detail["meta_learner_predicts"]}, Best technique: {best_technique}")
             results = pd.concat([results, pd.DataFrame([instance_json_object])], ignore_index=True)
         save_data_frame(results, output_path)
 

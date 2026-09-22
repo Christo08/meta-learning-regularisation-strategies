@@ -1,0 +1,9 @@
+technique,1,2,3,4,5,6,7,8
+baseline,0,1,13,54,78,78,56,107
+batch_normalisation,4,10,13,53,74,69,51,107
+dropout,8,7,18,42,55,72,54,107
+layer_normalisation,8,4,11,32,51,55,44,107
+prune,1,0,0,5,30,43,51,107
+weight_normalisation,0,0,1,3,36,51,49,107
+weight_decay,2,0,1,10,36,41,39,107
+weight_perturbation,0,0,6,17,50,59,48,107

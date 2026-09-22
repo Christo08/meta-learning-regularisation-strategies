@@ -11,8 +11,8 @@ from src.Utils.constants import *
 from src.Utils.datasetSettingHandler import DatasetsSettingsHandler
 from src.Utils.fileHandler import load_settings, load_meta_features_csv, load_results_csv
 from src.Utils.instanceCreator import create_subsets, create_dataset_for_subset, recreate_meta_features
-from src.Utils.menus import show_menu, show_dataset_loader_menu
-from src.Utils.metaFeatureDatasetHandler import prepare_meta_feature_sets
+from src.Utils.menus import show_menu
+from src.Utils.metaFeatureDatasetHandler import prepare_meta_feature_sets, show_dataset_loader_menu
 from src.Utils.statsCalculator import calculate_meta_learners_stats, calculate_dataset_stats, \
     calculate_meta_learners_performance
 

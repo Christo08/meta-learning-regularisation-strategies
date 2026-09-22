@@ -52,6 +52,7 @@ OPTIMED_METRIC_OPTIONS = ["Accuracies",
                           "f1 Scores",
                           "MSE",
                           "Precision"]
+TEST_TYPES = ["Mann Whitney-U", "Friedman and Nemenyi"]
 
 #SUBSET CREATION
 MIN_CLASSES_REQUIRED = 2

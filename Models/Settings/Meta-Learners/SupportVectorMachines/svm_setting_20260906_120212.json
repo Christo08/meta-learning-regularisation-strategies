@@ -1,0 +1,58 @@
+{
+    "baseline": {
+        "kernel": "linear",
+        "C": 6.2939,
+        "gamma": "auto",
+        "degree": 4,
+        "coef0": 0.6695
+    },
+    "batch_normalisation": {
+        "kernel": "linear",
+        "C": 0.6119,
+        "gamma": "auto",
+        "degree": 5,
+        "coef0": 0.1364
+    },
+    "dropout": {
+        "kernel": "linear",
+        "C": 2.8152,
+        "gamma": "auto",
+        "degree": 5,
+        "coef0": 0.36
+    },
+    "layer_normalisation": {
+        "kernel": "rbf",
+        "C": 2.0953,
+        "gamma": "scale",
+        "degree": 4,
+        "coef0": 0.0
+    },
+    "prune": {
+        "kernel": "poly",
+        "C": 2.5397,
+        "gamma": "scale",
+        "degree": 3,
+        "coef0": 0.0
+    },
+    "weight_normalisation": {
+        "kernel": "linear",
+        "C": 6.1403,
+        "gamma": "scale",
+        "degree": 4,
+        "coef0": 1.0
+    },
+    "weight_decay": {
+        "kernel": "poly",
+        "C": 0.6215,
+        "gamma": "scale",
+        "degree": 5,
+        "coef0": 0.1573
+    },
+    "weight_perturbation": {
+        "kernel": "linear",
+        "C": 3.7509,
+        "gamma": "scale",
+        "degree": 5,
+        "coef0": 0.4683
+    }
+}

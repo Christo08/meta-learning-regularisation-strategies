@@ -20,7 +20,8 @@ wr.filterwarnings('ignore')
 
 def create_feature_stats(features, output_path):
     print(f"Making the feature summary")
-    inf_removed = features.replace([np.inf, -np.inf], np.nan).dropna(axis=0, how='any')
+
+    inf_removed = features.drop(columns=['dataset_name', 'file_name']).replace([np.inf, -np.inf], np.nan).dropna(axis=0, how='any')
     stats_df = inf_removed.describe().T
     stats_df = stats_df.round(4)
     stats_df = stats_df.reset_index().rename(columns={'index': 'column name'})

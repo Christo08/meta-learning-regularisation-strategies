@@ -1,0 +1,37 @@
+dataset_name,baseline,batch_normalisation,dropout,layer_normalisation,prune,weight_normalisation,weight_decay,weight_perturbation
+Agaricus Lepiota,15,5,13,0,14,14,15,12
+Ann thyroid,14,14,14,16,4,2,1,4
+Balance Scale,16,14,16,3,7,3,2,15
+Car evaluation,15,14,11,10,6,12,12,14
+Dry Bean,16,16,16,14,12,15,14,14
+Glass Identification,15,15,15,11,8,13,12,13
+Indian Engineering Student Placement,12,16,8,11,11,9,5,8
+Led24,16,16,15,16,15,13,5,14
+Led7,16,15,10,14,4,15,5,14
+Liver Cirrhosis,15,16,16,16,16,15,15,14
+Magic,10,9,16,4,3,2,6,9
+Mobile Price Classification,16,16,11,16,0,16,0,16
+Mofn_3_7_10,15,15,16,5,8,5,10,9
+Mushroom,15,12,13,10,15,11,9,11
+Nursery,16,13,13,5,5,5,5,10
+Obesity Levels,13,14,11,13,14,3,16,6
+Online shopper,16,15,4,15,2,12,4,13
+Page Blocks,13,15,11,2,11,10,14,4
+Parity5,13,11,5,12,10,11,7,11
+Pendigits,16,16,16,3,15,15,16,16
+Pima Indians Diabetes,14,14,12,16,9,11,4,12
+Ring,12,16,15,16,2,0,1,3
+Salaries 2023,15,8,13,14,10,12,12,10
+Schizo,16,16,16,12,15,12,10,10
+Segmentation,16,16,16,15,13,12,14,12
+Smartphone battery,6,14,14,11,3,3,4,4
+Statlog Vehicle Silhouettes,15,15,16,9,13,10,11,12
+Students Performance,3,16,16,15,2,1,2,1
+Students Performance Burnout,13,16,5,16,1,3,7,8
+Twonorm,13,16,9,12,11,8,8,10
+Vehicle,15,10,16,11,10,7,13,12
+Vowel,16,16,16,2,7,6,14,14
+Waveform_21,14,13,15,16,5,8,2,8
+White Wine Quality,16,16,16,12,14,14,13,13
+Wine Quality Red,16,16,16,15,13,11,13,10
+Yeast,12,13,16,6,10,8,9,9

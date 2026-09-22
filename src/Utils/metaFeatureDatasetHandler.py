@@ -1,16 +1,25 @@
 import ast
 import math
+import random
 from datetime import datetime
+from itertools import combinations
 
 import numpy as np
 import pandas as pd
 from joblib import dump, load
-from scipy.stats import ttest_ind
+from scipy.stats import ttest_ind, friedmanchisquare
+from sympy import true, false
+
+try:
+    from scipy.stats import studentized_range
+except ImportError:
+    studentized_range = None
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import PowerTransformer, StandardScaler
 
-from src.Utils.constants import TARGET_COLUMNS
+from src.Utils.constants import TARGET_COLUMNS, TEST_TYPES
 from src.Utils.fileHandler import load_meta_features_csv, save_data_frame
+from src.Utils.menus import show_menu
 
 
 def spilt_dataset_and_targets(dataset, target_columns=TARGET_COLUMNS):
@@ -35,17 +44,20 @@ def split_dataset(dataset):
 
     rankings_per_dataset["mean_loss"] = rankings_per_dataset[targets].mean(axis=1)
     rankings_per_dataset["bin"] = pd.qcut(rankings_per_dataset["mean_loss"], q=4, labels=False)
-    #Seed use to recreate meta-learner 5232
-    seed = 5232
-    print("Seed:", seed)
+    #Seed use to recreate meta-learner 5232 9760
+    seed = 9851
     train, test = train_test_split(rankings_per_dataset,
                                    test_size=0.25,
                                    stratify=rankings_per_dataset["bin"],
                                    random_state = seed)
 
-    train_datasets_name =["Agaricus Lepiota","Ann thyroid","Car evaluation","Dry Bean","Glass Identification","Indian Engineering Student Placement","Led24","Liver Cirrhosis","Magic","Mobile Price Classification","Mofn_3_7_10","Mushroom","Nursery","Obesity Levels","Online shopper","Page Blocks","Parity5","Pendigits","Pima Indians Diabetes","Ring","Salaries 2023","Segmentation","Smartphone battery","Students Performance","Twonorm","White Wine Quality","Wine Quality Red"]
-    test_datasets_name = ["Balance Scale","Led7","Schizo","Statlog Vehicle Silhouettes","Students Performance Burnout","Vehicle","Vowel","Waveform_21","Yeast"]
-
+    train_datasets_name = train["dataset_name"].tolist()
+    train_datasets_name.remove("Page Blocks")
+    train_datasets_name.append("Online shopper")
+    test_datasets_name = test["dataset_name"].tolist()
+    test_datasets_name.remove("Online shopper")
+    test_datasets_name.append("Page Blocks")
+    print("Seed:", seed)
     print("Train datasets:")
     print(train_datasets_name)
 
@@ -113,7 +125,11 @@ def prepare_meta_feature_dataset_for_states():
     targets = dataset[TARGET_COLUMNS]
     features = dataset.drop(TARGET_COLUMNS, axis=1)
 
-    targets = rank_techniques(targets)
+    test_type = show_menu("Select the test method which will be used to rank the techniques: ", TEST_TYPES)
+    if test_type == TEST_TYPES[0]:
+        targets = rank_techniques_mann_whitney(targets)
+    else:
+        targets = rank_techniques_friedman(targets)
     should_cover_to_binary = input("Do you want to convert the ranks to binary (1 for best technique, 0 for others)? (y/n): ").lower() == "y"
     if should_cover_to_binary:
         options = options+"binary_"
@@ -177,7 +193,11 @@ def prepare_meta_feature_sets():
 
     targets = dataset[TARGET_COLUMNS]
     features = dataset.drop(TARGET_COLUMNS, axis=1)
-    targets = rank_techniques(targets)
+    test_type = show_menu("Select the test method which will be used to rank the techniques: ", TEST_TYPES)
+    if test_type == TEST_TYPES[0]:
+        targets = rank_techniques_mann_whitney(targets)
+    else:
+        targets = rank_techniques_friedman(targets)
     dataset = pd.concat([features, targets], axis=1)
 
     training_set, validation_set, seed = split_dataset(dataset)
@@ -414,13 +434,13 @@ def apply_normalization(features=None, training_features=None, testing_features=
     else:
         raise ValueError("Either dataset or both training_set and testing_set must be provided.")
 
-def rank_techniques(targets):
+def rank_techniques_mann_whitney(targets):
     assert targets.shape[1] >= 2, "Need at least two techniques to compare."
 
     # apply hypothesis test
     def row_wise_pval_matrix(row):
         return pd.DataFrame({
-            col1: [apply_ttest(row[col1], row[col2]) for col2 in targets.columns]
+            col1: [apply_pValue(row[col1], row[col2]) for col2 in targets.columns]
             for col1 in targets.columns
         }, index=targets.columns)
 
@@ -459,6 +479,79 @@ def rank_techniques(targets):
 
     return pd.DataFrame(ranked_rows, index=means_dataset.index)
 
+def rank_techniques_friedman(targets):
+    assert targets.shape[1] >= 2, "Need at least two techniques to compare."
+
+    techniques = list(targets.columns)
+    ranked_rows = pd.DataFrame(columns=techniques)
+
+    alpha = 0.1
+
+    for idx, row in targets.iterrows():
+        ranked_row = {technique: [] for technique in techniques}
+        values_by_technique = {
+            technique: np.asarray(cell_parse(row[technique]), dtype=float)
+            for technique in techniques
+        }
+
+        run_count = len(next(iter(values_by_technique.values())))
+        if any(len(values) != run_count for values in values_by_technique.values()):
+            raise ValueError(f"All technique columns must contain the same number of values for row {idx}.")
+
+        # 1) Rank techniques across the 10 runs (higher F1 = better rank)
+        for counter in range(run_count):
+            run_values = {technique: values[counter] for technique, values in values_by_technique.items()}
+            ranked_techniques = sorted(run_values, key=run_values.get, reverse=True)
+            for rank, technique in enumerate(ranked_techniques, start=1):
+                ranked_row[technique].append(rank)
+
+        # 2) Friedman test across all samples
+        statistic, p_value = friedmanchisquare(
+            *[ranked_row[technique] for technique in techniques]
+        )
+
+        for technique in techniques:
+            if p_value > 0.1:
+                ranked_row[technique] = 1
+            else:
+                ranked_row[technique] = round(np.mean(ranked_row[technique]))
+
+        if p_value <= 0.1:
+            # 3) Nemenyi pairwise comparisons
+            if studentized_range is not None:
+                q_critical = studentized_range.ppf(1 - alpha, len(techniques), np.inf) / np.sqrt(2)
+                critical_difference = q_critical * np.sqrt(
+                    len(techniques) * (len(techniques) - 1) / (6 * run_count)
+                )
+            else:
+                critical_difference = 0.0
+
+            changed = True
+            while changed:
+                changed = False
+                for technique1, technique2 in combinations(techniques, 2):
+                    diff = abs(ranked_row[technique1] - ranked_row[technique2])
+                    significant = diff > critical_difference if critical_difference > 0 else False
+                    if not significant:
+                        if ranked_row[technique1] < ranked_row[technique2]:
+                            ranked_row[technique2] = ranked_row[technique1]
+                            changed = True
+                        elif ranked_row[technique2] < ranked_row[technique1]:
+                            ranked_row[technique1] = ranked_row[technique2]
+                            changed = True
+
+        valid_ranks = sorted({rank for rank in ranked_row.values() if rank >= 1})
+        rank_map = {rank: index for index, rank in enumerate(valid_ranks, start=1)}
+        ranked_row = {
+            technique: rank_map[rank] if rank >= 1 else rank
+            for technique, rank in ranked_row.items()
+        }
+
+        ranked_rows.loc[idx] = ranked_row
+
+    return pd.DataFrame(ranked_rows, index=targets.index)
+
+
 def cell_parse(cell):
     if isinstance(cell, list):
         values = cell
@@ -468,7 +561,7 @@ def cell_parse(cell):
     values = [float('inf') if value == 'inf' else value for value in values]
     return values
 
-def apply_ttest(cell1, cell2):
+def apply_pValue(cell1, cell2):
     if cell1 == cell2:
         return True
     values1 = cell_parse(cell1)
@@ -486,3 +579,34 @@ def apply_ttest(cell1, cell2):
 def calculate_mean(cell):
     values = cell_parse(cell)
     return sum(values) / len(values)
+
+def show_dataset_loader_menu(allow_full_dataset = False, return_both_sets = False):
+    if allow_full_dataset:
+        was_processed= input("Has the dataset been processed before? (y/n): ").lower() == "y"
+        set_types = ["Full dataset", "Training dataset", "Validation dataset"]
+        set_type = show_menu("What type of dataset do you want to calculate stats for? ", set_types)
+        if was_processed:
+            if set_type == set_types[0]:
+                return load_meta_features_csv()
+            else:
+                return load_meta_features_csv(set_type.split(" ")[0].strip().lower())
+        else:
+            if set_type == set_types[0]:
+                return prepare_meta_feature_dataset_for_states()
+            else:
+                training_set, validation_set = prepare_meta_feature_sets()
+                if set_type == set_types[1]:
+                    return training_set
+                else:
+                    return validation_set
+    elif return_both_sets:
+            if input("Do you have training and validation sets? (y/n): ").lower() == "y":
+                return load_meta_features_csv("training"), load_meta_features_csv("validation")
+            else:
+                return prepare_meta_feature_sets()
+    else:
+        if input("Do you have training sets? (y/n): ").lower() == "y":
+            return load_meta_features_csv("training")
+        else:
+            training_set, _ = prepare_meta_feature_sets()
+            return training_set
