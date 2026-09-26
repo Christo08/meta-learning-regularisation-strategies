@@ -1,3 +1,4 @@
+import ast
 import os
 import warnings as wr
 from datetime import datetime
@@ -303,6 +304,7 @@ def calculate_meta_learners_stats():
 
     print("Making the testing confusion matrix:")
     create_confusion_matrix(meta_learners_results, output_path, "testing")
+    create_avrg_and_std_table(meta_learners_results, output_path, "testing")
 
     print("Making the validation confusion matrix:")
     create_confusion_matrix(meta_learners_results, output_path, "validation")
@@ -718,6 +720,41 @@ def create_f1_comparison_heatmap(df: pd.DataFrame, alpha: float = 0.05,
     plt.show()
 
     return comparison_df
+
+def create_avrg_and_std_table(dataset, output_path, type):
+    required_cols = [
+        "model type",
+        "technique",
+        f"{type} loses"
+    ]
+    missing = [c for c in required_cols if c not in dataset.columns]
+    if missing:
+        raise ValueError(f"Missing required columns: {missing}")
+
+    df =dataset.copy()
+    df = df[required_cols]
+    techniques = list(df["technique"].dropna().unique())
+    model_types = list(df["model type"].dropna().unique())
+    new_df_columns = ["technique"]
+    for model in model_types:
+        new_df_columns.append(f"{model} loses mean")
+        new_df_columns.append(f"{model} loses std")
+    avg_std_df = pd.DataFrame(columns=new_df_columns)
+    for technique in techniques:
+        technique_df = df[df["technique"] == technique]
+        new_row = {"technique": technique}
+        for model in model_types:
+            model_df = technique_df[technique_df["model type"] == model]
+            loses_values =model_df[f"{type} loses"].iloc[0]
+            if isinstance(loses_values, str):
+                loses_values = ast.literal_eval(loses_values)
+            loses_values = np.asarray(loses_values, dtype=float)
+            new_row[f"{model} loses mean"] = round(loses_values.mean(),3)
+            new_row[f"{model} loses std"] = round(loses_values.std(),3)
+        avg_std_df = pd.concat([avg_std_df, pd.DataFrame([new_row])], ignore_index=True)
+    if output_path is not None:
+        save_data_frame(avg_std_df, f"{output_path}\\{type}_loses_avg_std.csv")
+        print(f"Saved average and std of {type} loses to {output_path}\\{type}_loses_avg_std.csv")
 
 
 def create_confusion_matrix(dataset, output_path, type):

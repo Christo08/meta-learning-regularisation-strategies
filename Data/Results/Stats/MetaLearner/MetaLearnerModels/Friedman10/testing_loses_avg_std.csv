@@ -1,0 +1,9 @@
+technique,Decision tree loses mean,Decision tree loses std,KNN loses mean,KNN loses std,Neural Network loses mean,Neural Network loses std,Random forest loses mean,Random forest loses std,svm loses mean,svm loses std
+baseline,0.106,0.051,0.105,0.027,0.106,0.054,0.106,0.052,0.113,0.05
+batch normalisation,0.113,0.044,0.109,0.028,0.106,0.059,0.113,0.049,0.104,0.03
+dropout,0.16,0.044,0.162,0.049,0.155,0.04,0.146,0.062,0.16,0.04
+layer normalisation,0.264,0.049,0.185,0.078,0.197,0.067,0.195,0.057,0.183,0.048
+prune,0.276,0.053,0.261,0.058,0.259,0.055,0.234,0.044,0.224,0.069
+weight normalisation,0.26,0.071,0.255,0.061,0.266,0.056,0.278,0.059,0.264,0.042
+weight decay,0.257,0.052,0.222,0.058,0.252,0.063,0.243,0.062,0.224,0.03
+weight perturbation,0.3,0.06,0.273,0.061,0.266,0.068,0.257,0.04,0.262,0.073
